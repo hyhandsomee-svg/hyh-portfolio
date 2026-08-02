@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>行业链接 - 华东师范大学设计学院</title>
+  <style>
+    :root {
+      --bg: #f4f8fb;
+      --ink: #0b0d10;
+      --muted: rgba(11, 13, 16, .56);
+      --line: rgba(35, 72, 95, .12);
+      --blue: #0766eb;
+      --blue-soft: rgba(7, 102, 235, .08);
+      --lime: #dfff4f;
+      --white: rgba(255, 255, 255, .72);
+      --radius: 28px;
+      --ease: cubic-bezier(.2, .85, .2, 1);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 84% 18%, rgba(223,255,79,.34), transparent 30%),
+        radial-gradient(circle at 18% 24%, rgba(158,203,255,.34), transparent 32%),
+        linear-gradient(135deg, #f7fbff 0%, #f4fbff 46%, #f8fbf2 100%);
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(24, 94, 126, .11) .7px, transparent .7px);
+      background-size: 8px 8px;
+      opacity: .8;
+      mask-image: linear-gradient(135deg, transparent 0%, black 18%, black 80%, transparent 100%);
+    }
+    .page {
+      position: relative;
+      z-index: 1;
+      width: min(1480px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+    .nav {
+      min-height: 76px;
+      position: sticky;
+      top: 24px;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px 10px 18px;
+      background: rgba(255,255,255,.66);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 22px 70px rgba(65, 112, 148, .09);
+      overflow: hidden;
+    }
+    .nav-home {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      color: rgba(11,13,16,.78);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 720;
+      background: rgba(255,255,255,.5);
+    }
+    .nav-menu-drawer {
+      position: absolute;
+      top: 50%;
+      right: 70px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      max-width: min(880px, calc(100vw - 150px));
+      height: 48px;
+      padding: 5px 8px;
+      border: 1px solid rgba(11,11,13,.07);
+      border-radius: 999px;
+      background: rgba(250,253,255,.78);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 16px 46px rgba(82, 135, 168, .10);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(34px, -50%) scaleX(.78);
+      transform-origin: right center;
+      transition: opacity .34s var(--ease), transform .5s var(--ease);
+    }
+    .nav.is-menu-open .nav-menu-drawer {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(0, -50%) scaleX(1);
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      height: 38px;
+      padding: 0 11px;
+      border-radius: 999px;
+      color: rgba(11,11,13,.76);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 620;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: background .25s ease, opacity .32s var(--ease), transform .42s var(--ease);
+    }
+    .nav.is-menu-open .nav-link { opacity: 1; transform: translateX(0); }
+    .nav.is-menu-open .nav-link:nth-child(1) { transition-delay: .02s; }
+    .nav.is-menu-open .nav-link:nth-child(2) { transition-delay: .04s; }
+    .nav.is-menu-open .nav-link:nth-child(3) { transition-delay: .06s; }
+    .nav.is-menu-open .nav-link:nth-child(4) { transition-delay: .08s; }
+    .nav.is-menu-open .nav-link:nth-child(5) { transition-delay: .10s; }
+    .nav.is-menu-open .nav-link:nth-child(6) { transition-delay: .12s; }
+    .nav.is-menu-open .nav-link:nth-child(7) { transition-delay: .14s; }
+    .nav.is-menu-open .nav-link:nth-child(8) { transition-delay: .16s; }
+    .nav-link:hover, .nav-link.is-active { background: rgba(7,102,235,.08); color: var(--blue); }
+    .nav-right { position: relative; z-index: 4; }
+    .menu-toggle {
+      width: 46px;
+      height: 46px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid rgba(11,11,13,.09);
+      border-radius: 50%;
+      background: rgba(252,254,255,.82);
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(82, 135, 168, .10);
+    }
+    .menu-toggle-lines { position: relative; width: 18px; height: 12px; display: block; }
+    .menu-toggle-lines::before, .menu-toggle-lines::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--blue);
+      transition: transform .35s var(--ease), top .35s var(--ease), width .35s var(--ease);
+    }
+    .menu-toggle-lines::before { top: 1px; }
+    .menu-toggle-lines::after { top: 9px; width: 13px; }
+    .nav.is-menu-open .menu-toggle-lines::before { top: 5px; transform: rotate(45deg); }
+    .nav.is-menu-open .menu-toggle-lines::after { top: 5px; width: 18px; transform: rotate(-45deg); }
+    .hero {
+      padding: 74px 0 46px;
+      text-align: center;
+    }
+    .breadcrumb {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.45);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .breadcrumb b { color: var(--blue); font-weight: 760; }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 4.35vw, 58px);
+      line-height: 1.08;
+      letter-spacing: -.045em;
+      font-weight: 700;
+      color: rgba(29, 29, 31, .92);
+    }
+    .hero-en {
+      display: block;
+      margin-top: 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(22px, 2.65vw, 36px);
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: -.028em;
+      color: rgba(29, 29, 31, .58);
+    }
+    .hero-copy {
+      max-width: 680px;
+      margin: 22px auto 0;
+      color: rgba(29, 29, 31, .52);
+      font-size: 14px;
+      line-height: 1.85;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 180px minmax(760px, 1.75fr) 240px;
+      gap: 18px;
+      align-items: start;
+    }
+    .side, .main, .aside {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 24px 76px rgba(65, 112, 148, .08);
+    }
+    .side { padding: 14px; position: sticky; top: 124px; }
+    .side-title, .aside-title {
+      margin: 0 0 14px;
+      color: rgba(11,13,16,.42);
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .side a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 40px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: rgba(11,13,16,.72);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 650;
+      transition: background .25s ease, color .25s ease;
+    }
+    .side a + a { margin-top: 6px; }
+    .side a:hover, .side a.active { background: var(--blue-soft); color: var(--blue); }
+    .side a span { color: rgba(11,13,16,.28); font-size: 12px; }
+    .main { overflow: hidden; }
+
+    /* 行业板块 - 简化版 */
+    .industry-section {
+      padding: 32px 36px;
+      border-bottom: 1px solid var(--line);
+    }
+    .industry-section:last-child { border-bottom: 0; }
+    .industry-header {
+      margin-bottom: 22px;
+    }
+    .industry-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .industry-num {
+      font-size: 22px;
+      font-style: italic;
+      font-weight: 500;
+      color: var(--blue);
+      opacity: .7;
+      letter-spacing: -.02em;
+    }
+    .industry-sub {
+      margin: 6px 0 0 34px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* 项目卡片 - 整洁版 */
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-left: 34px;
+    }
+    .project-card {
+      padding: 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.5);
+      transition: all .35s var(--ease);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .project-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px -10px rgba(7, 102, 235, .12);
+      border-color: rgba(7, 102, 235, .18);
+      background: rgba(255,255,255,.7);
+    }
+    .project-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -.01em;
+      color: rgba(11,13,16,.86);
+    }
+    .project-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .aside { padding: 18px; }
+    .stat-card {
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(7,102,235,.08), rgba(223,255,79,.12));
+      margin-bottom: 16px;
+    }
+    .stat-number {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      color: var(--blue);
+      line-height: 1;
+    }
+    .stat-label {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .notice {
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+    }
+    .notice:first-of-type { border-top: 0; padding-top: 0; }
+    .notice time {
+      display: block;
+      margin-bottom: 7px;
+      color: rgba(11,13,16,.38);
+      font-size: 12px;
+      font-weight: 720;
+    }
+    .notice a {
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 680;
+      line-height: 1.55;
+    }
+    .quick {
+      display: grid;
+      gap: 8px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .quick a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 40px;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.5);
+      color: rgba(11,13,16,.74);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 680;
+    }
+    footer {
+      margin-top: 42px;
+      padding: 24px 2px 0;
+      color: rgba(11,13,16,.42);
+      font-size: 12px;
+      line-height: 1.8;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      border-top: 1px solid var(--line);
+      background: transparent;
+    }
+    @media (max-width: 1280px) {
+      .layout { grid-template-columns: 160px minmax(0, 1fr) 220px; gap: 14px; }
+      .industry-section { padding: 28px 28px; }
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { position: static; display: flex; gap: 8px; overflow-x: auto; }
+      .side-title { display: none; }
+      .side a { white-space: nowrap; }
+      .aside { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      .aside-title, .quick { grid-column: 1 / -1; }
+    }
+    @media (max-width: 760px) {
+      .page { width: min(100% - 28px, 1320px); padding-top: 16px; }
+      .nav { top: 12px; min-height: 64px; }
+      .nav-home { font-size: 12px; padding: 0 12px; }
+      .nav-menu-drawer {
+        top: calc(100% + 10px);
+        right: 0;
+        max-width: none;
+        width: 100%;
+        height: auto;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        border-radius: 24px;
+        transform: translateY(-8px);
+      }
+      .nav.is-menu-open .nav-menu-drawer { transform: translateY(0); }
+      .hero { padding: 54px 0 32px; }
+      .industry-section { padding: 24px 20px; }
+      .project-grid { grid-template-columns: 1fr; margin-left: 0; }
+      .industry-sub { margin-left: 0; }
+      .aside { grid-template-columns: 1fr; }
+      footer { flex-direction: column; }
+    }
+
+
+    /* --- Typography refinement aligned with previous pages --- */
+    body {
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    .hero {
+      padding: 68px 0 42px;
+    }
+
+    h1 {
+      font-size: clamp(31px, 3.9vw, 52px);
+      line-height: 1.08;
+      letter-spacing: -0.042em;
+      font-weight: 690;
+      color: rgba(29, 29, 31, .92);
+    }
+
+    .hero-en {
+      margin-top: 7px;
+      font-size: clamp(18px, 2.18vw, 30px);
+      line-height: 1.12;
+      letter-spacing: -0.026em;
+      font-weight: 400;
+      color: rgba(29, 29, 31, .56);
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      margin-top: 18px;
+      color: rgba(29, 29, 31, .50);
+      font-size: 14px;
+      line-height: 1.76;
+      letter-spacing: .005em;
+    }
+
+    .breadcrumb {
+      margin-bottom: 16px;
+      color: rgba(29, 29, 31, .48);
+      font-size: 12px;
+      font-weight: 520;
+    }
+
+    .breadcrumb b {
+      font-weight: 680;
+    }
+
+    .industry-section {
+      padding: 30px 36px;
+    }
+
+    .industry-header {
+      margin-bottom: 20px;
+    }
+
+    .industry-header h2 {
+      margin: 0;
+      font-size: clamp(18px, 1.65vw, 22px);
+      line-height: 1.24;
+      letter-spacing: -0.028em;
+      font-weight: 670;
+      color: rgba(29, 29, 31, .90);
+      gap: 10px;
+    }
+
+    .industry-num {
+      font-size: clamp(19px, 1.75vw, 23px);
+      font-style: italic;
+      font-weight: 460;
+      color: rgba(7, 102, 235, .78);
+      letter-spacing: -0.025em;
+    }
+
+    .industry-sub {
+      margin: 7px 0 0 34px;
+      color: rgba(29, 29, 31, .48);
+      font-size: 13px;
+      line-height: 1.62;
+      font-weight: 420;
+    }
+
+    .project-grid {
+      gap: 14px;
+    }
+
+    .project-card {
+      padding: 19px 21px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 84% 18%, rgba(223, 255, 79, .09), transparent 40%),
+        radial-gradient(circle at 16% 84%, rgba(158, 203, 255, .10), transparent 44%),
+        rgba(255, 255, 255, .54);
+    }
+
+    .project-card:hover {
+      background:
+        radial-gradient(circle at 84% 18%, rgba(223, 255, 79, .14), transparent 42%),
+        radial-gradient(circle at 16% 84%, rgba(158, 203, 255, .15), transparent 46%),
+        rgba(255, 255, 255, .74);
+      box-shadow: 0 16px 42px -14px rgba(7, 102, 235, .16);
+    }
+
+    .project-title {
+      font-size: 15px;
+      line-height: 1.38;
+      font-weight: 650;
+      letter-spacing: -0.018em;
+      color: rgba(29, 29, 31, .86);
+      margin-bottom: 9px;
+    }
+
+    .project-desc {
+      font-size: 13px;
+      line-height: 1.68;
+      color: rgba(29, 29, 31, .52);
+      font-weight: 420;
+    }
+
+    .side-title,
+    .aside-title {
+      color: rgba(29, 29, 31, .38);
+      font-size: 11.5px;
+      letter-spacing: .11em;
+      font-weight: 680;
+    }
+
+    .side a,
+    .quick a {
+      font-size: 13px;
+      font-weight: 610;
+      color: rgba(29, 29, 31, .68);
+    }
+
+    .notice time {
+      color: rgba(29, 29, 31, .38);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .notice a {
+      color: rgba(29, 29, 31, .78);
+      font-size: 13px;
+      line-height: 1.58;
+      font-weight: 620;
+    }
+
+    .stat-card {
+      background:
+        radial-gradient(circle at 80% 20%, rgba(223, 255, 79, .16), transparent 44%),
+        radial-gradient(circle at 18% 82%, rgba(158, 203, 255, .16), transparent 48%),
+        rgba(255, 255, 255, .56) !important;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      font-weight: 720;
+      color: rgba(7, 102, 235, .88) !important;
+    }
+
+    .stat-label {
+      color: rgba(29, 29, 31, .48);
+      font-size: 12px;
+      font-weight: 560;
+    }
+
+    footer {
+      margin-top: 42px;
+      padding: 24px 2px 0;
+      border-top: 1px solid var(--line);
+      display: block;
+      text-align: center;
+      color: rgba(29, 29, 31, .46);
+      font-size: 12px;
+      line-height: 1.9;
+      letter-spacing: .01em;
+      background: transparent;
+    }
+
+    .footer-info {
+      margin: 0 auto;
+      width: min(760px, 92vw);
+    }
+
+    @media (max-width: 760px) {
+      .hero {
+        padding: 50px 0 30px;
+      }
+
+      h1 {
+        font-size: clamp(30px, 9.8vw, 44px);
+      }
+
+      .hero-en {
+        font-size: clamp(17px, 5.8vw, 25px);
+      }
+
+      .industry-section {
+        padding: 24px 20px;
+      }
+
+      .industry-sub {
+        margin-left: 0;
+      }
+    }
+
+  
+
+/* --- Unified homepage-style top navigation across linked pages --- */
+.unified-site-nav {
+  min-height: 76px !important;
+  z-index: 120 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  border: 1px solid rgba(35, 72, 95, .10) !important;
+  border-radius: 999px !important;
+  padding: 10px 14px 10px 18px !important;
+  background: rgba(255,255,255,.62) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  backdrop-filter: blur(24px) !important;
+  box-shadow: 0 22px 70px rgba(65, 112, 148, .09) !important;
+  overflow: hidden !important;
+  color: #0b0d10 !important;
+}
+body > .unified-site-nav {
+  position: fixed !important;
+  top: 28px !important;
+  left: 38px !important;
+  right: 38px !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+.page > .unified-site-nav {
+  position: sticky !important;
+  top: 24px !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+.unified-site-nav .nav-home {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: max-content !important;
+  height: 42px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  color: rgba(11,13,16,.76) !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em !important;
+  background: rgba(255,255,255,.46) !important;
+  transition: background .25s ease, transform .25s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav .nav-home:hover {
+  background: rgba(255,255,255,.78) !important;
+  transform: translateY(-1px) !important;
+}
+.unified-site-nav .nav-menu-drawer {
+  position: absolute !important;
+  top: 50% !important;
+  right: 70px !important;
+  z-index: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  max-width: min(880px, calc(100vw - 150px)) !important;
+  height: 48px !important;
+  padding: 5px 8px !important;
+  border: 1px solid rgba(11,11,13,.07) !important;
+  border-radius: 999px !important;
+  background: rgba(250,253,255,.76) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  backdrop-filter: blur(18px) !important;
+  box-shadow: 0 16px 46px rgba(82, 135, 168, .10) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translate(34px, -50%) scaleX(.78) !important;
+  transform-origin: right center !important;
+  transition: opacity .36s cubic-bezier(.2,.85,.2,1), transform .52s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav.is-menu-open .nav-menu-drawer {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translate(0, -50%) scaleX(1) !important;
+}
+.unified-site-nav .nav-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 38px !important;
+  padding: 0 11px !important;
+  border-radius: 999px !important;
+  color: rgba(11,11,13,.76) !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 620 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
+  transform: translateX(24px) !important;
+  background: transparent !important;
+  border: 0 !important;
+  transition: background .25s ease, color .25s ease, opacity .34s cubic-bezier(.2,.85,.2,1), transform .44s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav.is-menu-open .nav-link { opacity: 1 !important; transform: translateX(0) !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(1) { transition-delay: .02s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(2) { transition-delay: .04s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(3) { transition-delay: .06s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(4) { transition-delay: .08s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(5) { transition-delay: .10s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(6) { transition-delay: .12s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(7) { transition-delay: .14s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(8) { transition-delay: .16s !important; }
+.unified-site-nav .nav-link:hover,
+.unified-site-nav .nav-link.is-active {
+  opacity: 1 !important;
+  background: rgba(11,11,13,.055) !important;
+  color: rgba(11,11,13,.9) !important;
+}
+.unified-site-nav .nav-right {
+  position: relative !important;
+  z-index: 4 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+.unified-site-nav .menu-toggle {
+  width: 46px !important;
+  height: 46px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(11,11,13,.09) !important;
+  border-radius: 50% !important;
+  background: rgba(252,254,255,.82) !important;
+  cursor: pointer !important;
+  box-shadow: 0 10px 28px rgba(82, 135, 168, .10) !important;
+  transition: transform .3s cubic-bezier(.2,.85,.2,1), background .3s cubic-bezier(.2,.85,.2,1) !important;
+  padding: 0 !important;
+}
+.unified-site-nav .menu-toggle:hover { transform: translateY(-1px) !important; background: rgba(255,255,255,.95) !important; }
+.unified-site-nav .menu-toggle-lines { position: relative !important; width: 18px !important; height: 12px !important; display: block !important; }
+.unified-site-nav .menu-toggle-lines::before,
+.unified-site-nav .menu-toggle-lines::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 0 !important;
+  width: 18px !important;
+  height: 2px !important;
+  border-radius: 999px !important;
+  background: #056dff !important;
+  transition: transform .35s cubic-bezier(.2,.85,.2,1), top .35s cubic-bezier(.2,.85,.2,1), width .35s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav .menu-toggle-lines::before { top: 1px !important; }
+.unified-site-nav .menu-toggle-lines::after { top: 9px !important; width: 13px !important; }
+.unified-site-nav.is-menu-open .menu-toggle-lines::before { top: 5px !important; transform: rotate(45deg) !important; }
+.unified-site-nav.is-menu-open .menu-toggle-lines::after { top: 5px !important; width: 18px !important; transform: rotate(-45deg) !important; }
+@media (max-width: 1120px) {
+  .unified-site-nav { border-radius: 34px !important; overflow: visible !important; }
+  .unified-site-nav .nav-menu-drawer {
+    top: calc(100% + 10px) !important;
+    right: 0 !important;
+    max-width: min(720px, calc(100vw - 76px)) !important;
+    height: auto !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    padding: 10px !important;
+    border-radius: 26px !important;
+    transform: translate(24px, -8px) scale(.96) !important;
+  }
+  .unified-site-nav.is-menu-open .nav-menu-drawer { transform: translate(0, 0) scale(1) !important; }
+}
+@media (max-width: 760px) {
+  body > .unified-site-nav { top: 18px !important; left: 14px !important; right: 14px !important; }
+  .page > .unified-site-nav { top: 12px !important; }
+  .unified-site-nav { padding: 10px 10px 12px 16px !important; }
+  .unified-site-nav .nav-home { font-size: 12px !important; padding: 0 12px !important; }
+  .unified-site-nav .nav-menu-drawer {
+    max-width: calc(100vw - 28px) !important;
+    width: calc(100vw - 28px) !important;
+    right: -10px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .unified-site-nav .nav-link { justify-content: center !important; background: rgba(255,255,255,.62) !important; }
+}
+
+
+/* === Color sync with homepage: muted blue typography only; layout and functions unchanged === */
+:root {
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #6B8BA3 !important;
+  --blue: #6F97B2 !important;
+  --accent: #6F97B2 !important;
+  --theme: #6F97B2 !important;
+  --theme-dark: #476F8A !important;
+  --theme-light: #DCEBF4 !important;
+  --blue-soft: rgba(111, 151, 178, .10) !important;
+  --line: rgba(72, 108, 134, .16) !important;
+}
+
+body {
+  color: #476F8A !important;
+}
+
+body * {
+  text-shadow: none !important;
+}
+
+body :where(div, span, p, a, li, button, small, time, label, input, textarea, select, b, strong, em) {
+  color: #476F8A !important;
+}
+
+body :where(h1, h2, h3, h4, h5, h6, .title-cn, .title-en, .hero-title, .hero-title-cn, .hero-title-en, .hero-title-school, .brand, .num, .section-title h3, .news-item h3, .list-header h2, .card h4, .card h3, .modal-copy h2) {
+  color: #2E5A78 !important;
+}
+
+body :where(.muted, .sub, .desc, .hero-copy, .hero-en, .label, .kicker, .breadcrumb, .caption, .date, .notice time, footer, footer *, .aside-title, .side-title, .detail-meta, .meta, .en) {
+  color: #6B8BA3 !important;
+}
+
+body :where(.carousel-slide .slide-title, .carousel-slide .slide-desc, .carousel-slide .slide-tag, .hero-visual *, .cover *, .image-hero *, .banner *) {
+  color: #EEF6FA !important;
+}
+
+body :where(a:hover, .nav-link:hover, .nav-link.active, .nav-link.is-active, .active, .breadcrumb b, .more-link, .arrow) {
+  color: #2E5A78 !important;
+}
+
+body :where(.pager a.active, .tag, .pill, .btn-primary) {
+  color: #EEF6FA !important;
+}
+
+</style>
+
+<style id="final-homepage-blue-color-fix">
+/* Final typography color fix — only color/contrast; no layout, content, or interaction changes */
+:root {
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #5F8198 !important;
+  --blue: #6F97B2 !important;
+  --accent: #6F97B2 !important;
+  --theme: #6F97B2 !important;
+  --theme-dark: #476F8A !important;
+  --theme-light: #DCEBF4 !important;
+  --blue-soft: rgba(111, 151, 178, .11) !important;
+  --line: rgba(72, 108, 134, .16) !important;
+  --title-ink: #2E5A78 !important;
+  --title-soft: #5F8198 !important;
+  --body-soft: #5F8198 !important;
+}
+
+html, body {
+  color: #476F8A !important;
+}
+
+body * {
+  text-shadow: none !important;
+}
+
+/* 通用正文文字 */
+body :is(p, li, a, span, div, button, small, time, label, input, textarea, select, td, th, b, strong, em) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* 所有标题、主视觉标题、卡片标题、数字标题 */
+body :is(h1, h2, h3, h4, h5, h6,
+  [class*="title"], [class*="Title"], [class*="headline"], [class*="Headline"],
+  [class*="heading"], [class*="Heading"], [class*="brand"], [class*="Brand"],
+  [class*="name"], [class*="Name"], [class*="num"], [class*="Num"],
+  .hero-title, .hero-title-cn, .hero-title-en, .hero-title-school,
+  .title-cn, .title-en, .section-title, .section-title *,
+  .list-header h2, .news-item h3, .card h3, .card h4, .modal-copy h2) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  text-shadow: none !important;
+}
+
+/* 副标题、说明文字、元信息：比上一版加深，避免发浅 */
+body :is(.muted, .sub, .desc, .hero-copy, .hero-en, .label, .kicker, .breadcrumb,
+  .caption, .date, .meta, .en, .notice time, footer, footer *,
+  [class*="copy"], [class*="Copy"], [class*="desc"], [class*="Desc"],
+  [class*="meta"], [class*="Meta"], [class*="caption"], [class*="Caption"],
+  [class*="sub"], [class*="Sub"], [class*="kicker"], [class*="Kicker"]) {
+  color: #5F8198 !important;
+  -webkit-text-fill-color: #5F8198 !important;
+  text-shadow: none !important;
+}
+
+/* 玻璃/白色面板里的文本更深，提升可读性 */
+body :is(.main, .aside, .side, .panel, .card, .content, .list, .news-item, .quick, .notice, .breadcrumb) * {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+body :is(.main, .aside, .side, .panel, .card, .content, .list, .news-item, .quick, .notice, .breadcrumb)
+  :is(h1, h2, h3, h4, h5, h6, [class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"]) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+/* 图片/深色封面上的文字保持浅蓝白，保证在图像上清楚 */
+body :is(.carousel-slide, .slide-content, .cover, .banner, .image-hero, .hero-visual, .visual, .poster, .thumbnail)
+  :is(h1, h2, h3, h4, p, span, a, b, strong, small, div, [class*="title"], [class*="Title"], [class*="tag"], [class*="Tag"], [class*="desc"], [class*="Desc"]) {
+  color: #EEF6FA !important;
+  -webkit-text-fill-color: #EEF6FA !important;
+  text-shadow: none !important;
+}
+
+/* 链接 hover / active */
+body :is(a:hover, .nav-link:hover, .nav-link.active, .nav-link.is-active, .active,
+  .breadcrumb b, .more-link, .arrow, .side a:hover, .side a.active, .quick a:hover) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+/* 按钮深底情况 */
+body :is(.pager a.active, .tag, .pill, .btn-primary, .intro-btn:hover) {
+  color: #EEF6FA !important;
+  -webkit-text-fill-color: #EEF6FA !important;
+}
+</style>
+
+
+<style id="final-hover-soften-fix">
+/* Final hover row fix — target clickable controls only, never the whole row/container */
+:root {
+  --hover-soft-bg: rgba(111, 151, 178, .12);
+  --hover-soft-bg-strong: rgba(111, 151, 178, .16);
+  --hover-soft-border: rgba(72, 108, 134, .18);
+  --hover-soft-text: #2E5A78;
+}
+
+/* 容器本身不允许出现 hover 背景，避免整行底色 */
+body :is(
+  .filter-tabs,
+  .level-filter,
+  .category-tabs,
+  .category-filter,
+  .tab-list,
+  .tabs,
+  .filter-list,
+  .button-row,
+  .button-group,
+  .controls,
+  .toolbar,
+  .search-container
+),
+body :is(
+  .filter-tabs,
+  .level-filter,
+  .category-tabs,
+  .category-filter,
+  .tab-list,
+  .tabs,
+  .filter-list,
+  .button-row,
+  .button-group,
+  .controls,
+  .toolbar,
+  .search-container
+):hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 默认按钮/标签状态 */
+body :is(
+  button,
+  a.tab-btn,
+  button.tab-btn,
+  .level-tag,
+  a.filter-tag,
+  button.filter-tag,
+  a.filter-btn,
+  button.filter-btn,
+  a.category-tab,
+  button.category-tab,
+  a.category-btn,
+  button.category-btn,
+  a.chip,
+  button.chip,
+  a.tag,
+  button.tag,
+  a.pill,
+  button.pill,
+  .side a,
+  .quick a,
+  .pager a,
+  .nav-link,
+  .intro-btn
+) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  border-color: var(--hover-soft-border) !important;
+}
+
+/* 仅实际按钮 hover/active 变浅色，不作用于父级整行 */
+body :is(
+  button:hover,
+  button.active,
+  button.is-active,
+  a.tab-btn:hover,
+  a.tab-btn.active,
+  button.tab-btn:hover,
+  button.tab-btn.active,
+  .level-tag:hover,
+  .level-tag.active,
+  .level-tag.active-all,
+  a.filter-tag:hover,
+  a.filter-tag.active,
+  button.filter-tag:hover,
+  button.filter-tag.active,
+  a.filter-btn:hover,
+  a.filter-btn.active,
+  button.filter-btn:hover,
+  button.filter-btn.active,
+  a.category-tab:hover,
+  a.category-tab.active,
+  button.category-tab:hover,
+  button.category-tab.active,
+  a.category-btn:hover,
+  a.category-btn.active,
+  button.category-btn:hover,
+  button.category-btn.active,
+  a.chip:hover,
+  a.chip.active,
+  button.chip:hover,
+  button.chip.active,
+  a.tag:hover,
+  a.tag.active,
+  button.tag:hover,
+  button.tag.active,
+  a.pill:hover,
+  a.pill.active,
+  button.pill:hover,
+  button.pill.active,
+  .side a:hover,
+  .side a.active,
+  .quick a:hover,
+  .quick a.active,
+  .pager a:hover,
+  .pager a.active,
+  .nav-link:hover,
+  .nav-link.active,
+  .nav-link.is-active,
+  .intro-btn:hover
+) {
+  background: var(--hover-soft-bg) !important;
+  color: var(--hover-soft-text) !important;
+  -webkit-text-fill-color: var(--hover-soft-text) !important;
+  border-color: var(--hover-soft-border) !important;
+  box-shadow: 0 8px 24px rgba(72, 108, 134, .07) !important;
+}
+
+/* 荣誉奖项页筛选按钮单独精修 */
+body .filter-tabs .tab-btn,
+body .level-filter .level-tag {
+  display: inline-flex;
+  width: auto !important;
+  background: rgba(255,255,255,.54) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  border: 1px solid rgba(72, 108, 134, .12) !important;
+  box-shadow: none !important;
+}
+
+body .filter-tabs .tab-btn:hover,
+body .filter-tabs .tab-btn.active,
+body .level-filter .level-tag:hover,
+body .level-filter .level-tag.active,
+body .level-filter .level-tag.active-all {
+  background: rgba(111, 151, 178, .14) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  border-color: rgba(72, 108, 134, .18) !important;
+  box-shadow: 0 8px 24px rgba(72, 108, 134, .07) !important;
+}
+
+/* 防止父级因为旧样式残留显示整行背景 */
+body .filter-tabs:hover *,
+body .level-filter:hover * {
+  box-shadow: none;
+}
+
+/* 不影响轮播圆点/箭头 */
+body :is(.carousel-btn, .carousel-indicators button) {
+  -webkit-text-fill-color: currentColor !important;
+}
+</style>
+
+</head>
+<body>
+  <div class="page">
+    <header class="nav unified-site-nav" id="siteNav">
+  <a class="nav-home" href="./index.html#home">School of Design</a>
+  <div class="nav-menu-drawer" id="navMenu" aria-hidden="true" aria-label="主导航">
+      <a class="nav-link" href="./index.html#card-0">新闻动态</a>
+      <a class="nav-link" href="./index.html#card-1">教学科研</a>
+      <a class="nav-link" href="./index.html#card-2">学院概况</a>
+      <a class="nav-link" href="./index.html#card-3">学生天地</a>
+      <a class="nav-link" href="./index.html#card-4">数字展厅</a>
+      <a class="nav-link" href="./index.html#card-5">社会服务</a>
+      <a class="nav-link is-active" href="./index.html#card-6">校友&合作</a>
+      <a class="nav-link" href="./index.html#card-7">党群工作</a>
+  </div>
+  <div class="nav-right">
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="展开目录" aria-controls="navMenu" aria-expanded="false">
+      <span class="menu-toggle-lines"></span>
+    </button>
+  </div>
+</header>
+
+    <main>
+      <section class="hero">
+        <div class="breadcrumb">首页 <span>/</span> 校友&合作 <span>/</span> <b>行业链接</b></div>
+        <h1>行业链接<span class="hero-en">Industry Connections</span></h1>
+        <p class="hero-copy">对接多元产业领域，搭建设计教育与行业实践的桥梁，推动设计成果转化与创新人才培养。</p>
+      </section>
+
+      <section class="layout">
+        <aside class="side" aria-label="行业分类">
+          <h2 class="side-title">Industries</h2>
+          <a class="active" href="#culture">文创品牌 <span>01</span></a>
+          <a href="#aerospace">航天科技 <span>02</span></a>
+          <a href="#food">食品消费 <span>03</span></a>
+          <a href="#fashion">时尚商业 <span>04</span></a>
+          <a href="#home">家居空间 <span>05</span></a>
+          <a href="#industry">智能制造 <span>06</span></a>
+          <a href="./partners.html">合作伙伴 <span>←</span></a>
+        </aside>
+
+        <section class="main" aria-label="行业合作项目">
+          <div id="culture" class="industry-section">
+            <div class="industry-header">
+              <h2><span class="industry-num">01</span> 文创与品牌衍生品行业</h2>
+              <p class="industry-sub">品牌IP打造 · 文化创意产品 · 视觉包装设计</p>
+            </div>
+            <div class="project-grid">
+              <a href="#" class="project-card">
+                <div class="project-title">高端汽车品牌衍生品设计</div>
+                <div class="project-desc">与捷豹、路虎、奥迪等汽车品牌合作，开展品牌周边、车主礼品、文化衍生品的全案设计研发。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">文旅文创产品开发</div>
+                <div class="project-desc">联合申迪集团、文旅景区，打造地域文化IP、主题乐园周边、城市伴手礼等文创产品体系。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">品牌视觉与包装设计</div>
+                <div class="project-desc">服务快消、文具、食品等行业品牌，提供视觉识别系统、包装创新、品牌升级设计服务。</div>
+              </a>
+            </div>
+          </div>
+
+          <div id="aerospace" class="industry-section">
+            <div class="industry-header">
+              <h2><span class="industry-num">02</span> 航天科技设计行业</h2>
+              <p class="industry-sub">太空场景设计 · 航天装备 · 数字孪生</p>
+            </div>
+            <div class="project-grid">
+              <a href="#" class="project-card">
+                <div class="project-title">太空场景与空间设计</div>
+                <div class="project-desc">模拟太空工作、生活、旅行场景的构筑物设计，探索极端环境下的人居空间解决方案。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">航天装备与文创设计</div>
+                <div class="project-desc">航空航天技术民用转化设计、航天科普课程研发、航天文化IP与文创产品开发。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">数字太空建造研究</div>
+                <div class="project-desc">结合数字孪生、参数化设计技术，开展虚拟太空场景与数字建造技术的交叉研究。</div>
+              </a>
+            </div>
+          </div>
+
+          <div id="food" class="industry-section">
+            <div class="industry-header">
+              <h2><span class="industry-num">03</span> 食品与消费行业</h2>
+              <p class="industry-sub">食品产业升级 · 新零售空间 · 体验设计</p>
+            </div>
+            <div class="project-grid">
+              <a href="#" class="project-card">
+                <div class="project-title">食品产业设计升级</div>
+                <div class="project-desc">依托食品设计学院，推动食品外观、包装、体验、品牌全链条设计，助力食品产业供给侧升级。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">新零售餐饮空间设计</div>
+                <div class="project-desc">为餐饮品牌提供门店空间设计、消费场景打造、新零售体验设计一体化服务。</div>
+              </a>
+            </div>
+          </div>
+
+          <div id="fashion" class="industry-section">
+            <div class="industry-header">
+              <h2><span class="industry-num">04</span> 时尚与商业行业</h2>
+              <p class="industry-sub">品牌孵化 · 商业落地 · 秀场发布</p>
+            </div>
+            <div class="project-grid">
+              <a href="#" class="project-card">
+                <div class="project-title">学生品牌商业落地</div>
+                <div class="project-desc">联合BFC外滩金融中心，支持学生原创时尚品牌开设线下实体店、发布时装秀，对接商业资源。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">时尚产业人才培养</div>
+                <div class="project-desc">与上海服装集团合作，开展版型工艺、品牌运营、秀场策划等实战型人才联合培养。</div>
+              </a>
+            </div>
+          </div>
+
+          <div id="home" class="industry-section">
+            <div class="industry-header">
+              <h2><span class="industry-num">05</span> 家居与空间设计行业</h2>
+              <p class="industry-sub">家居产业孵化 · 室内设计 · 软装陈设</p>
+            </div>
+            <div class="project-grid">
+              <a href="#" class="project-card">
+                <div class="project-title">家居设计产业孵化</div>
+                <div class="project-desc">与中成智谷·原创家平台合作，孵化学生家居设计品牌，推动设计成果市场化转化。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">室内与软装设计实践</div>
+                <div class="project-desc">联合家居品牌与设计工作室，开展住宅空间、商业空间、软装陈设等项目实践教学。</div>
+              </a>
+            </div>
+          </div>
+
+          <div id="industry" class="industry-section">
+            <div class="industry-header">
+              <h2><span class="industry-num">06</span> 工业与智能制造行业</h2>
+              <p class="industry-sub">具身智能 · 工业设计 · 成果转化</p>
+            </div>
+            <div class="project-grid">
+              <a href="#" class="project-card">
+                <div class="project-title">具身智能创新设计</div>
+                <div class="project-desc">聚焦智能机器人、人机交互、实体AI产品的设计研究，推动工业设计与人工智能深度融合。</div>
+              </a>
+              <a href="#" class="project-card">
+                <div class="project-title">创新设计成果转化</div>
+                <div class="project-desc">依托中国好设计平台，对接制造业资源，推动优秀工业设计成果落地与产业化。</div>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <aside class="aside" aria-label="行业数据与资讯">
+          <h2 class="aside-title">行业概览</h2>
+          <div class="stat-card">
+            <div class="stat-number">6</div>
+            <div class="stat-label">核心行业领域</div>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(223,255,79,.15), rgba(7,102,235,.06));">
+            <div class="stat-number" style="color: #0b0d10;">30+</div>
+            <div class="stat-label">落地合作项目</div>
+          </div>
+
+          <h2 class="aside-title" style="margin-top: 24px;">行业资讯</h2>
+          <div class="notice">
+            <time>2026.06.15</time>
+            <a href="#">太空设计联合实验室入选上海市前沿交叉研究平台</a>
+          </div>
+          <div class="notice">
+            <time>2026.05.30</time>
+            <a href="#">设计学院学生文创作品斩获国际设计大奖</a>
+          </div>
+          <div class="notice">
+            <time>2026.05.12</time>
+            <a href="#">食品设计学院与多家食品企业签署合作协议</a>
+          </div>
+          <div class="notice">
+            <time>2026.04.20</time>
+            <a href="#">时尚设计专业学生作品亮相上海时装周</a>
+          </div>
+
+          <div class="quick">
+            <a href="#">项目合作咨询 →</a>
+            <a href="#">学生实习对接 →</a>
+            <a href="#">设计服务指南 →</a>
+          </div>
+        </aside>
+      </section>
+
+      <footer>
+        <div class="footer-info">
+          ©️2026华东师范大学设计学院<br>
+          地址:上海市普陀区中山北路3663号<br>
+          电话:+86-21-62237313<br>
+          传真:+86-21-62606775<br>
+          邮箱:DESIGN@DESIGN.ECNU.EDU.CN
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const nav = document.getElementById('siteNav');
+    const toggle = document.getElementById('menuToggle');
+    toggle.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('is-menu-open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  </script>
+
+<script>
+(function(){
+  const nav = document.querySelector('.unified-site-nav');
+  if (!nav) return;
+  const toggle = nav.querySelector('.menu-toggle');
+  const menu = nav.querySelector('.nav-menu-drawer');
+  function closeUnifiedMenu(){
+    nav.classList.remove('is-menu-open');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', '展开目录');
+    }
+    if (menu) menu.setAttribute('aria-hidden', 'true');
+  }
+  if (toggle && menu) {
+    toggle.addEventListener('click', function(event){
+      event.stopPropagation();
+      const isOpen = nav.classList.toggle('is-menu-open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.setAttribute('aria-label', isOpen ? '收起目录' : '展开目录');
+      menu.setAttribute('aria-hidden', String(!isOpen));
+    });
+    document.addEventListener('click', function(event){
+      if (!nav.contains(event.target) && nav.classList.contains('is-menu-open')) closeUnifiedMenu();
+    });
+    document.addEventListener('keydown', function(event){
+      if (event.key === 'Escape') closeUnifiedMenu();
+    });
+  }
+})();
+</script>
+
+
+
+<script id="unified-menu-hotfix">
+(function () {
+  function setupUnifiedMenuHotfix() {
+    const nav = document.querySelector('.unified-site-nav');
+    const toggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
+    if (!nav || !toggle || !navMenu || toggle.dataset.hotfixBound === 'true') return;
+    toggle.dataset.hotfixBound = 'true';
+
+    function setMenuState(isOpen) {
+      nav.classList.toggle('is-menu-open', isOpen);
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.setAttribute('aria-label', isOpen ? '收起目录' : '展开目录');
+      navMenu.setAttribute('aria-hidden', String(!isOpen));
+    }
+
+    function toggleMenu(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      setMenuState(!nav.classList.contains('is-menu-open'));
+    }
+
+    // Capture phase binding prevents older duplicated click handlers from toggling twice.
+    toggle.addEventListener('click', toggleMenu, true);
+
+    navMenu.addEventListener('click', function (event) {
+      const link = event.target.closest('a');
+      if (link) setMenuState(false);
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!nav.contains(event.target)) setMenuState(false);
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') setMenuState(false);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupUnifiedMenuHotfix);
+  } else {
+    setupUnifiedMenuHotfix();
+  }
+})();
+</script>
+
+</body>
+</html>

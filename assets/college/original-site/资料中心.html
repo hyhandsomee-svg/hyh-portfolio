@@ -1,0 +1,2371 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能体驱动的设计学院资料中心</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        --blue: #0766eb;
+        --lime: #cdff05;
+        --ink: #15171c;
+        --muted: rgba(21, 23, 28, 0.54);
+        --grid: rgba(7, 102, 235, 0.055);
+        --paper: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        min-width: 1440px;
+        min-height: 1080px;
+      }
+
+      body {
+        margin: 0;
+        overflow: auto;
+        color: var(--ink);
+        background: #f7faf8;
+        font-family:
+          "Helvetica Neue", Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei",
+          sans-serif;
+      }
+
+      .stage {
+        position: relative;
+        width: 1440px;
+        height: 1080px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 53% 50%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.36) 42%, transparent 72%),
+          linear-gradient(rgba(7, 102, 235, 0.048) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(7, 102, 235, 0.048) 1px, transparent 1px),
+          linear-gradient(rgba(7, 102, 235, 0.018) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(7, 102, 235, 0.018) 1px, transparent 1px),
+          linear-gradient(180deg, #fbfdfb, #f2f6f4);
+        background-size: auto, 80px 80px, 80px 80px, 20px 20px, 20px 20px, auto;
+      }
+
+      .stage::before {
+        content: "";
+        position: absolute;
+        inset: 36px;
+        border: 1px solid rgba(7, 102, 235, 0.07);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.92),
+          0 24px 70px rgba(12, 32, 72, 0.07);
+        pointer-events: none;
+      }
+
+      .noise {
+        position: absolute;
+        inset: 0;
+        opacity: 0.11;
+        pointer-events: none;
+        background-image:
+          radial-gradient(circle, rgba(7, 102, 235, 0.16) 0 0.65px, transparent 0.7px),
+          radial-gradient(circle, rgba(7, 102, 235, 0.08) 0 0.45px, transparent 0.5px);
+        background-size: 11px 11px, 19px 19px;
+        mix-blend-mode: multiply;
+      }
+
+      .mono,
+      .kicker,
+      .data-line {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .agent-area {
+        position: absolute;
+        left: 74px;
+        top: 274px;
+        z-index: 12;
+        width: 420px;
+        transition: top 0.72s cubic-bezier(0.18, 0.86, 0.2, 1);
+      }
+
+      .stage.has-results .agent-area {
+        top: 132px;
+      }
+
+      h1 {
+        margin: 0 0 22px;
+        color: var(--ink);
+        font-size: 40px;
+        line-height: 1;
+        letter-spacing: 0;
+        font-weight: 920;
+      }
+
+      h1 .question {
+        color: var(--blue);
+      }
+
+      .agent-card {
+        position: relative;
+        width: 370px;
+        padding: 20px 18px 16px;
+        border: 1px solid rgba(7, 102, 235, 0.1);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 18px 48px rgba(12, 32, 72, 0.1);
+        backdrop-filter: blur(16px) saturate(125%);
+      }
+
+      .agent-card::before {
+        content: "";
+        display: block;
+        width: 78px;
+        height: 10px;
+        margin: -8px 0 13px 0;
+        border-radius: 999px;
+        background: rgba(7, 102, 235, 0.12);
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        min-height: 72px;
+        padding: 10px 12px;
+        border: 1px solid rgba(7, 102, 235, 0.16);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      textarea {
+        width: 100%;
+        height: 44px;
+        border: 0;
+        outline: 0;
+        resize: none;
+        color: var(--ink);
+        background: transparent;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      textarea::placeholder {
+        color: rgba(21, 23, 28, 0.36);
+      }
+
+      .submit {
+        display: grid;
+        place-items: center;
+        width: 106px;
+        height: 40px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 900;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .chips {
+        display: flex;
+        gap: 9px;
+        margin-top: 12px;
+      }
+
+      .chip {
+        height: 20px;
+        min-width: 72px;
+        padding: 0 10px;
+        border: 1px solid rgba(21, 23, 28, 0.2);
+        border-radius: 999px;
+        background: #fff;
+        color: rgba(21, 23, 28, 0.48);
+        font: inherit;
+        font-size: 10px;
+        font-weight: 760;
+        cursor: pointer;
+        transition:
+          border-color 0.2s ease,
+          background 0.2s ease,
+          color 0.2s ease;
+      }
+
+      .chip.is-primary,
+      .chip:hover {
+        border-color: var(--blue);
+        background: rgba(205, 255, 5, 0.82);
+        color: var(--blue);
+      }
+
+      .skeleton {
+        display: flex;
+        gap: 18px;
+        margin: 16px 18px 0;
+      }
+
+      .skeleton span {
+        width: 78px;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(7, 102, 235, 0.08);
+      }
+
+      .fan-area {
+        position: absolute;
+        left: 338px;
+        top: 32px;
+        z-index: 2;
+        width: 1054px;
+        height: 860px;
+        overflow: hidden;
+      }
+
+      .fan-area::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        z-index: 4;
+        width: 236px;
+        background: linear-gradient(90deg, rgba(247, 250, 248, 0.98), rgba(247, 250, 248, 0));
+        pointer-events: none;
+      }
+
+      .fan-viewport {
+        position: absolute;
+        inset: 0;
+      }
+
+      .wheel-system {
+        position: absolute;
+        left: -18px;
+        top: -14px;
+        width: 1030px;
+        height: 930px;
+        --rotation: 0deg;
+        --wheel-shift-x: 0px;
+      }
+
+      .wheel-system.is-idle .wheel-level.level-1 {
+        animation: wheelIdle 5.8s ease-in-out infinite alternate;
+      }
+
+      @keyframes wheelIdle {
+        from {
+          transform: rotate(-12deg);
+        }
+        to {
+          transform: rotate(12deg);
+        }
+      }
+
+      .wheel-system.is-idle::before {
+        display: none;
+      }
+
+      @keyframes wheelDialIdle {
+        from {
+          transform: rotate(-12deg);
+        }
+        to {
+          transform: rotate(12deg);
+        }
+      }
+
+      .wheel-system::before {
+        content: "";
+        display: none;
+        position: absolute;
+        left: calc(-14px + var(--wheel-shift-x));
+        top: 58px;
+        width: 790px;
+        height: 790px;
+        border-radius: 999px;
+        background:
+          repeating-conic-gradient(from -72deg, rgba(7, 102, 235, 0.028) 0 6.65deg, rgba(7, 102, 235, 0.18) 6.65deg 7.2deg),
+          repeating-conic-gradient(from -72deg, transparent 0 3.25deg, rgba(7, 102, 235, 0.07) 3.25deg 3.36deg, transparent 3.36deg 7.2deg),
+          radial-gradient(circle, transparent 0 148px, rgba(7, 102, 235, 0.12) 149px 150px, transparent 151px 352px, rgba(7, 102, 235, 0.14) 353px 355px, transparent 356px);
+        mask-image: linear-gradient(90deg, transparent 0 37%, #000 39% 100%);
+        opacity: 0.72;
+        pointer-events: none;
+      }
+
+      .sector-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        opacity: 0.76;
+        pointer-events: none;
+        transform: translateX(var(--wheel-shift-x));
+        transform-origin: 381px 453px;
+      }
+
+      .wheel-system.is-idle .sector-layer {
+        animation: wheelDialIdle 5.8s ease-in-out infinite alternate;
+      }
+
+      .sector-arc {
+        fill: none;
+        stroke: rgba(7, 102, 235, 0.17);
+        stroke-linecap: round;
+      }
+
+      .sector-arc.is-outer {
+        stroke-width: 2.2;
+      }
+
+      .sector-arc.is-inner {
+        stroke-width: 1.7;
+      }
+
+      .sector-divider {
+        stroke: rgba(7, 102, 235, 0.16);
+        stroke-width: 1;
+        stroke-dasharray: 4 5;
+        stroke-linecap: round;
+      }
+
+      .sector-divider.is-major {
+        stroke: rgba(7, 102, 235, 0.2);
+        stroke-width: 2.4;
+        stroke-dasharray: none;
+      }
+
+      .wheel-core {
+        position: absolute;
+        left: calc(316px + var(--wheel-shift-x));
+        top: 388px;
+        z-index: 3;
+        display: grid;
+        place-items: center;
+        width: 130px;
+        height: 130px;
+        border: 2px solid var(--blue);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--blue);
+        box-shadow: 0 12px 32px rgba(12, 32, 72, 0.1);
+        text-align: center;
+      }
+
+      .wheel-core span {
+        font-size: 10px;
+        font-weight: 820;
+      }
+
+      .wheel-core strong {
+        display: block;
+        margin-top: 4px;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .wheel-level {
+        position: absolute;
+        left: 381px;
+        top: 453px;
+        z-index: 2;
+        width: 0;
+        height: 0;
+      }
+
+      .containment-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.42s ease 0.88s;
+      }
+
+      .wheel-system.is-complete .containment-layer {
+        opacity: 1;
+      }
+
+      .containment-parent {
+        fill: none;
+        stroke: var(--blue);
+        stroke-width: 1.15;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.42;
+      }
+
+      .containment-spine {
+        fill: none;
+        stroke: var(--lime);
+        stroke-width: 3;
+        stroke-linecap: round;
+        opacity: 0.9;
+      }
+
+      .containment-branch {
+        fill: none;
+        stroke: var(--blue);
+        stroke-width: 1.35;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.58;
+      }
+
+      .containment-node {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 1.8;
+      }
+
+      .wheel-level.level-1 {
+        left: calc(381px + var(--wheel-shift-x));
+        transform: rotate(var(--rotation));
+        transition: transform 0.9s cubic-bezier(0.18, 0.86, 0.2, 1);
+      }
+
+      .wheel-level.level-2,
+      .wheel-level.level-3 {
+        opacity: 0;
+        transform: translateX(-28px);
+        transition:
+          opacity 0.34s ease,
+          transform 0.72s cubic-bezier(0.18, 0.86, 0.2, 1);
+      }
+
+      .wheel-system.is-expanded .wheel-level.level-2 {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .wheel-system.is-complete .wheel-level.level-3 {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .wheel-label {
+        position: absolute;
+        width: var(--w, 184px);
+        min-height: 34px;
+        transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a))) translateY(-50%);
+        transform-origin: left center;
+        color: rgba(21, 23, 28, 0.5);
+        font-size: 12px;
+        font-weight: 820;
+        line-height: 1.12;
+        transition:
+          color 0.28s ease,
+          opacity 0.28s ease,
+          filter 0.28s ease;
+      }
+
+      .wheel-label.is-fixed {
+        left: var(--x);
+        top: var(--y);
+        transform: translateY(-50%);
+      }
+
+      .wheel-label small {
+        display: block;
+        margin-top: 3px;
+        color: rgba(7, 102, 235, 0.46);
+        font-size: 8px;
+        font-weight: 760;
+        line-height: 1.15;
+      }
+
+      .wheel-label.field-label {
+        width: var(--w, 142px);
+        min-height: 22px;
+        color: rgba(21, 23, 28, 0.52);
+        font-size: 9.5px;
+        line-height: 1.06;
+        opacity: 0.82;
+      }
+
+      .wheel-system.is-idle .wheel-label.field-label {
+        padding-left: 8px;
+        border-left: 1px dashed rgba(7, 102, 235, 0.18);
+        transform: rotate(var(--a)) translateX(var(--r)) rotate(-8deg) translateY(-50%);
+      }
+
+      .wheel-label.field-label small {
+        margin-top: 2px;
+        font-size: 7px;
+      }
+
+      .wheel-label.field-label::before {
+        left: -16px;
+        top: 6px;
+        width: 6px;
+        height: 6px;
+      }
+
+      .wheel-label::before {
+        content: "";
+        position: absolute;
+        left: -20px;
+        top: 8px;
+        width: 8px;
+        height: 8px;
+        border: 1px solid rgba(7, 102, 235, 0.58);
+        border-radius: 999px;
+        background: #fff;
+      }
+
+      .wheel-label.is-active,
+      .wheel-label.is-selected {
+        color: var(--blue);
+        opacity: 1;
+        filter: saturate(1.1);
+      }
+
+      .wheel-label.field-label.is-active {
+        font-size: 12px;
+        font-weight: 920;
+      }
+
+      .wheel-label.is-active::before,
+      .wheel-label.is-selected::before {
+        border: 2px solid var(--blue);
+        background: var(--lime);
+      }
+
+      .wheel-label.is-selected {
+        width: var(--w, 250px);
+        padding: 5px 8px;
+        border: 2px solid var(--blue);
+        border-radius: 999px;
+        background: var(--lime);
+        font-size: 11px;
+        box-shadow: 0 8px 18px rgba(7, 102, 235, 0.12);
+      }
+
+      .wheel-label.is-selected::before {
+        left: -17px;
+        top: 10px;
+      }
+
+      .wheel-label.type-label {
+        width: 130px;
+        padding: 8px 12px;
+        border: 2px solid var(--blue);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--blue);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .wheel-label.type-label::before {
+        display: none;
+      }
+
+      .wheel-label.type-label.is-selected {
+        border-color: var(--blue);
+        background: var(--lime);
+        color: var(--blue);
+      }
+
+      .wheel-label.resource-label.is-selected {
+        display: flex;
+        min-height: 50px;
+        flex-direction: column;
+        justify-content: center;
+        padding: 7px 14px;
+        border-color: var(--lime);
+        background: var(--blue);
+        color: #fff;
+        font-size: 11px;
+        line-height: 1.18;
+      }
+
+      .wheel-label.resource-label.is-selected small {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .wheel-label.resource-label.is-selected::before {
+        top: 50%;
+        background: var(--blue);
+        border-color: var(--lime);
+        transform: translateY(-50%);
+        box-shadow: 0 0 0 2px var(--lime);
+      }
+
+      .wheel-caption {
+        position: absolute;
+        left: 425px;
+        top: 104px;
+        z-index: 3;
+        color: rgba(7, 102, 235, 0.42);
+        font-size: 10px;
+        font-weight: 760;
+        letter-spacing: 0.08em;
+      }
+
+      .lock-window {
+        display: none;
+      }
+
+      .data-panel {
+        position: absolute;
+        right: 58px;
+        top: 56px;
+        z-index: 6;
+        display: grid;
+        gap: 6px;
+        min-width: 210px;
+        padding: 13px 16px;
+        border: 1px solid rgba(7, 102, 235, 0.1);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.9);
+        color: rgba(7, 102, 235, 0.72);
+        box-shadow: 0 14px 36px rgba(12, 32, 72, 0.08);
+        backdrop-filter: blur(14px);
+        font-size: 10px;
+      }
+
+      .overview {
+        position: absolute;
+        left: 74px;
+        top: 532px;
+        z-index: 12;
+        width: 370px;
+        max-height: 332px;
+        padding: 16px 16px 14px;
+        border: 1px solid rgba(7, 102, 235, 0.12);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 16px 42px rgba(12, 32, 72, 0.11);
+        backdrop-filter: blur(16px) saturate(125%);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(14px) scale(0.985);
+        transition:
+          opacity 0.42s ease,
+          top 0.72s cubic-bezier(0.18, 0.86, 0.2, 1),
+          transform 0.42s cubic-bezier(0.18, 0.86, 0.2, 1);
+      }
+
+      .stage.has-results .overview {
+        top: 410px;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+      }
+
+      .overview-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: start;
+        margin-bottom: 10px;
+      }
+
+      .overview h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .overview-sub {
+        margin: 6px 0 0;
+        color: rgba(21, 23, 28, 0.55);
+        font-size: 11px;
+        font-weight: 760;
+      }
+
+      .save {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba(21, 23, 28, 0.24);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--blue);
+        font: inherit;
+        font-size: 10px;
+        font-weight: 850;
+      }
+
+      .overview-copy {
+        margin: 0 0 10px;
+        color: rgba(21, 23, 28, 0.58);
+        font-size: 11px;
+        font-weight: 760;
+        line-height: 1.5;
+      }
+
+      .overview-list {
+        display: grid;
+        gap: 7px;
+        max-height: 202px;
+        overflow: auto;
+        padding-right: 5px;
+      }
+
+      .overview-list::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .overview-list::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(7, 102, 235, 0.24);
+      }
+
+      .overview-item {
+        display: grid;
+        grid-template-columns: 36px 1fr auto;
+        gap: 8px;
+        align-items: center;
+        min-height: 56px;
+        padding: 8px 9px;
+        border: 1px solid rgba(7, 102, 235, 0.12);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 6px 18px rgba(12, 32, 72, 0.04);
+      }
+
+      .overview-num {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .overview-title {
+        display: block;
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 920;
+        line-height: 1.25;
+      }
+
+      .overview-meta {
+        display: block;
+        margin-top: 4px;
+        color: rgba(21, 23, 28, 0.52);
+        font-size: 9px;
+        font-weight: 760;
+        line-height: 1.5;
+      }
+
+      .overview-action {
+        min-width: 62px;
+        height: 24px;
+        padding: 0 10px;
+        border: 1px solid var(--blue);
+        border-radius: 999px;
+        background: var(--lime);
+        color: var(--blue);
+        font: inherit;
+        font-size: 9px;
+        font-weight: 920;
+        text-align: center;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 700px) {
+        html,
+        body {
+          width: 100%;
+          min-width: 0;
+          min-height: 100%;
+        }
+
+        body {
+          overflow: auto;
+          background: #f7faf8;
+        }
+
+        .stage {
+          box-sizing: border-box;
+          display: flex;
+          width: 100%;
+          min-height: 100dvh;
+          height: auto;
+          padding: max(26px, env(safe-area-inset-top)) 18px max(30px, env(safe-area-inset-bottom));
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          overflow: visible;
+          transition:
+            padding 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+            gap 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .stage.has-results {
+          justify-content: flex-start;
+          padding-top: max(42px, calc(env(safe-area-inset-top) + 34px));
+          gap: 22px;
+        }
+
+        .stage::before {
+          inset: 20px;
+          border-color: rgba(7, 102, 235, 0.06);
+          box-shadow: none;
+        }
+
+        .noise {
+          opacity: 0.08;
+        }
+
+        .fan-area,
+        .data-panel,
+        .lock-window {
+          display: none;
+        }
+
+        .agent-area {
+          position: relative;
+          left: auto;
+          top: auto;
+          z-index: 12;
+          width: 100%;
+          max-width: 460px;
+          margin: 0 auto;
+        }
+
+        .stage.has-results .agent-area {
+          top: auto;
+        }
+
+        h1 {
+          margin: 0 0 18px;
+          font-size: clamp(35px, 11vw, 48px);
+          line-height: 1.06;
+          letter-spacing: 0;
+        }
+
+        .agent-card {
+          width: 100%;
+          padding: 18px 16px 16px;
+          border-radius: 26px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 18px 44px rgba(12, 32, 72, 0.1);
+        }
+
+        .agent-card::before {
+          width: 92px;
+          height: 10px;
+          margin: -6px 0 15px 0;
+        }
+
+        .composer {
+          grid-template-columns: 1fr;
+          gap: 12px;
+          min-height: 0;
+          padding: 14px;
+          border-radius: 20px;
+        }
+
+        textarea {
+          height: 64px;
+          font-size: 16px;
+          line-height: 1.45;
+        }
+
+        .submit {
+          justify-self: stretch;
+          width: 100%;
+          height: 46px;
+          font-size: 15px;
+        }
+
+        .chips {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .chip {
+          min-width: 0;
+          width: 100%;
+          height: 28px;
+          padding: 0 8px;
+          font-size: 11px;
+        }
+
+        .skeleton {
+          display: none;
+        }
+
+        .overview {
+          position: relative;
+          left: auto;
+          top: auto;
+          z-index: 12;
+          display: none;
+          width: 100%;
+          max-width: 460px;
+          max-height: none;
+          margin: 0 auto;
+          padding: 20px 16px 18px;
+          border-radius: 26px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 18px 44px rgba(12, 32, 72, 0.1);
+          transform: translateY(18px);
+        }
+
+        .stage.has-results .overview {
+          top: auto;
+          display: block;
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0) scale(1);
+        }
+
+        .overview-head {
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+
+        .overview h2 {
+          font-size: 25px;
+          line-height: 1.08;
+        }
+
+        .overview-sub {
+          font-size: 12px;
+        }
+
+        .save {
+          height: 32px;
+          padding: 0 12px;
+          font-size: 11px;
+        }
+
+        .overview-copy {
+          margin-bottom: 12px;
+          font-size: 13px;
+          line-height: 1.55;
+        }
+
+        .overview-list {
+          gap: 10px;
+          max-height: min(430px, calc(100dvh - 430px));
+          min-height: 260px;
+          padding-right: 4px;
+        }
+
+        .overview-item {
+          grid-template-columns: 42px minmax(0, 1fr) auto;
+          gap: 10px;
+          min-height: 74px;
+          padding: 10px;
+          border-radius: 18px;
+        }
+
+        .overview-num {
+          width: 38px;
+          height: 38px;
+          font-size: 14px;
+        }
+
+        .overview-title {
+          font-size: 14px;
+          line-height: 1.25;
+        }
+
+        .overview-meta {
+          font-size: 10px;
+          line-height: 1.45;
+        }
+
+        .overview-action {
+          min-width: 68px;
+          height: 28px;
+          padding: 0 10px;
+          font-size: 10px;
+        }
+      }
+    
+/* === ECNU homepage visual sync + shared top menu; original page functions/content preserved === */
+:root {
+  --blue: #6F97B2 !important;
+  --red: #6F97B2 !important;
+  --signal: #6F97B2 !important;
+  --green: #DDEFC7 !important;
+  --lime: #DDEFC7 !important;
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #6B8BA3 !important;
+  --grid: rgba(72, 108, 134, .055) !important;
+  --paper: #ffffff !important;
+  --line: rgba(72, 108, 134, .16) !important;
+  --ease: cubic-bezier(.2, .85, .2, 1);
+}
+
+html, body {
+  color: #476F8A !important;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.32), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.24), transparent 34%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 42%,#f8fbf3 100%) !important;
+}
+
+body {
+  padding-top: 108px !important;
+  overflow: auto !important;
+}
+
+body * {
+  text-shadow: none !important;
+}
+
+body :is(p, li, a, span, div, button, small, time, label, input, textarea, select, b, strong, em) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body :is(h1, h2, h3, h4, h5, h6,
+  [class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"],
+  [class*="label"], [class*="Label"], [class*="brand"], [class*="Brand"],
+  .path-name, .overview-title, .wheel-core strong, .tooltip strong) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+body :is(.muted, .sub, .desc, .caption, .data-line, .kicker, .mono,
+  [class*="copy"], [class*="Copy"], [class*="desc"], [class*="Desc"],
+  [class*="meta"], [class*="Meta"], [class*="caption"], [class*="Caption"],
+  [class*="sub"], [class*="Sub"], [class*="kicker"], [class*="Kicker"]) {
+  color: #6B8BA3 !important;
+  -webkit-text-fill-color: #6B8BA3 !important;
+}
+
+.stage {
+  background:
+    radial-gradient(circle at 52% 52%, rgba(255,255,255,.96), rgba(255,255,255,.36) 42%, transparent 72%),
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.18), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.18), transparent 34%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 42%,#f8fbf3 100%) !important;
+}
+
+.stage::before {
+  border-color: rgba(72,108,134,.10) !important;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255,255,255,.72), transparent 46%),
+    linear-gradient(rgba(72,108,134,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72,108,134,.055) 1px, transparent 1px),
+    linear-gradient(rgba(72,108,134,.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72,108,134,.028) 1px, transparent 1px) !important;
+  background-size: auto, 96px 96px, 96px 96px, 24px 24px, 24px 24px !important;
+}
+
+/* SVG / visual text sync */
+svg text,
+.label,
+.sub,
+.zone-label,
+.data-tick,
+.step-badge-text {
+  fill: #476F8A !important;
+  stroke: rgba(255,255,255,.78) !important;
+}
+
+.label.root,
+.label.computerroot,
+svg text[class*="root"] {
+  fill: #2E5A78 !important;
+}
+
+.edge,
+.edge.primary,
+.edge.secondary,
+.edge.computer,
+.edge.knowledge,
+.edge.cross,
+.edge.contact,
+.edge.faint,
+.route-edge,
+.bridge-link,
+.ownership-link,
+.sector-arc,
+.sector-divider,
+.containment-parent,
+.containment-branch {
+  stroke: rgba(111,151,178,.32) !important;
+}
+
+.node-core,
+.node-point,
+.containment-node,
+.legend-mark.design,
+.legend-mark.computer {
+  fill: #6F97B2 !important;
+}
+
+.node-core.computer-node,
+.node-core.cross-node,
+.legend-mark.cross,
+.node.path .node-core,
+.wheel-label.is-active::before,
+.wheel-label.is-selected::before {
+  fill: #DDEFC7 !important;
+}
+
+.chat-card,
+.agent-card,
+.composer-glass,
+.composer,
+.path-panel,
+.tooltip,
+.overview,
+.data-panel {
+  background: rgba(255,255,255,.82) !important;
+  border-color: rgba(72,108,134,.14) !important;
+  box-shadow: 0 18px 48px rgba(72,108,134,.08) !important;
+}
+
+.send,
+.submit,
+.overview-num {
+  background: #6F97B2 !important;
+  color: #EEF6FA !important;
+  -webkit-text-fill-color: #EEF6FA !important;
+}
+
+.chip,
+.save,
+.save-path,
+.overview-action,
+.path-tag,
+.agent-status button,
+.wheel-label.type-label,
+.wheel-label.is-selected {
+  background: rgba(255,255,255,.68) !important;
+  border-color: rgba(72,108,134,.18) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+
+.chip:hover,
+.chip.is-primary,
+.path-item.is-hovered,
+.path-item.is-selected-path,
+.wheel-label.is-active,
+.wheel-label.is-selected,
+.wheel-label.type-label.is-selected,
+.overview-action:hover,
+.save:hover,
+.save-path:hover {
+  background: rgba(111,151,178,.14) !important;
+  border-color: rgba(72,108,134,.22) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  box-shadow: 0 8px 24px rgba(72,108,134,.07) !important;
+}
+
+.prompt-copy,
+textarea {
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+.prompt-copy::placeholder,
+textarea::placeholder {
+  color: rgba(71,111,138,.46) !important;
+}
+
+/* Shared top menu copied to match the existing site navigation */
+.site-nav {
+  min-height: 76px;
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  z-index: 10000;
+  width: min(1480px, calc(100% - 48px));
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(72,108,134,.16);
+  border-radius: 999px;
+  padding: 10px 14px 10px 18px;
+  background: rgba(255,255,255,.66);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 22px 70px rgba(65,112,148,.09);
+  overflow: hidden;
+}
+
+.site-nav-home {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 720;
+  letter-spacing: .02em;
+  background: rgba(255,255,255,.50);
+  transition: background .25s ease, transform .25s var(--ease);
+}
+
+.site-nav-home:hover {
+  background: rgba(238,246,250,.86);
+  transform: translateY(-1px);
+}
+
+.site-nav-menu {
+  position: absolute;
+  top: 50%;
+  right: 70px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: min(880px, calc(100vw - 150px));
+  height: 48px;
+  padding: 5px 8px;
+  border: 1px solid rgba(72,108,134,.12);
+  border-radius: 999px;
+  background: rgba(250,253,255,.78);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 16px 46px rgba(82,135,168,.10);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(34px, -50%) scaleX(.78);
+  transform-origin: right center;
+  transition: opacity .34s var(--ease), transform .5s var(--ease);
+}
+
+.site-nav.is-menu-open .site-nav-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -50%) scaleX(1);
+}
+
+.site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 11px;
+  border-radius: 999px;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 620;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: background .25s ease, opacity .34s var(--ease), transform .44s var(--ease);
+}
+
+.site-nav.is-menu-open .site-nav-link { opacity: 1; transform: translateX(0); }
+.site-nav.is-menu-open .site-nav-link:nth-child(1) { transition-delay: .02s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(2) { transition-delay: .04s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(3) { transition-delay: .06s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(4) { transition-delay: .08s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(5) { transition-delay: .10s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(6) { transition-delay: .12s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(7) { transition-delay: .14s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(8) { transition-delay: .16s; }
+
+.site-nav-link:hover,
+.site-nav-link.is-active {
+  background: rgba(238,246,250,.86);
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+.site-nav-right {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.site-menu-toggle {
+  width: 46px;
+  height: 46px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(72,108,134,.14);
+  border-radius: 50%;
+  background: rgba(252,254,255,.82);
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(82,135,168,.10);
+  transition: transform .3s var(--ease), background .3s var(--ease);
+}
+
+.site-menu-toggle:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.95);
+}
+
+.site-menu-toggle-lines {
+  position: relative;
+  width: 18px;
+  height: 12px;
+  display: block;
+}
+
+.site-menu-toggle-lines::before,
+.site-menu-toggle-lines::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #6F97B2;
+  transition: transform .35s var(--ease), top .35s var(--ease), width .35s var(--ease);
+}
+
+.site-menu-toggle-lines::before { top: 1px; }
+.site-menu-toggle-lines::after { top: 9px; width: 13px; }
+.site-nav.is-menu-open .site-menu-toggle-lines::before { top: 5px; transform: rotate(45deg); }
+.site-nav.is-menu-open .site-menu-toggle-lines::after { top: 5px; width: 18px; transform: rotate(-45deg); }
+
+@media (max-width: 1120px) {
+  .site-nav { border-radius: 34px; overflow: visible; }
+  .site-nav-menu {
+    top: calc(100% + 10px);
+    right: 0;
+    max-width: min(720px, calc(100vw - 76px));
+    height: auto;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 10px;
+    border-radius: 26px;
+    transform: translate(24px, -8px) scale(.96);
+  }
+  .site-nav.is-menu-open .site-nav-menu { transform: translate(0, 0) scale(1); }
+}
+
+@media (max-width: 760px) {
+  body { padding-top: 96px !important; }
+  .site-nav {
+    top: 14px;
+    width: calc(100vw - 28px);
+    min-height: 64px;
+    padding: 10px 10px 12px 16px;
+  }
+  .site-nav-home { font-size: 12px; padding: 0 12px; }
+  .site-nav-menu {
+    max-width: calc(100vw - 28px);
+    width: calc(100vw - 28px);
+    right: -10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .site-nav-link { justify-content: center; background: rgba(255,255,255,.62); }
+}
+
+</style>
+  
+<style id="course-resource-gradient-visual-fix">
+/* Final course/resource visual fix:
+   - visual accents follow homepage gradient blue/lime
+   - text stays muted grey-blue
+   - title weights align with other pages
+   - no content/function changes */
+:root {
+  --blue: #9ECBFF !important;
+  --red: #9ECBFF !important;
+  --signal: #9ECBFF !important;
+  --green: #EAFF8F !important;
+  --lime: #EAFF8F !important;
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #6B8BA3 !important;
+  --grid: rgba(126, 170, 204, .075) !important;
+  --line: rgba(126, 170, 204, .16) !important;
+}
+
+/* Background follows the homepage gradient instead of grey-blue UI tint */
+html, body {
+  color: #476F8A !important;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.48), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.38), transparent 34%),
+    radial-gradient(circle at 48% 42%, rgba(214,247,244,.34), transparent 33%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 38%,#f8fbf3 100%) !important;
+}
+
+.stage {
+  background:
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.36), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.30), transparent 34%),
+    radial-gradient(circle at 50% 52%, rgba(255,255,255,.94), rgba(255,255,255,.34) 42%, transparent 72%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 40%,#f8fbf3 100%) !important;
+}
+
+.stage::before {
+  border-color: rgba(158,203,255,.18) !important;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255,255,255,.76), transparent 46%),
+    linear-gradient(rgba(126,170,204,.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126,170,204,.075) 1px, transparent 1px),
+    linear-gradient(rgba(186,214,72,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(186,214,72,.045) 1px, transparent 1px) !important;
+  background-size: auto, 96px 96px, 96px 96px, 24px 24px, 24px 24px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.94),
+    0 24px 70px rgba(65,112,148,.07) !important;
+}
+
+.stage::after {
+  opacity: .08 !important;
+}
+
+/* Text remains grey-blue only */
+body :is(p, li, a, span, div, button, small, time, label, input, textarea, select, b, strong, em) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-shadow: none !important;
+}
+
+body :is(h1, h2, h3, h4, h5, h6,
+  [class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"],
+  .path-name, .overview-title, .wheel-core strong, .tooltip strong,
+  .chat-card h2, .agent-card h2) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  text-shadow: none !important;
+}
+
+/* Title weights aligned with other subpages */
+h1,
+.chat-card h2,
+.agent-card h2,
+.overview h2,
+.path-title,
+.wheel-core strong,
+.tooltip strong,
+.overview-title,
+.path-name,
+body :is([class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"]) {
+  font-weight: 680 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.kicker,
+.agent-kicker,
+.data-line,
+.mono {
+  font-weight: 620 !important;
+  letter-spacing: .06em !important;
+}
+
+/* Keep labels readable but not overly heavy */
+.label,
+.wheel-label,
+.path-tag,
+.overview-action,
+.chip,
+.save,
+.save-path,
+.submit,
+.send {
+  font-weight: 650 !important;
+}
+
+/* Visual accents use homepage gradient colors, not grey-blue */
+.edge.primary,
+.edge.secondary,
+.edge.computer,
+.edge.knowledge,
+.edge.cross,
+.edge.contact,
+.edge.faint,
+.sector-arc,
+.sector-divider,
+.containment-parent,
+.containment-branch {
+  stroke: rgba(126, 170, 204, .30) !important;
+}
+
+.route-edge,
+.bridge-link,
+.containment-spine,
+.graph.has-path .route-edge,
+.graph.has-path .edge.is-route-related {
+  stroke: rgba(186, 214, 72, .70) !important;
+}
+
+.ownership-link {
+  stroke: rgba(126, 170, 204, .46) !important;
+}
+
+.node-core,
+.node-point,
+.legend-mark.design,
+.legend-mark.computer,
+.overview-num {
+  fill: #9ECBFF !important;
+  background: #9ECBFF !important;
+}
+
+.node-core.computer-node,
+.node-core.cross-node,
+.legend-mark.cross,
+.node.path .node-core,
+.wheel-label.is-active::before,
+.wheel-label.is-selected::before,
+.containment-node {
+  fill: #EAFF8F !important;
+}
+
+.node.hover .node-core,
+.node.is-linked-hover .node-core,
+.node.path .node-core {
+  stroke: rgba(126, 170, 204, .72) !important;
+  filter: drop-shadow(0 4px 12px rgba(126,170,204,.18)) !important;
+}
+
+.node.path .node-halo {
+  stroke: rgba(186, 214, 72, .76) !important;
+}
+
+svg text,
+.label,
+.sub,
+.zone-label,
+.data-tick,
+.step-badge-text {
+  fill: #476F8A !important;
+  stroke: rgba(255,255,255,.86) !important;
+}
+
+.label.root,
+.label.computerroot,
+svg text[class*="root"] {
+  fill: #2E5A78 !important;
+}
+
+/* Panels and glass cards remain close to homepage's soft translucent style */
+.chat-card,
+.agent-card,
+.composer-glass,
+.composer,
+.path-panel,
+.tooltip,
+.overview,
+.data-panel {
+  background:
+    radial-gradient(circle at 84% 16%, rgba(235,255,124,.12), transparent 34%),
+    radial-gradient(circle at 18% 78%, rgba(147,199,255,.12), transparent 40%),
+    rgba(255,255,255,.82) !important;
+  border-color: rgba(158,203,255,.20) !important;
+  box-shadow: 0 18px 48px rgba(65,112,148,.08) !important;
+}
+
+/* Buttons / chips use soft background-gradient accents */
+.send,
+.submit {
+  background: linear-gradient(135deg, #9ECBFF, #CFEAF9) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  border-color: rgba(126,170,204,.24) !important;
+}
+
+.chip,
+.save,
+.save-path,
+.overview-action,
+.path-tag,
+.agent-status button,
+.wheel-label.type-label,
+.wheel-label.is-selected {
+  background: rgba(255,255,255,.72) !important;
+  border-color: rgba(158,203,255,.24) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+
+.chip:hover,
+.chip.is-primary,
+.path-item.is-hovered,
+.path-item.is-selected-path,
+.wheel-label.is-active,
+.wheel-label.is-selected,
+.wheel-label.type-label.is-selected,
+.overview-action:hover,
+.save:hover,
+.save-path:hover {
+  background:
+    radial-gradient(circle at 80% 20%, rgba(235,255,124,.38), transparent 46%),
+    rgba(158,203,255,.18) !important;
+  border-color: rgba(126,170,204,.30) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  box-shadow: 0 8px 24px rgba(65,112,148,.08) !important;
+}
+
+.path-item.is-hovered .path-num,
+.path-item.is-selected-path .path-num {
+  border-color: rgba(126,170,204,.54) !important;
+  background: #9ECBFF !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+.path-item.is-hovered .path-tag,
+.path-item.is-selected-path .path-tag,
+.path-tag.role,
+.path-tag.priority {
+  background: rgba(234,255,143,.36) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+
+.prompt-copy,
+textarea {
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+.prompt-copy::placeholder,
+textarea::placeholder {
+  color: rgba(71,111,138,.46) !important;
+}
+
+/* Shared top menu stays the same as other pages */
+.site-nav {
+  background: rgba(255,255,255,.66) !important;
+  border-color: rgba(72,108,134,.16) !important;
+}
+.site-menu-toggle-lines::before,
+.site-menu-toggle-lines::after {
+  background: #6F97B2 !important;
+}
+</style>
+
+
+<style id="resource-circle-and-bg-fix">
+/* Resource Center fine-tune:
+   1) unify RESOURCE / LIBRARY typography inside the circle
+   2) reduce line spacing and center text in the circle
+   3) remove the left-side background color break caused by the fan mask */
+.wheel-core {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 0 !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+}
+
+.wheel-core span,
+.wheel-core strong {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 16px !important;
+  line-height: .95 !important;
+  font-weight: 820 !important;
+  letter-spacing: .08em !important;
+  text-align: center !important;
+}
+
+.wheel-core strong {
+  margin-top: 1px !important;
+}
+
+/* Remove the left gradient mask that created a visible background seam */
+.fan-area::before {
+  display: none !important;
+  opacity: 0 !important;
+  background: transparent !important;
+}
+
+/* Make the canvas background continuous from left to right */
+.stage,
+body {
+  background:
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.48), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.38), transparent 34%),
+    radial-gradient(circle at 48% 42%, rgba(214,247,244,.34), transparent 33%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 38%,#f8fbf3 100%) !important;
+}
+
+.stage::before {
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255,255,255,.72), transparent 46%),
+    linear-gradient(rgba(126,170,204,.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126,170,204,.065) 1px, transparent 1px),
+    linear-gradient(rgba(186,214,72,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(186,214,72,.035) 1px, transparent 1px) !important;
+  background-size: auto, 96px 96px, 96px 96px, 24px 24px, 24px 24px !important;
+}
+</style>
+
+
+<style id="resource-decor-blocks-remove-fix">
+/* Remove the decorative color blocks marked in the screenshot */
+.agent-card::before,
+.skeleton {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.agent-card {
+  padding-top: 20px !important;
+}
+
+.skeleton span {
+  display: none !important;
+}
+</style>
+
+
+<style id="resource-title-gradient-fix">
+/* Deepened gradient for “学点什么” in 资料中心.html */
+.agent-area h1 .question {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background:
+    linear-gradient(105deg,
+      rgba(70, 136, 220, 1) 0%,
+      rgba(91, 184, 204, .98) 45%,
+      rgba(168, 205, 64, .96) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: none !important;
+}
+</style>
+
+</head>
+  <body>
+
+<nav class="site-nav" id="siteNav" aria-label="网站顶部导航">
+  <a class="site-nav-home" href="./index.html#home">School of Design</a>
+  <div class="site-nav-menu" id="siteNavMenu" aria-hidden="true">
+    <a class="site-nav-link" href="./index.html#card-0">新闻动态</a>
+    <a class="site-nav-link" href="./index.html#card-1">教学科研</a>
+    <a class="site-nav-link" href="./index.html#card-2">学院概况</a>
+    <a class="site-nav-link" href="./index.html#card-3">学生天地</a>
+    <a class="site-nav-link" href="./index.html#card-4">数字展厅</a>
+    <a class="site-nav-link" href="./index.html#card-5">社会服务</a>
+    <a class="site-nav-link" href="./index.html#card-6">校友&合作</a>
+    <a class="site-nav-link" href="./index.html#card-7">党群工作</a>
+  </div>
+  <div class="site-nav-right">
+    <button class="site-menu-toggle" id="siteMenuToggle" type="button" aria-label="展开目录" aria-controls="siteNavMenu" aria-expanded="false">
+      <span class="site-menu-toggle-lines"></span>
+    </button>
+  </div>
+</nav>
+
+    <main class="stage" id="stage" aria-label="智能体驱动资料中心">
+      <div class="noise"></div>
+
+      <section class="agent-area">
+        <h1>今天想<span class="question">学点什么?</span></h1>
+        <form class="agent-card" id="agentForm">
+          <div class="composer">
+            <textarea id="goalInput" placeholder="你想学点什么？"></textarea>
+            <button class="submit" type="submit" aria-label="检索资料">检索资料 →</button>
+          </div>
+          <div class="chips" aria-label="检索类型">
+            <button class="chip is-primary" type="button" data-mode="book">书籍</button>
+            <button class="chip" type="button" data-mode="literature">文献</button>
+            <button class="chip" type="button" data-mode="fragment">片段检索</button>
+            <button class="chip" type="button" data-mode="analysis">串联分析</button>
+          </div>
+        </form>
+        <div class="skeleton" aria-hidden="true"><span></span><span></span><span></span></div>
+      </section>
+
+      <section class="fan-area" aria-label="资料库扇形轮播">
+        <div class="fan-viewport" id="fanViewport"></div>
+      </section>
+
+      <div class="lock-window" aria-hidden="true"></div>
+
+      <aside class="data-panel mono">
+        <span>RESOURCE_CENTER / COURSE.AGENT</span>
+        <span>CANVAS: 1440 × 1080</span>
+        <span>LIBRARY_SIZE: <strong id="librarySize">00</strong></span>
+        <span id="selectedCount">SELECTED: 00</span>
+        <span>STATUS: WAITING_INPUT</span>
+      </aside>
+
+      <section class="overview" id="overview" aria-live="polite">
+        <div class="overview-head">
+          <div>
+            <h2>推荐资料总览</h2>
+            <p class="overview-sub">Course Agent 生成</p>
+          </div>
+          <button class="save" type="button">保存资料</button>
+        </div>
+        <p class="overview-copy" id="overviewCopy">
+          已根据你的学习方向，从资料库中转动并锁定核心阅读资料。
+        </p>
+        <div class="overview-list" id="overviewList"></div>
+      </section>
+    </main>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const form = document.getElementById("agentForm");
+      const input = document.getElementById("goalInput");
+      const fanViewport = document.getElementById("fanViewport");
+      const overviewList = document.getElementById("overviewList");
+      const overviewCopy = document.getElementById("overviewCopy");
+      const librarySize = document.getElementById("librarySize");
+      const selectedCount = document.getElementById("selectedCount");
+      const submitButton = document.querySelector(".submit");
+
+      const resources = [
+        { title: "《具身认知与具身智能导论》", type: "BOOK", field: "具身智能", tags: ["具身智能", "人工智能", "人机协作"] },
+        { title: "《机器人学导论》", type: "BOOK", field: "机器人", tags: ["具身智能", "机器人", "控制"] },
+        { title: "《自动化学报》具身智能专题", type: "JOURNAL", field: "自动化", tags: ["具身智能", "机器人", "自动化"] },
+        { title: "《机器人》期刊", type: "JOURNAL", field: "机器人", tags: ["具身智能", "机器人", "智能系统"] },
+        { title: "具身智能综述：感知、控制与交互", type: "PAPER", field: "具身智能", tags: ["具身智能", "机器人", "HRI"] },
+        { title: "人机协作中的多模态交互研究", type: "PAPER", field: "人机协作", tags: ["具身智能", "HRI", "多模态交互"] },
+        { title: "The Design of Everyday Things", type: "BOOK", field: "产品设计", tags: ["产品设计", "用户体验", "HCI"] },
+        { title: "About Face: The Essentials of Interaction Design", type: "BOOK", field: "交互设计", tags: ["HCI", "产品设计", "交互"] },
+        { title: "Human-Computer Interaction", type: "BOOK", field: "HCI", tags: ["HCI", "人机交互"] },
+        { title: "Designing Interactions", type: "BOOK", field: "交互设计", tags: ["HCI", "交互", "产品设计"] },
+        { title: "Observing the User Experience", type: "BOOK", field: "用户研究", tags: ["用户研究", "产品设计", "HCI"] },
+        { title: "Universal Principles of Design", type: "BOOK", field: "设计基础", tags: ["设计", "产品设计"] },
+        { title: "Service Design: From Insight to Implementation", type: "BOOK", field: "服务设计", tags: ["服务设计", "产品设计"] },
+        { title: "ACM Transactions on Computer-Human Interaction", type: "JOURNAL", field: "HCI", tags: ["HCI", "人机交互", "论文"] },
+        { title: "International Journal of Human-Computer Studies", type: "JOURNAL", field: "HCI", tags: ["HCI", "用户体验"] },
+        { title: "Design Studies", type: "JOURNAL", field: "设计研究", tags: ["设计", "产品设计"] },
+        { title: "She Ji: Design, Economics, and Innovation", type: "JOURNAL", field: "设计创新", tags: ["设计", "服务设计", "产品设计"] },
+        { title: "Journal of Human-Robot Interaction", type: "JOURNAL", field: "人机协作", tags: ["具身智能", "机器人", "HRI"] },
+        { title: "Science Robotics", type: "JOURNAL", field: "机器人", tags: ["具身智能", "机器人", "智能系统"] },
+        { title: "IEEE Robotics and Automation Letters", type: "JOURNAL", field: "机器人", tags: ["具身智能", "自动化", "机器人"] },
+        { title: "Robotics: Modelling, Planning and Control", type: "BOOK", field: "机器人控制", tags: ["具身智能", "机器人", "控制"] },
+        { title: "Probabilistic Robotics", type: "BOOK", field: "机器人感知", tags: ["具身智能", "机器人", "感知"] },
+        { title: "Reinforcement Learning: An Introduction", type: "BOOK", field: "机器学习", tags: ["人工智能", "具身智能"] },
+        { title: "Deep Learning", type: "BOOK", field: "人工智能", tags: ["人工智能", "AI 医疗", "具身智能"] },
+        { title: "Artificial Intelligence: A Modern Approach", type: "BOOK", field: "人工智能", tags: ["人工智能", "具身智能"] },
+        { title: "Embodied Interaction", type: "PAPER", field: "具身交互", tags: ["具身智能", "HCI", "交互"] },
+        { title: "A Survey of Human-Robot Interaction", type: "PAPER", field: "HRI", tags: ["具身智能", "HRI", "机器人"] },
+        { title: "Learning from Demonstration for Robotics", type: "PAPER", field: "机器人学习", tags: ["具身智能", "机器人"] },
+        { title: "Multimodal Interaction: A Review", type: "PAPER", field: "多模态交互", tags: ["HCI", "具身智能", "智能座舱"] },
+        { title: "Automotive User Interfaces and Vehicular Apps", type: "JOURNAL", field: "智能座舱", tags: ["智能座舱", "HMI", "交通"] },
+        { title: "Human Factors in Automotive Design", type: "BOOK", field: "人因工程", tags: ["智能座舱", "HMI", "心理学"] },
+        { title: "In-Vehicle HMI Design Guidelines", type: "PAPER", field: "HMI", tags: ["智能座舱", "HMI"] },
+        { title: "Information Architecture for the Web and Beyond", type: "BOOK", field: "信息架构", tags: ["产品设计", "HCI", "智能座舱"] },
+        { title: "Lean UX", type: "BOOK", field: "产品验证", tags: ["产品设计", "用户体验"] },
+        { title: "Inspired: Create Tech Products Customers Love", type: "BOOK", field: "产品管理", tags: ["产品设计", "AI 医疗", "智能座舱"] },
+        { title: "Medical Image Analysis", type: "JOURNAL", field: "医学影像", tags: ["AI 医疗", "医学", "人工智能"] },
+        { title: "The Lancet Digital Health", type: "JOURNAL", field: "数字健康", tags: ["AI 医疗", "医学", "数字健康"] },
+        { title: "Nature Biomedical Engineering", type: "JOURNAL", field: "医疗工程", tags: ["AI 医疗", "医学", "智能硬件"] },
+        { title: "Deep Medicine", type: "BOOK", field: "AI 医疗", tags: ["AI 医疗", "医学", "人工智能"] },
+        { title: "Healthcare Human Factors", type: "BOOK", field: "医疗人因", tags: ["AI 医疗", "HCI", "心理学"] },
+        { title: "Clinical AI Systems: Evaluation and Safety", type: "PAPER", field: "医疗 AI", tags: ["AI 医疗", "人工智能", "合规"] }
+      ];
+
+      const profiles = {
+        embodied: {
+          label: "具身智能",
+          field: "交叉学科",
+          keys: ["具身", "机器人", "智能硬件", "embodied"],
+          match: ["具身智能", "机器人", "HRI", "人机协作", "多模态交互", "人工智能"],
+          copy: "依据具身智能方向，已锁定机器人、人机协作、强化学习与具身交互相关资料。"
+        },
+        hci: {
+          label: "HCI",
+          field: "设计",
+          keys: ["hci", "人机交互", "交互"],
+          match: ["HCI", "人机交互", "用户体验", "多模态交互", "交互"],
+          copy: "依据 HCI 方向，已锁定交互设计、用户体验、多模态交互与人机系统研究资料。"
+        },
+        product: {
+          label: "产品设计",
+          field: "设计",
+          keys: ["产品", "产品设计", "ux", "用户体验"],
+          match: ["产品设计", "用户研究", "用户体验", "设计", "服务设计", "产品管理"],
+          copy: "依据产品设计方向，已锁定用户研究、产品验证、服务设计与产品管理资料。"
+        },
+        medical: {
+          label: "AI 医疗",
+          field: "医学",
+          keys: ["医疗", "医学", "ai 医疗", "ai医疗", "数字健康"],
+          match: ["AI 医疗", "医学", "医学影像", "数字健康", "医疗工程", "合规"],
+          copy: "依据 AI 医疗方向，已锁定医学影像、数字健康、医疗人因与临床 AI 安全资料。"
+        },
+        cockpit: {
+          label: "智能座舱",
+          field: "交通运输",
+          keys: ["智能座舱", "hmi", "车载", "自动驾驶"],
+          match: ["智能座舱", "HMI", "交通", "人因工程", "多模态交互", "信息架构"],
+          copy: "依据智能座舱方向，已锁定车载 HMI、人因工程、信息架构与多模态交互资料。"
+        }
+      };
+
+      Object.entries(profiles).forEach(([id, profile]) => {
+        profile.id = id;
+      });
+
+      const typeNames = { BOOK: "书籍", JOURNAL: "刊物", PAPER: "文献" };
+      const fieldCatalog = [
+        { label: "设计", en: "Design", profile: "product" },
+        { label: "文学", en: "Literature", profile: "product" },
+        { label: "新闻传播", en: "Communication", profile: "product" },
+        { label: "艺术传媒", en: "Art & Media", profile: "product" },
+        { label: "教育", en: "Education", profile: "product" },
+        { label: "心理学", en: "Psychology", profile: "hci" },
+        { label: "经济金融", en: "Economics & Finance", profile: "product" },
+        { label: "管理", en: "Management", profile: "product" },
+        { label: "法学", en: "Law", profile: "product" },
+        { label: "统计 / 理学", en: "Statistics & Science", profile: "medical" },
+        { label: "交叉学科", en: "Interdisciplinary", profile: "embodied" },
+        { label: "计算机", en: "Computer Science", profile: "embodied" },
+        { label: "电子信息", en: "Electronic Information", profile: "embodied" },
+        { label: "自动化", en: "Automation", profile: "embodied" },
+        { label: "机械", en: "Mechanical Engineering", profile: "embodied" },
+        { label: "材料", en: "Materials", profile: "product" },
+        { label: "医学", en: "Medicine", profile: "medical" },
+        { label: "建筑", en: "Architecture", profile: "product" },
+        { label: "交通运输", en: "Transportation", profile: "cockpit" },
+        { label: "农学", en: "Agriculture", profile: "medical" },
+        { label: "环境能源", en: "Environment & Energy", profile: "product" }
+      ];
+      const wheelFields = fieldCatalog.map((field, index) => ({
+        ...field,
+        angle: -72 + index * (144 / (fieldCatalog.length - 1)),
+        radius: 288,
+        width: 132
+      }));
+      let selected = [];
+      let activeProfile = null;
+      let activeMode = "book";
+
+      function detectProfile(value) {
+        const text = value.trim().toLowerCase();
+        return Object.values(profiles).find((profile) => profile.keys.some((key) => text.includes(key.toLowerCase()))) || profiles.embodied;
+      }
+
+      function createWheelLabel({ label, en, angle, radius, width, x, y, className = "" }) {
+        const node = document.createElement("div");
+        node.className = `wheel-label ${className}`.trim();
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          node.classList.add("is-fixed");
+          node.style.setProperty("--x", `${x}px`);
+          node.style.setProperty("--y", `${y}px`);
+        } else {
+          node.style.setProperty("--a", `${angle}deg`);
+          node.style.setProperty("--r", `${radius}px`);
+        }
+        node.style.setProperty("--w", `${width}px`);
+        node.innerHTML = `${label}<small>${en}</small>`;
+        return node;
+      }
+
+      function polarPoint(angle, radius) {
+        const radian = (angle * Math.PI) / 180;
+        return {
+          x: 381 + Math.cos(radian) * radius,
+          y: 453 + Math.sin(radian) * radius
+        };
+      }
+
+      function fixedPoint(x, y) {
+        return {
+          x: 381 + x,
+          y: 453 + y
+        };
+      }
+
+      function makeSvgNode(name, attrs) {
+        const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+        Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+        return node;
+      }
+
+      function wheelPoint(angle, radius) {
+        const radian = (angle * Math.PI) / 180;
+        return {
+          x: 381 + Math.cos(radian) * radius,
+          y: 453 + Math.sin(radian) * radius
+        };
+      }
+
+      function arcPath(radius, startAngle, endAngle) {
+        const start = wheelPoint(startAngle, radius);
+        const end = wheelPoint(endAngle, radius);
+        const largeArc = Math.abs(endAngle - startAngle) > 180 ? 1 : 0;
+        return `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+      }
+
+      function createSectorLayer(fields) {
+        const svg = makeSvgNode("svg", {
+          class: "sector-layer",
+          viewBox: "0 0 1030 930",
+          preserveAspectRatio: "none",
+          "aria-hidden": "true"
+        });
+        const step = fields.length > 1 ? fields[1].angle - fields[0].angle : 7.2;
+        const startAngle = fields[0].angle - step / 2;
+        const endAngle = fields[fields.length - 1].angle + step / 2;
+        const innerRadius = 166;
+        const outerRadius = 356;
+
+        svg.append(makeSvgNode("path", {
+          class: "sector-arc is-inner",
+          d: arcPath(innerRadius, startAngle, endAngle)
+        }));
+        svg.append(makeSvgNode("path", {
+          class: "sector-arc is-outer",
+          d: arcPath(outerRadius, startAngle, endAngle)
+        }));
+
+        for (let index = 0; index <= fields.length; index += 1) {
+          const angle = startAngle + step * index;
+          const inner = wheelPoint(innerRadius, angle);
+          const outer = wheelPoint(outerRadius, angle);
+          svg.append(makeSvgNode("line", {
+            class: `sector-divider ${index % 4 === 0 ? "is-major" : ""}`,
+            x1: inner.x.toFixed(1),
+            y1: inner.y.toFixed(1),
+            x2: outer.x.toFixed(1),
+            y2: outer.y.toFixed(1)
+          }));
+        }
+
+        return svg;
+      }
+
+      function createContainmentLayer(groups) {
+        const svg = makeSvgNode("svg", {
+          class: "containment-layer",
+          viewBox: "0 0 1030 930",
+          preserveAspectRatio: "none",
+          "aria-hidden": "true"
+        });
+
+        groups.forEach((group) => {
+          const parent = Number.isFinite(group.x) && Number.isFinite(group.y)
+            ? fixedPoint(group.x, group.y)
+            : polarPoint(group.angle, 238);
+          const childPoints = group.entries.map((entry) => ({
+            ...(Number.isFinite(entry.x) && Number.isFinite(entry.y) ? fixedPoint(entry.x, entry.y) : polarPoint(entry.angle, 452)),
+            angle: entry.angle
+          }));
+          const parentRightX = parent.x + (group.width || 136);
+          const parentY = parent.y;
+          const firstChildX = Math.min(...childPoints.map((point) => point.x)) - 25;
+          const hubX = Math.min(firstChildX - 32, parentRightX + 34);
+          const minY = Math.min(...childPoints.map((point) => point.y));
+          const maxY = Math.max(...childPoints.map((point) => point.y));
+
+          svg.append(makeSvgNode("path", {
+            class: "containment-parent",
+            d: `M ${parentRightX.toFixed(1)} ${parentY.toFixed(1)} C ${(parentRightX + 20).toFixed(1)} ${parentY.toFixed(1)}, ${(hubX - 18).toFixed(1)} ${parentY.toFixed(1)}, ${hubX.toFixed(1)} ${parentY.toFixed(1)}`
+          }));
+
+          if (childPoints.length > 1) {
+            svg.append(makeSvgNode("path", {
+              class: "containment-spine",
+              d: `M ${hubX.toFixed(1)} ${minY.toFixed(1)} V ${maxY.toFixed(1)}`
+            }));
+          } else {
+            svg.append(makeSvgNode("circle", {
+              class: "containment-node",
+              cx: hubX.toFixed(1),
+              cy: parentY.toFixed(1),
+              r: "5"
+            }));
+          }
+
+          childPoints.forEach((point) => {
+            const endX = point.x - 22;
+            svg.append(makeSvgNode("path", {
+              class: "containment-branch",
+              d: `M ${hubX.toFixed(1)} ${point.y.toFixed(1)} C ${(hubX + 42).toFixed(1)} ${point.y.toFixed(1)}, ${(endX - 44).toFixed(1)} ${point.y.toFixed(1)}, ${endX.toFixed(1)} ${point.y.toFixed(1)}`
+            }));
+            svg.append(makeSvgNode("circle", {
+              class: "containment-node",
+              cx: hubX.toFixed(1),
+              cy: point.y.toFixed(1),
+              r: "4.5"
+            }));
+          });
+        });
+
+        return svg;
+      }
+
+      function renderWheel(profile = activeProfile, isResult = false) {
+        librarySize.textContent = String(resources.length).padStart(2, "0");
+        fanViewport.innerHTML = "";
+        const profileId = profile?.id;
+        const activeField =
+          wheelFields.find((field) => profile?.field && field.label === profile.field) ||
+          wheelFields.find((field) => profile?.label && (field.label.includes(profile.label) || field.en.toLowerCase().includes(profile.label.toLowerCase()))) ||
+          wheelFields.find((field) => field.profile === profileId) ||
+          wheelFields[0];
+        const system = document.createElement("div");
+        system.className = "wheel-system";
+        if (!isResult) system.classList.add("is-idle");
+        if (isResult) system.style.setProperty("--wheel-shift-x", "-150px");
+        system.innerHTML = `
+          <div class="wheel-caption mono">RESOURCE WHEEL / FIELD → TYPE → TITLE</div>
+          <div class="wheel-core mono"><span>RESOURCE</span><strong>LIBRARY</strong></div>
+        `;
+        const level1 = document.createElement("div");
+        level1.className = "wheel-level level-1";
+        wheelFields.forEach((field) => {
+          const isActive = isResult && field.label === activeField.label;
+          level1.append(createWheelLabel({
+            label: field.label,
+            en: field.en,
+            angle: field.angle,
+            radius: field.radius,
+            width: field.width,
+            className: `field-label ${isActive ? "is-active" : ""}`
+          }));
+        });
+
+        const level3 = document.createElement("div");
+        level3.className = "wheel-level level-3";
+        const items = selected.length ? selected : resources.slice(0, 7);
+        const start = -28;
+        const step = items.length > 1 ? 56 / (items.length - 1) : 0;
+        const rowStart = -205;
+        const rowGap = 69;
+        const parentX = 182;
+        const childX = 426;
+        const resourceAngles = items.map((item, index) => ({
+          item,
+          angle: start + step * index,
+          x: isResult ? childX : undefined,
+          y: isResult ? rowStart + index * rowGap : undefined
+        }));
+
+        const level2 = document.createElement("div");
+        level2.className = "wheel-level level-2";
+        const groupedAngles = new Map();
+        resourceAngles.forEach((entry) => {
+          const group = fieldGroup(entry.item);
+          if (!groupedAngles.has(group)) groupedAngles.set(group, []);
+          groupedAngles.get(group).push(entry);
+        });
+
+        const groups = Array.from(groupedAngles, ([label, entries]) => ({
+          label,
+          angle: entries.reduce((sum, entry) => sum + entry.angle, 0) / entries.length,
+          x: isResult ? parentX : undefined,
+          y: isResult ? entries.reduce((sum, entry) => sum + entry.y, 0) / entries.length : undefined,
+          width: 130,
+          count: entries.length,
+          entries
+        }));
+
+        groups.forEach((group) => {
+          level2.append(createWheelLabel({
+            label: group.label,
+            en: `包含 ${group.count} 个结果`,
+            angle: group.angle,
+            radius: 238,
+            x: group.x,
+            y: group.y,
+            width: 130,
+            className: "type-label is-selected"
+          }));
+        });
+
+        items.forEach((item, index) => {
+          const title = item.title.length > 42 ? `${item.title.slice(0, 42)}...` : item.title;
+          level3.append(createWheelLabel({
+            label: title,
+            en: `${item.field} / ${typeNames[item.type] || item.type}`,
+            angle: start + step * index,
+            radius: 452,
+            x: resourceAngles[index].x,
+            y: resourceAngles[index].y,
+            width: 230,
+            className: `resource-label ${isResult ? "is-selected" : ""}`
+          }));
+        });
+
+        const containmentLayer = isResult ? createContainmentLayer(groups) : document.createDocumentFragment();
+        system.append(level1, containmentLayer, level2, level3);
+        fanViewport.append(system);
+
+        if (isResult) {
+          window.setTimeout(() => {
+            system.style.setProperty("--rotation", `${-activeField.angle}deg`);
+          }, 40);
+          window.setTimeout(() => system.classList.add("is-expanded"), 680);
+          window.setTimeout(() => system.classList.add("is-complete"), 1020);
+        }
+      }
+
+      function matches(resource, profile) {
+        return resource.tags.some((tag) => profile.match.includes(tag)) || profile.match.includes(resource.field);
+      }
+
+      function matchesMode(resource) {
+        if (activeMode === "book") return resource.type === "BOOK";
+        if (activeMode === "literature") return resource.type === "JOURNAL" || resource.type === "PAPER";
+        if (activeMode === "fragment") return resource.type === "PAPER";
+        return true;
+      }
+
+      function fieldGroup(resource) {
+        const field = resource.field;
+        if (["具身智能", "具身交互", "人机协作", "HRI", "多模态交互"].includes(field)) return "具身智能";
+        if (["机器人", "机器人控制", "机器人感知", "机器人学习"].includes(field)) return "机器人";
+        if (["人工智能", "机器学习"].includes(field)) return "人工智能";
+        if (["产品设计", "产品验证", "产品管理", "设计基础", "服务设计", "设计研究", "设计创新"].includes(field)) return "产品设计";
+        if (["交互设计", "HCI", "用户研究", "用户体验", "信息架构"].includes(field)) return "交互设计";
+        if (["AI 医疗", "医学", "医学影像", "数字健康", "医疗工程", "医疗人因", "医疗 AI"].includes(field)) return "AI 医疗";
+        if (["智能座舱", "HMI", "人因工程"].includes(field)) return "智能座舱";
+        return field;
+      }
+
+      function isChineseResource(resource) {
+        return /[\u4e00-\u9fff]/.test(resource.title);
+      }
+
+      function pickResources(profile) {
+        const matched = resources
+          .map((resource, index) => ({ ...resource, index }))
+          .filter((resource) => matches(resource, profile) && matchesMode(resource));
+        const chosen = [];
+        const addFirst = (predicate) => {
+          const item = matched.find((resource) => predicate(resource) && !chosen.some((selectedItem) => selectedItem.index === resource.index));
+          if (item) chosen.push(item);
+        };
+
+        addFirst((resource) => resource.type === "JOURNAL" && isChineseResource(resource));
+        addFirst((resource) => resource.type === "JOURNAL" && !isChineseResource(resource));
+        addFirst((resource) => resource.type === "BOOK" && isChineseResource(resource));
+        addFirst((resource) => resource.type === "BOOK" && !isChineseResource(resource));
+        addFirst((resource) => resource.type === "PAPER" && isChineseResource(resource));
+        addFirst((resource) => resource.type === "PAPER" && !isChineseResource(resource));
+
+        matched.forEach((resource) => {
+          if (chosen.length < 7 && !chosen.some((selectedItem) => selectedItem.index === resource.index)) {
+            chosen.push(resource);
+          }
+        });
+
+        return chosen.slice(0, 7);
+      }
+
+      function renderOverview(profile) {
+        overviewCopy.textContent = profile.copy;
+        overviewList.innerHTML = "";
+        selected.forEach((item, index) => {
+          const row = document.createElement("article");
+          row.className = "overview-item";
+          row.innerHTML = `
+            <span class="overview-num">${String(index + 1).padStart(2, "0")}</span>
+            <span>
+              <strong class="overview-title">${item.title}</strong>
+              <span class="overview-meta">${item.field} / ${item.tags.join(" · ")}</span>
+            </span>
+            <button class="overview-action" type="button" aria-label="加入书架：${item.title}">加入书架</button>
+          `;
+          overviewList.append(row);
+        });
+      }
+
+      function runSearch(value) {
+        const profile = detectProfile(value);
+        activeProfile = profile;
+        selected = pickResources(profile);
+        submitButton.textContent = "重新检索";
+        stage.classList.remove("has-results");
+        selectedCount.textContent = `SELECTED: ${String(selected.length).padStart(2, "0")} / ${profile.label}`;
+        renderWheel(profile, true);
+        renderOverview(profile);
+        const resultDelay = window.matchMedia("(max-width: 700px)").matches ? 120 : 1080;
+        window.setTimeout(() => stage.classList.add("has-results"), resultDelay);
+      }
+
+      function resetSearch() {
+        selected = [];
+        activeProfile = null;
+        activeMode = "book";
+        input.value = "";
+        submitButton.textContent = "检索资料 →";
+        selectedCount.textContent = "SELECTED: 00";
+        overviewList.innerHTML = "";
+        overviewCopy.textContent = "已根据你的学习方向，从资料库中转动并锁定核心阅读资料。";
+        document.querySelectorAll(".chip").forEach((item) => item.classList.remove("is-primary"));
+        document.querySelector('[data-mode="book"]').classList.add("is-primary");
+        stage.classList.remove("has-results");
+        renderWheel(null, false);
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (stage.classList.contains("has-results")) {
+          resetSearch();
+          return;
+        }
+        runSearch(input.value);
+      });
+
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          activeMode = chip.dataset.mode || "book";
+          document.querySelectorAll(".chip").forEach((item) => item.classList.remove("is-primary"));
+          chip.classList.add("is-primary");
+          if (stage.classList.contains("has-results")) {
+            runSearch(input.value);
+          }
+        });
+      });
+
+      renderWheel(null, false);
+    </script>
+  
+<script id="site-top-nav-script">
+(function(){
+  const nav = document.getElementById('siteNav');
+  const toggle = document.getElementById('siteMenuToggle');
+  if (!nav || !toggle) return;
+  toggle.addEventListener('click', function(){
+    const isOpen = nav.classList.toggle('is-menu-open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    const menu = document.getElementById('siteNavMenu');
+    if (menu) menu.setAttribute('aria-hidden', String(!isOpen));
+  });
+  document.addEventListener('click', function(event){
+    if (!nav.contains(event.target)) {
+      nav.classList.remove('is-menu-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      const menu = document.getElementById('siteNavMenu');
+      if (menu) menu.setAttribute('aria-hidden', 'true');
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

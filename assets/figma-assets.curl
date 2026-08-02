@@ -1,0 +1,33 @@
+location
+fail
+silent
+show-error
+
+url = "https://www.figma.com/api/mcp/asset/8dc0a838-fef4-43e2-8e98-1017be4b1ae0"
+output = "portfolio-site/assets/hero-thinking.png"
+url = "https://www.figma.com/api/mcp/asset/9f454d1e-af31-47fd-9a34-f00d0823bf58"
+output = "portfolio-site/assets/hero-multi.png"
+url = "https://www.figma.com/api/mcp/asset/9487ffcc-2ab1-499b-a7b7-f75c506ae346"
+output = "portfolio-site/assets/hero-order.png"
+url = "https://www.figma.com/api/mcp/asset/feba6abc-2d7e-462c-8eeb-5a020dbe184b"
+output = "portfolio-site/assets/scenario.png"
+url = "https://www.figma.com/api/mcp/asset/b0b717d3-6f4b-4261-9aaf-cd5ee20f9812"
+output = "portfolio-site/assets/persona.png"
+url = "https://www.figma.com/api/mcp/asset/bbc05d6c-11cc-465f-a3cb-e7c09cf27ccc"
+output = "portfolio-site/assets/journey.png"
+url = "https://www.figma.com/api/mcp/asset/eeae2212-a29d-4682-b6df-f4d45796f099"
+output = "portfolio-site/assets/gui-aui.png"
+url = "https://www.figma.com/api/mcp/asset/936cc49f-305e-49db-bec0-6fa33a105f4b"
+output = "portfolio-site/assets/architecture.png"
+url = "https://www.figma.com/api/mcp/asset/3b82c5aa-dedb-4698-99f0-3793a543c3f4"
+output = "portfolio-site/assets/dialogue-analysis.png"
+url = "https://www.figma.com/api/mcp/asset/d41f8f31-2379-4130-a201-222ddbb3f1a9"
+output = "portfolio-site/assets/voice-compare.png"
+url = "https://www.figma.com/api/mcp/asset/24fc7485-cd1d-4940-86b5-553ff3cb7c67"
+output = "portfolio-site/assets/journey-nodes.png"
+url = "https://www.figma.com/api/mcp/asset/efaf0dcf-c554-4d19-bc82-d708495badac"
+output = "portfolio-site/assets/atom-library.png"
+url = "https://www.figma.com/api/mcp/asset/7778c7ca-04bc-435a-9985-73c4210afe25"
+output = "portfolio-site/assets/voice-system.png"
+url = "https://www.figma.com/api/mcp/asset/ebccb8f6-d22b-4c7c-91b1-4f6e327dad71"
+output = "portfolio-site/assets/design-system.png"

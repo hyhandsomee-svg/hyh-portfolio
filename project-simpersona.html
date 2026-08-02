@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SimPersona：面向设计预调研的合成样本问卷模拟器，通过人群反推、Persona 生成、独立作答与结果分析预演问卷。" />
+    <meta name="theme-color" content="#050506" />
+    <title>SimPersona｜韩鸿远</title>
+    <link rel="stylesheet" href="styles.css?v=20260802-9" />
+  </head>
+  <body class="standalone-project-page simpersona-project-page">
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
+
+    <header class="site-header" data-header>
+      <a class="site-mark" href="index.html#profile" aria-label="返回个人简介">HAN HONGYUAN</a>
+      <nav class="site-nav" aria-label="页面导航">
+        <a href="index.html#profile" data-zh="关于" data-en="About">关于</a>
+        <a href="index.html#projects" data-zh="项目" data-en="Projects">项目</a>
+        <button class="header-contact" type="button" data-contact-open aria-haspopup="dialog" data-zh="联系我" data-en="Contact">联系我</button>
+        <button class="language-toggle" type="button" data-language-toggle aria-label="中英切换" aria-pressed="false"><span data-language-current>中</span><span aria-hidden="true">/</span><span>EN</span></button>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="project-hero sim-product-hero immersive-section" data-section="03" data-label="SYNTHETIC RESPONDENTS" aria-labelledby="simpersona-title">
+        <div class="content-shell project-hero__heading reveal">
+          <a class="project-back" href="index.html#projects" data-zh="← 返回项目" data-en="← Back to projects">← 返回项目</a>
+          <p class="eyebrow">03 / Design research tool</p>
+          <h1 id="simpersona-title">SimPersona</h1>
+          <p class="project-hero__lede" data-zh="SimPersona 将问卷转化为一组场景化合成受访者的独立作答任务。系统从研究问题反推人群，生成带经历与限制的 Persona，再汇总回答分布、群体差异和作答理由，帮助设计师在真人招募前检查研究方向。" data-en="SimPersona turns a questionnaire into independent response tasks for a scenario-based synthetic cohort. It derives audience archetypes from the research question, generates personas with lived constraints, then summarizes distributions, group differences and response rationales before real recruitment.">SimPersona 将问卷转化为一组场景化合成受访者的独立作答任务。系统从研究问题反推人群，生成带经历与限制的 Persona，再汇总回答分布、群体差异和作答理由，帮助设计师在真人招募前检查研究方向。</p>
+        </div>
+
+        <div class="content-shell project-hero__meta reveal" aria-label="项目信息">
+          <div><span>Role</span><strong data-zh="问题定义 · 工作流设计 · 提示词工程 · Python 实现" data-en="Problem Framing · Workflow · Prompt Engineering · Python">问题定义 · 工作流设计 · 提示词工程 · Python 实现</strong></div>
+          <div><span>Boundary</span><strong data-zh="合成样本问卷模拟 · 不替代真实用户研究" data-en="Synthetic questionnaire simulation · Not a replacement for real research">合成样本问卷模拟 · 不替代真实用户研究</strong></div>
+          <div><span>Deliverable</span><strong data-zh="可运行 Skill · 结构化数据 · 分析报告" data-en="Runnable Skill · Structured data · Research report">可运行 Skill · 结构化数据 · 分析报告</strong></div>
+        </div>
+
+        <div class="content-shell sim-system-window reveal" aria-label="SimPersona 研究预检系统总览">
+          <div class="sim-system-window__top"><span>design-flow / active run</span><b>SYNTHETIC COHORT</b></div>
+          <div class="sim-system-window__problem">
+            <span>研究风险</span>
+            <strong>问卷缺陷通常在正式发放后才暴露</strong>
+            <p>目标样本难以触达，低质量互填又会稀释场景差异。</p>
+          </div>
+          <div class="sim-system-window__flow" aria-hidden="true">
+            <div><i>01</i><b>问卷规范化</b><small>survey.json</small></div><em>→</em>
+            <div><i>02</i><b>场景建模</b><small>archetypes.json</small></div><em>→</em>
+            <div><i>03</i><b>样本生成</b><small>respondents.jsonl</small></div><em>→</em>
+            <div><i>04</i><b>模拟作答</b><small>responses.jsonl</small></div><em>→</em>
+            <div class="is-result"><i>05</i><b>确定性分析</b><small>report.md</small></div>
+          </div>
+          <div class="sim-system-window__status"><span>3 confirmation gates</span><span>schema validated</span><span>synthetic sample labeled</span></div>
+        </div>
+      </section>
+
+      <section class="project-section immersive-section" data-section="03" data-label="PROBLEM FRAMING" aria-labelledby="sim-problem">
+        <div class="content-shell project-section__intro project-section__intro--split reveal">
+          <div><p class="eyebrow">Problem discovery</p><h2 id="sim-problem" data-zh="先发现研究工具的问题，再投入招募成本" data-en="Find defects in the research instrument before recruitment">先发现研究工具的问题，再投入招募成本</h2></div>
+          <p data-zh="设计学生常依赖同学互填，回答者与目标人群不匹配；问卷的题意、题序和选项问题又要等数据回收后才显现。此时修改会触发重新招募、重新发放和重新分析。设计目标因此收敛为一套正式调研前的预检流程：先模拟场景差异，定位问卷缺口，再把需要经验判断的议题交给真实用户研究。" data-en="Design students often rely on peer exchanges, producing a mismatch between respondents and target audiences. Ambiguous questions, ordering effects and option gaps become visible only after data collection, triggering repeated recruitment and analysis. The design goal therefore became a pre-research workflow that rehearses scenario differences, locates survey defects and routes questions requiring lived experience to real participants.">设计学生常依赖同学互填，回答者与目标人群不匹配；问卷的题意、题序和选项问题又要等数据回收后才显现。此时修改会触发重新招募、重新发放和重新分析。设计目标因此收敛为一套正式调研前的预检流程：先模拟场景差异，定位问卷缺口，再把需要经验判断的议题交给真实用户研究。</p>
+        </div>
+
+        <div class="content-shell sim-discovery-flow reveal" aria-label="SimPersona 从问题发现到解决方案的设计过程">
+          <article><span>OBSERVATION</span><h3>低质量互填</h3><p>回答者与目标人群错位，研究者难以判断答案是否来自真实使用情境。</p></article>
+          <em aria-hidden="true">→</em>
+          <article><span>COST</span><h3>缺陷发现过晚</h3><p>题意、题序与场景覆盖问题在回收后显现，返工会消耗新的招募成本。</p></article>
+          <em aria-hidden="true">→</em>
+          <article><span>DESIGN QUESTION</span><h3>如何在发放前预演</h3><p>需要提前检查问卷结构，同时保留真实研究对生活经验的判断权。</p></article>
+          <em aria-hidden="true">→</em>
+          <article class="is-result"><span>RESPONSE</span><h3>研究预检工作流</h3><p>用合成场景发现缺口，用验证脚本保证可追溯，再生成真实招募清单。</p></article>
+        </div>
+      </section>
+
+      <section class="project-section project-section--surface immersive-section" data-section="03" data-label="WORKFLOW" aria-labelledby="sim-workflow">
+        <div class="content-shell project-section__intro project-section__intro--split reveal">
+          <div><p class="eyebrow">Research workflow</p><h2 id="sim-workflow" data-zh="七个阶段形成可检查的研究链路" data-en="Seven inspectable stages form the research pipeline">七个阶段形成可检查的研究链路</h2></div>
+          <p data-zh="模型负责构建场景与回答，脚本负责抽样、校验与统计。每个阶段写入独立文件，下一阶段只读取通过校验的上游结果。" data-en="The model constructs scenarios and responses; scripts handle selection, validation and statistics. Each stage writes an explicit artifact consumed only after validation.">模型负责构建场景与回答，脚本负责抽样、校验与统计。每个阶段写入独立文件，下一阶段只读取通过校验的上游结果。</p>
+        </div>
+
+        <div class="content-shell sim-pipeline reveal">
+          <article><span>01</span><b>问卷设计</b><small>规范题序、题型与测量构念</small></article>
+          <article><span>02A</span><b>人群反推</b><small>从问题范围推导场景类型</small></article>
+          <article><span>02B</span><b>行为机制</b><small>记录机制依据与替代解释</small></article>
+          <article><span>02C</span><b>任务摩擦</b><small>映射可观察限制和情境变量</small></article>
+          <article><span>03</span><b>Persona 生成</b><small>分层展开具体合成受访者</small></article>
+          <article><span>04</span><b>模拟作答</b><small>隔离上下文，独立完成问卷</small></article>
+          <article class="is-result"><span>05</span><b>结果分析</b><small>脚本计算统计，模型解释主题</small></article>
+        </div>
+
+        <div class="content-shell sim-gates reveal">
+          <div><span>GATE 01</span><b>确认问卷</b><small>题意与构念</small></div>
+          <div><span>GATE 02</span><b>确认样本规模</b><small>覆盖与预算</small></div>
+          <div><span>GATE 03</span><b>抽查 Persona</b><small>一致性与边界</small></div>
+        </div>
+      </section>
+
+      <section class="project-section immersive-section" data-section="03" data-label="SCENARIO MODEL" aria-labelledby="sim-model">
+        <div class="content-shell project-section__intro project-section__intro--split reveal">
+          <div><p class="eyebrow">Scenario model</p><h2 id="sim-model" data-zh="从可观察情境推导合成样本" data-en="Derive synthetic respondents from observable contexts">从可观察情境推导合成样本</h2></div>
+          <p data-zh="每个 Persona 由环境事件、资源限制、行为机制和任务摩擦共同构成。结果变量不写入人物背景，模拟回答才保留检验空间。" data-en="Each persona is grounded in events, constraints, behavioral mechanisms and task frictions. Outcome variables remain outside the persona context to preserve room for testing.">每个 Persona 由环境事件、资源限制、行为机制和任务摩擦共同构成。结果变量不写入人物背景，模拟回答才保留检验空间。</p>
+        </div>
+
+        <div class="content-shell sim-causal-graph reveal" aria-label="合成样本因果链">
+          <div><span>CONTEXT</span><b>环境 / 事件</b><small>何时、何地、发生了什么</small></div><em>→</em>
+          <div><span>CONSTRAINT</span><b>处境 / 限制</b><small>资源、能力与时间边界</small></div><em>→</em>
+          <div><span>MECHANISM</span><b>行为机制</b><small>决策如何形成</small></div><em>→</em>
+          <div><span>FRICTION</span><b>任务摩擦</b><small>行动中可观察的阻力</small></div><em>→</em>
+          <div class="is-result"><span>RESPONDENT</span><b>合成受访者</b><small>带来源的场景化样本</small></div>
+        </div>
+
+        <div class="content-shell sim-coverage reveal">
+          <div class="sim-coverage__axis"><span>SCENARIO COVERAGE</span><b>场景覆盖矩阵</b><p>等权覆盖用于探索差异，不映射真实人群比例。</p></div>
+          <div class="sim-coverage__matrix" aria-hidden="true">
+            <span class="label-x">任务熟悉度 →</span><span class="label-y">资源约束 ↑</span>
+            <i style="--x:14%;--y:72%">R01</i><i style="--x:32%;--y:38%">R02</i><i style="--x:49%;--y:80%">R03</i><i style="--x:67%;--y:24%">R04</i><i style="--x:82%;--y:58%">R05</i><i style="--x:58%;--y:52%">R06</i>
+          </div>
+        </div>
+      </section>
+
+      <section class="project-section project-section--surface immersive-section" data-section="03" data-label="ENGINEERING" aria-labelledby="sim-engineering">
+        <div class="content-shell project-section__intro project-section__intro--split reveal">
+          <div><p class="eyebrow">Engineering system</p><h2 id="sim-engineering" data-zh="结构化契约连接判断与计算" data-en="Structured contracts connect judgment and computation">结构化契约连接判断与计算</h2></div>
+          <p data-zh="自然语言判断被写入 JSON 与 JSONL，脚本再检查字段、追溯链和样本覆盖。文件既是阶段产物，也是代理之间的接口契约。" data-en="Natural-language judgment is written to JSON and JSONL, then scripts validate schema, traceability and coverage. Files serve as both artifacts and interfaces between agents.">自然语言判断被写入 JSON 与 JSONL，脚本再检查字段、追溯链和样本覆盖。文件既是阶段产物，也是代理之间的接口契约。</p>
+        </div>
+
+        <div class="content-shell sim-contracts reveal">
+          <div class="sim-contracts__files" aria-label="SimPersona 数据契约">
+            <article><span>01 / INPUT</span><b>survey.json</b><small>questions[] · construct_measured</small></article>
+            <article><span>02 / MODEL</span><b>archetypes.json</b><small>scenario_weight · simulation_plan</small></article>
+            <article><span>03 / SAMPLE</span><b>respondents.jsonl</b><small>respondent_id → archetype_id</small></article>
+            <article><span>04 / RESPONSE</span><b>responses.jsonl</b><small>respondent_id → question_id</small></article>
+            <article class="is-result"><span>05 / OUTPUT</span><b>stats.json + report.md</b><small>pattern · explanation · open question</small></article>
+          </div>
+          <div class="sim-contracts__console" aria-label="验证脚本运行结果">
+            <div class="console-top"><span>validate_run.py</span><b>● ● ●</b></div>
+            <code>$ python validate_run.py --run runs/2026-07-03</code>
+            <code class="is-dim">checking schema ............... ok</code>
+            <code class="is-dim">checking traceability ......... ok</code>
+            <code class="is-dim">checking synthetic labels ..... ok</code>
+            <code class="is-dim">checking scenario coverage .... ok</code>
+            <strong>PASS / ready for next stage</strong>
+          </div>
+        </div>
+
+        <div class="content-shell sim-responsibility reveal">
+          <article><span>MODEL</span><h3>研究判断</h3><p>问卷规范化、场景推导、Persona 展开、主题编码。</p></article>
+          <article><span>PYTHON</span><h3>确定性执行</h3><p>分层抽样、结构校验、统计计算、追溯完整性检查。</p></article>
+          <article><span>RESEARCHER</span><h3>方法决策</h3><p>确认研究边界、样本规模与进入真实研究的优先问题。</p></article>
+        </div>
+      </section>
+
+      <section class="project-section immersive-section" data-section="03" data-label="VALIDATION" aria-labelledby="sim-validation">
+        <div class="content-shell project-section__intro reveal">
+          <p class="eyebrow">Research integrity</p>
+          <h2 id="sim-validation" data-zh="把模拟边界写进系统" data-en="Encode simulation boundaries into the system">把模拟边界写进系统</h2>
+          <p data-zh="合成记录始终标注来源与用途，报告区分模拟模式、机制解释和真人待验证问题。预检结果用于修改问卷与安排招募，真实人群结论仍由正式研究获得。" data-en="Synthetic records retain their provenance and intended use. Reports separate simulated patterns, mechanism-based interpretation and questions that require real participants. Results guide survey revision and recruitment planning; real-user findings still come from formal research.">合成记录始终标注来源与用途，报告区分模拟模式、机制解释和真人待验证问题。预检结果用于修改问卷与安排招募，真实人群结论仍由正式研究获得。</p>
+        </div>
+
+        <div class="content-shell sim-integrity reveal">
+          <article><span>01</span><h3>防止答案泄漏</h3><p>Persona 只包含经历、资源与限制，不提前写入满意度或使用意愿。</p></article>
+          <article><span>02</span><h3>保留替代解释</h3><p>行为机制同时记录证据等级、可证伪条件与其他可能原因。</p></article>
+          <article><span>03</span><h3>隔离模拟上下文</h3><p>入选 Persona 独立作答，减少前序样本与分析预期的干扰。</p></article>
+          <article><span>04</span><h3>区分数据角色</h3><p>统计来自脚本，模型负责主题编码和研究判断。</p></article>
+        </div>
+
+        <div class="content-shell sim-lab reveal" data-sim-demo>
+          <div class="sim-lab__header">
+            <div>
+              <span>INTERACTIVE SYNTHETIC SURVEY</span>
+              <h3 data-zh="让一组模拟受访者独立完成问卷" data-en="Let a synthetic respondent cohort complete a questionnaire">让一组模拟受访者独立完成问卷</h3>
+            </div>
+            <p data-zh="设置研究主题、目标人群和三道核心问题。网页会演示人群反推、Persona 生成、隔离作答和结果汇总的完整链路。全部结果为本地演示用合成记录。" data-en="Set a topic, target audience and three core questions. The browser demo walks through audience derivation, persona generation, isolated responses and result synthesis. All outputs are local synthetic records for demonstration.">设置研究主题、目标人群和三道核心问题。网页会演示人群反推、Persona 生成、隔离作答和结果汇总的完整链路。全部结果为本地演示用合成记录。</p>
+          </div>
+
+          <form class="sim-lab__form" data-sim-form>
+            <div class="sim-lab__form-head"><span>01 / SURVEY SETUP</span><b>问卷与样本设置</b></div>
+            <label><span>研究主题</span><input type="text" value="车载语音助手的多轮确认体验" data-sim-topic /></label>
+            <div class="sim-lab__form-row">
+              <label><span>目标人群</span><input type="text" value="高频通勤驾驶者" data-sim-audience /></label>
+              <label><span>模拟规模</span><select data-sim-size><option value="12">12 人 / 快速预演</option><option value="24" selected>24 人 / 分层预演</option><option value="48">48 人 / 完整覆盖</option></select></label>
+            </div>
+            <fieldset>
+              <legend>核心问卷</legend>
+              <label class="sim-question"><i>Q1</i><input type="text" value="复杂任务中，你希望系统在哪个阶段主动确认？" data-sim-question="0" /></label>
+              <label class="sim-question"><i>Q2</i><input type="text" value="连续确认几次后，你会感到交互被打断？" data-sim-question="1" /></label>
+              <label class="sim-question"><i>Q3</i><input type="text" value="驾驶过程中，你更愿意怎样修正任务？" data-sim-question="2" /></label>
+            </fieldset>
+            <button type="submit" data-sim-run><span>生成样本并模拟填写</span><b aria-hidden="true">→</b></button>
+            <small>浏览器交互用于解释工作流，不调用真实研究样本，也不保存输入。</small>
+          </form>
+
+          <div class="sim-lab__runtime" aria-live="polite">
+            <div class="sim-lab__runtime-head"><span>02 / SIMULATION RUN</span><b data-sim-status>READY</b></div>
+            <ol class="sim-lab__stages" data-sim-stages>
+              <li data-stage="0"><i>01</i><span>人群反推</span><b>queued</b></li>
+              <li data-stage="1"><i>02</i><span>Persona 生成</span><b>queued</b></li>
+              <li data-stage="2"><i>03</i><span>隔离作答</span><b>queued</b></li>
+              <li data-stage="3"><i>04</i><span>统计汇总</span><b>queued</b></li>
+            </ol>
+
+            <div class="sim-lab__workspace">
+              <section class="sim-cohort" aria-label="合成受访者样本">
+                <div class="sim-panel-head"><span>SYNTHETIC COHORT</span><b data-cohort-count>0 / 24 READY</b></div>
+                <div class="sim-archetypes">
+                  <span><i class="is-time"></i>时间压力型</span><span><i class="is-risk"></i>风险谨慎型</span><span><i class="is-familiar"></i>任务熟悉型</span>
+                </div>
+                <div class="sim-respondents" data-sim-respondents aria-label="当前可见受访者窗口"></div>
+                <small data-cohort-note>等待生成分层合成样本</small>
+              </section>
+
+              <section class="sim-response-live" aria-label="当前模拟作答状态">
+                <div class="sim-panel-head"><span>ISOLATED RESPONSE</span><b data-response-progress>0 / 24</b></div>
+                <div class="sim-response-live__empty" data-response-empty>
+                  <i>R—</i><p>每位 Persona 将在独立语境中逐题完成问卷。</p>
+                </div>
+                <div class="sim-response-card" data-response-card hidden>
+                  <div><i data-live-id>R01</i><span data-live-type>时间压力型</span><b data-live-state>answering</b></div>
+                  <p data-live-context>工作日通勤 50 分钟，路线熟悉，驾驶中会优先维持注意力。</p>
+                  <blockquote data-live-answer>“我希望系统在涉及支付或改道前确认。”</blockquote>
+                </div>
+              </section>
+            </div>
+
+            <div class="sim-lab__output" data-sim-output hidden>
+              <div class="sim-lab__output-head"><span>03 / SYNTHETIC RESULTS</span><b data-output-meta>分层预演 · N=24</b></div>
+              <div class="sim-results-grid">
+                <article class="sim-result-chart">
+                  <span data-output-q1>Q1 / 主动确认时机</span>
+                  <div class="sim-bars" data-result-bars>
+                    <div><i>执行前</i><b><em style="--value:72%"></em></b><strong>72%</strong></div>
+                    <div><i>执行中</i><b><em style="--value:19%"></em></b><strong>19%</strong></div>
+                    <div><i>执行后</i><b><em style="--value:9%"></em></b><strong>9%</strong></div>
+                  </div>
+                </article>
+                <article class="sim-result-difference">
+                  <span>GROUP DIFFERENCE</span>
+                  <h4>任务压力改变确认偏好</h4>
+                  <p data-output-difference>时间压力型更关注少打断；风险谨慎型更关注支付、改道和外部服务调用前的可撤销确认。</p>
+                </article>
+                <article class="sim-result-quotes">
+                  <span>RESPONSE EVIDENCE</span>
+                  <p>“普通推荐直接给结果，涉及付款时再问我。” <i>R07</i></p>
+                  <p>“高速上少说一句，比解释完整更重要。” <i>R13</i></p>
+                </article>
+                <article class="sim-result-boundary">
+                  <span>REAL RESEARCH NEXT</span>
+                  <h4 data-output-next>真人验证重点</h4>
+                  <p data-output-recruitment>在真实驾驶任务中验证确认频率、驾驶负荷与信任感的关系。</p>
+                </article>
+              </div>
+              <p class="sim-result-note">合成样本 / 仅供预调研 / 分布不代表真实人群比例 / 关键判断需进入真人研究</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="project-next immersive-section" data-section="01" data-label="BACK TO PROJECTS"><a class="content-shell project-next__link" href="index.html#projects"><span data-zh="返回项目" data-en="Back to projects">返回项目</span><strong data-zh="选择另一个案例" data-en="Choose another case">选择另一个案例</strong><b aria-hidden="true">→</b></a></section>
+    </main>
+
+    <footer class="site-footer immersive-section" data-section="06" data-label="CONTACT"><div class="content-shell footer-layout"><div><p class="eyebrow">Contact</p><h2 data-zh="让研究判断和工程约束保持可追溯。" data-en="Keep research judgment and engineering constraints traceable.">让研究判断和工程约束<br />保持可追溯。</h2></div><div class="footer-contact"><a href="mailto:hanhy0825@163.com">hanhy0825@163.com</a><a href="tel:+8618315482881">183 1548 2881</a><span>韩鸿远 · Product / UX Design</span></div></div></footer>
+
+    <dialog class="contact-dialog" data-contact-dialog aria-label="微信联系方式"><button class="contact-dialog__close" type="button" data-contact-close aria-label="关闭联系方式弹窗">×</button><img src="assets/wechat-contact.jpg" width="888" height="1137" alt="韩鸿远的微信二维码" /></dialog>
+    <script src="script.js?v=20260802-4"></script>
+  </body>
+</html>

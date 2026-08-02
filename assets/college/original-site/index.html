@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design College Website Demo</title>
+  <style>
+    :root {
+      --bg: #f3f7fb;
+      --text: #0b0d10;
+      --muted: #6f7780;
+      --line: rgba(35, 72, 95, 0.10);
+      --blue: #9ecbff;
+      --green: #eaff8f;
+      --ease: cubic-bezier(.2, .85, .2, 1);
+      --radius: 34px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 84% 20%, rgba(235, 255, 124, .48), transparent 30%),
+        radial-gradient(circle at 18% 68%, rgba(147, 199, 255, .38), transparent 34%),
+        radial-gradient(circle at 48% 42%, rgba(214, 247, 244, .34), transparent 33%),
+        linear-gradient(135deg, #f5f8fb 0%, #f4fbff 38%, #f8fbf3 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(rgba(24, 94, 126, .13) .7px, transparent .7px),
+        radial-gradient(rgba(186, 214, 72, .12) .6px, transparent .6px);
+      background-size: 7px 7px, 11px 11px;
+      background-position: 0 0, 3px 5px;
+      mask-image: linear-gradient(135deg, transparent 0%, black 18%, black 78%, transparent 100%);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: 28px 38px 40px;
+    }
+
+    .nav {
+      min-height: 76px;
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px 10px 18px;
+      background: rgba(255,255,255,.62);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 22px 70px rgba(65, 112, 148, .09);
+      overflow: hidden;
+    }
+
+    .nav-home {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      color: rgba(11,13,16,.76);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      background: rgba(255,255,255,.46);
+      transition: background .25s ease, transform .25s var(--ease);
+    }
+
+    .nav-home:hover {
+      background: rgba(255,255,255,.78);
+      transform: translateY(-1px);
+    }
+
+    .nav-menu-drawer {
+      position: absolute;
+      top: 50%;
+      right: 70px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      max-width: min(880px, calc(100vw - 150px));
+      height: 48px;
+      padding: 5px 8px;
+      border: 1px solid rgba(11,11,13,.07);
+      border-radius: 999px;
+      background: rgba(250,253,255,.76);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 16px 46px rgba(82, 135, 168, .10);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(34px, -50%) scaleX(.78);
+      transform-origin: right center;
+      transition: opacity .36s var(--ease), transform .52s var(--ease);
+    }
+
+    .nav.is-menu-open .nav-menu-drawer {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(0, -50%) scaleX(1);
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      height: 38px;
+      padding: 0 11px;
+      border-radius: 999px;
+      color: rgba(11,11,13,.76);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 620;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateX(24px);
+      transition: background .25s ease, opacity .34s var(--ease), transform .44s var(--ease);
+    }
+
+    .nav.is-menu-open .nav-link { opacity: 1; transform: translateX(0); }
+    .nav.is-menu-open .nav-link:nth-child(1) { transition-delay: .02s; }
+    .nav.is-menu-open .nav-link:nth-child(2) { transition-delay: .04s; }
+    .nav.is-menu-open .nav-link:nth-child(3) { transition-delay: .06s; }
+    .nav.is-menu-open .nav-link:nth-child(4) { transition-delay: .08s; }
+    .nav.is-menu-open .nav-link:nth-child(5) { transition-delay: .10s; }
+    .nav.is-menu-open .nav-link:nth-child(6) { transition-delay: .12s; }
+    .nav.is-menu-open .nav-link:nth-child(7) { transition-delay: .14s; }
+    .nav.is-menu-open .nav-link:nth-child(8) { transition-delay: .16s; }
+
+    .nav-link:hover, .nav-link.is-active {
+      opacity: 1;
+      background: rgba(11,11,13,.055);
+      color: rgba(11,11,13,.9);
+    }
+
+    .nav-right { position: relative; z-index: 4; display: flex; justify-content: flex-end; align-items: center; }
+
+    .menu-toggle {
+      width: 46px;
+      height: 46px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid rgba(11,11,13,.09);
+      border-radius: 50%;
+      background: rgba(252,254,255,.82);
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(82, 135, 168, .10);
+      transition: transform .3s var(--ease), background .3s var(--ease);
+    }
+
+    .menu-toggle:hover { transform: translateY(-1px); background: rgba(255,255,255,.95); }
+    .menu-toggle-lines { position: relative; width: 18px; height: 12px; display: block; }
+    .menu-toggle-lines::before, .menu-toggle-lines::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: #056dff;
+      transition: transform .35s var(--ease), top .35s var(--ease), width .35s var(--ease);
+    }
+    .menu-toggle-lines::before { top: 1px; }
+    .menu-toggle-lines::after { top: 9px; width: 13px; }
+    .nav.is-menu-open .menu-toggle-lines::before { top: 5px; transform: rotate(45deg); }
+    .nav.is-menu-open .menu-toggle-lines::after { top: 5px; width: 18px; transform: rotate(-45deg); }
+
+    .view { display: none; }
+    .view.is-active { display: block; }
+
+    .hero { text-align: center; padding-top: clamp(34px, 4.8vw, 64px); }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 14px;
+      color: rgba(11,11,13,.66);
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+      font-size: 18px;
+    }
+    .eyebrow::before, .eyebrow::after { content: ""; width: 36px; height: 1px; background: rgba(11,11,13,.16); }
+
+    h1 {
+      width: min(960px, 92vw);
+      margin: 0 auto;
+      font-size: clamp(34px, 5.4vw, 72px);
+      line-height: 1.04;
+      letter-spacing: -0.058em;
+      font-weight: 800;
+      text-align: center;
+    }
+    .headline-main { display: inline-block; transform: none; }
+    .headline-serif { font-family: Georgia, "Times New Roman", serif; font-size: .62em; font-weight: 400; font-style: italic; letter-spacing: -0.045em; }
+    .subtitle { width: max-content; max-width: 92vw; margin: 18px auto 18px; color: var(--muted); font-size: 14px; line-height: 1.75; text-align: center; white-space: nowrap; }
+    .actions { display: flex; justify-content: center; gap: 14px; margin-bottom: 22px; }
+
+    .pill, .ghost { height: 42px; padding: 0 18px; border-radius: 999px; font-weight: 650; cursor: pointer; }
+    .pill { display: inline-flex; align-items: center; gap: 10px; border: 0; background: #050505; color: #fff; box-shadow: 0 10px 28px rgba(0,0,0,.12); }
+    .ghost { border: 1px solid rgba(11,11,13,.12); background: rgba(255,255,255,.38); color: rgba(11,11,13,.74); backdrop-filter: blur(12px); }
+
+    .carousel-section, .works-section {
+      position: relative;
+      margin: 0 calc(50% - 50vw);
+      height: min(64vw, 640px);
+      min-height: 560px;
+      overflow: visible;
+      display: flex;
+      align-items: center;
+      perspective: 920px;
+      perspective-origin: 50% 48%;
+      user-select: none;
+      cursor: grab;
+    }
+    .works-section { height: min(58vw, 600px); min-height: 520px; margin-top: 18px; }
+    .carousel-section.dragging, .works-section.dragging { cursor: grabbing; }
+
+    .carousel-section::before, .carousel-section::after, .works-section::before, .works-section::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 16vw;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .carousel-section::before, .works-section::before { left: 0; background: linear-gradient(90deg, var(--bg), rgba(246,249,252,.72) 42%, rgba(246,249,252,0)); }
+    .carousel-section::after, .works-section::after { right: 0; background: linear-gradient(-90deg, var(--bg), rgba(246,249,252,.72) 42%, rgba(246,249,252,0)); }
+
+    .arc-glow { position: absolute; left: 50%; bottom: 44px; width: min(980px, 78vw); height: 180px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse at center, rgba(158, 203, 255, .28), rgba(234, 255, 143, .18) 42%, transparent 72%); filter: blur(18px); pointer-events: none; }
+    .track, .works-track { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; width: 1px; height: 1px; will-change: transform; }
+
+    .card, .work-card { position: absolute; left: 0; top: 0; transform-style: preserve-3d; border-radius: var(--radius); overflow: hidden; background: #fff; box-shadow: 0 42px 110px rgba(0,0,0,.20); transition: filter .45s var(--ease), box-shadow .45s var(--ease), opacity .45s var(--ease); will-change: transform, opacity, filter; }
+    .card { width: clamp(270px, 25vw, 410px); height: clamp(345px, 34vw, 500px); }
+    .work-card { width: clamp(250px, 24vw, 380px); height: clamp(245px, 24vw, 360px); border-radius: 18px; cursor: pointer; }
+    .card:hover, .card.is-focused, .work-card:hover, .work-card.is-active { box-shadow: 0 58px 145px rgba(0,0,0,.24); }
+
+    .card::before, .work-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.05), transparent 35%), linear-gradient(0deg, rgba(0,0,0,.82), transparent 60%); z-index: 1; opacity: 1; transition: opacity .55s var(--ease); }
+    .card:hover::before, .card.is-focused::before { opacity: 0; }
+
+    .card img, .work-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.06); opacity: 1; transition: opacity .58s var(--ease), transform .72s var(--ease); z-index: 0; }
+    .card:hover img, .card.is-focused img { transform: scale(1.08); opacity: 0; }
+    .work-card:hover img { transform: scale(1.12); }
+
+    .card-fill { position: absolute; inset: 0; z-index: 1; opacity: 0; transform: translateY(18px) scale(.96); transition: opacity .58s var(--ease), transform .72s var(--ease); background: radial-gradient(circle at 84% 16%, rgba(236, 255, 126, .42), transparent 38%), radial-gradient(circle at 18% 70%, rgba(143, 196, 255, .30), transparent 42%), radial-gradient(circle at 52% 42%, rgba(219, 248, 246, .38), transparent 36%), linear-gradient(145deg, rgba(255,255,255,.98) 0%, rgba(246,250,254,.96) 46%, rgba(251,253,241,.95) 100%); }
+    .card-fill::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(26, 93, 126, .12) .8px, transparent .8px), radial-gradient(rgba(176, 205, 63, .13) .7px, transparent .7px); background-size: 7px 7px, 12px 12px; background-position: 0 0, 4px 6px; mask-image: radial-gradient(circle at center, black 0%, transparent 78%); opacity: .28; }
+    .card:hover .card-fill, .card.is-focused .card-fill { opacity: 1; transform: translateY(0) scale(1); }
+
+    .card-content, .work-content { position: absolute; z-index: 3; color: rgba(255,255,255,.92); text-align: left; }
+    .card-content { inset: auto 24px 24px 24px; transition: color .45s var(--ease), transform .55s var(--ease); }
+    .work-content { inset: auto 20px 18px 20px; }
+    .card:hover .card-content, .card.is-focused .card-content { color: rgba(29,29,31,.92); transform: translateY(-2px); }
+
+    .card-index, .work-index { display: inline-flex; height: 26px; align-items: center; padding: 0 10px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,.24); border-radius: 999px; background: rgba(255,255,255,.12); backdrop-filter: blur(10px); color: rgba(255,255,255,.78); font-size: 11px; font-weight: 560; letter-spacing: .065em; }
+    .card:hover .card-index, .card.is-focused .card-index { border-color: rgba(29,29,31,.10); background: rgba(255,255,255,.64); color: rgba(29,29,31,.56); }
+    .card-title { font-size: clamp(27px, 2.76vw, 40px); line-height: 1.02; letter-spacing: -0.046em; font-weight: 690; margin-bottom: 10px; }
+    .work-title { font-size: clamp(22px, 2.2vw, 34px); line-height: .98; letter-spacing: -0.055em; font-weight: 760; margin-bottom: 6px; }
+    .card-desc, .work-meta { font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.72); }
+    .card-desc { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif; font-style: normal; font-weight: 520; letter-spacing: .012em; }
+    .card:hover .card-desc, .card.is-focused .card-desc { color: rgba(29,29,31,.52); }
+
+    .card-menu { position: relative; z-index: 12; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.16); display: grid; gap: 9px; opacity: 0; transform: translateY(12px); transition: opacity .5s var(--ease), transform .58s var(--ease), border-color .45s var(--ease); pointer-events: none; }
+    .card:hover .card-menu, .card.is-focused .card-menu { opacity: 1; transform: translateY(0); border-top-color: rgba(29,29,31,.10); pointer-events: auto; }
+    .card-menu a { display: flex; align-items: center; justify-content: space-between; min-height: 32px; color: rgba(29,29,31,.74); text-decoration: none; font-size: 13.5px; font-weight: 560; letter-spacing: -0.012em; cursor: pointer; }
+    .card-menu a::after { content: "→"; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: rgba(11,11,13,.06); color: rgba(11,11,13,.58); transform: translateX(-4px); opacity: 0; transition: opacity .35s var(--ease), transform .35s var(--ease); }
+    .card-menu a:hover::after { opacity: 1; transform: translateX(0); }
+
+    .hint { position: absolute; left: 50%; bottom: 8px; z-index: 8; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 999px; border: 1px solid rgba(11,11,13,.08); background: rgba(250,253,255,.68); backdrop-filter: blur(16px); color: rgba(11,11,13,.56); font-size: 12px; font-weight: 620; }
+    .hint-dot { width: 7px; height: 7px; border-radius: 50%; background: linear-gradient(135deg, #9ecbff, #eaff8f); box-shadow: 0 0 18px rgba(158,203,255,.72); }
+
+    .feature-row { display: grid; grid-template-columns: 1fr; width: min(960px, 92vw); margin: 16px auto 0; padding-top: 24px; border-top: 1px solid rgba(11,11,13,.08); }
+    .feature { padding: 0; border-left: 0; text-align: center; }
+    .feature h3 { margin: 0 0 10px; font-size: 15px; letter-spacing: -0.02em; }
+    .feature p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.85; }
+    .home-contact { max-width: 760px; margin: 0 auto; text-align: center; color: rgba(11,13,16,.66); font-size: 12px; line-height: 1.9; }
+
+    .exhibition-hero {
+      text-align: center;
+      padding-top: clamp(42px, 5.8vw, 78px);
+    }
+
+    .exhibition-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 14px;
+      color: rgba(11,11,13,.66);
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    .exhibition-kicker::before,
+    .exhibition-kicker::after {
+      content: "";
+      width: 36px;
+      height: 1px;
+      background: rgba(11,11,13,.16);
+    }
+
+    .exhibition-title {
+      width: min(960px, 92vw);
+      margin: 0 auto;
+      font-size: clamp(34px, 5.4vw, 72px);
+      line-height: 1.04;
+      letter-spacing: -0.058em;
+      font-weight: 800;
+      text-align: center;
+      color: var(--text);
+      background: none;
+      -webkit-background-clip: initial;
+    }
+
+    .exhibition-title-main {
+      display: inline-block;
+      transform: translateX(.08em);
+    }
+
+    .exhibition-title-serif {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: .62em;
+      font-weight: 400;
+      font-style: italic;
+      letter-spacing: -0.045em;
+    }
+
+    .work-modal { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 32px; opacity: 0; pointer-events: none; background: rgba(9, 12, 14, .30); backdrop-filter: blur(6px); transition: opacity .36s var(--ease); }
+    .work-modal.is-open { opacity: 1; pointer-events: auto; }
+    .modal-panel { position: relative; width: min(1080px, 92vw); min-height: min(620px, 78vh); display: grid; grid-template-columns: 1.15fr .85fr; gap: 42px; padding: 54px; border-radius: 26px; background: rgba(255,255,255,.92); box-shadow: 0 38px 100px rgba(0,0,0,.20); transform: translateY(20px) scale(.96); transition: transform .46s var(--ease); }
+    .work-modal.is-open .modal-panel { transform: translateY(0) scale(1); }
+    .modal-image { position: relative; min-height: 420px; border-radius: 18px; overflow: hidden; background: #e9eef2; }
+    .modal-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .play-dot { position: absolute; right: 20px; bottom: 20px; width: 66px; height: 66px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.78); }
+    .play-dot::before { content: ""; width: 0; height: 0; border-top: 14px solid transparent; border-bottom: 14px solid transparent; border-left: 20px solid rgba(255,255,255,.92); filter: drop-shadow(0 0 2px rgba(0,0,0,.16)); transform: translateX(3px); }
+    .modal-copy h2 { margin: 0 0 2px; color: #056dff; font-size: clamp(28px, 3.6vw, 42px); line-height: 1; letter-spacing: -0.06em; }
+    .modal-copy .en { margin-bottom: 28px; color: #a7d96b; text-transform: uppercase; font-size: 18px; font-weight: 800; letter-spacing: .06em; }
+    .modal-copy p { margin: 0 0 18px; color: rgba(11,13,16,.66); font-size: 15px; line-height: 1.85; }
+    .modal-meta { margin-top: 28px; color: rgba(11,13,16,.58); font-size: 14px; line-height: 1.8; }
+    .modal-actions { position: absolute; right: 48px; top: 44px; display: flex; gap: 14px; }
+    .icon-btn, .modal-close { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: #056dff; color: #fff; cursor: pointer; font-size: 19px; }
+    .modal-close { position: absolute; right: 16px; top: 16px; z-index: 3; background: rgba(11,13,16,.08); color: #111; }
+
+    .work-card.is-active::before {
+      opacity: 0;
+    }
+
+    .work-card.is-active img.work-cover {
+      opacity: 0;
+      transform: scale(1.14);
+    }
+
+    .work-card.is-active .work-content {
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+    }
+
+    .work-detail {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      opacity: 0;
+      pointer-events: none;
+      padding: 24px;
+      color: #0b0d10;
+      background: linear-gradient(145deg, rgba(255,255,255,.995) 0%, rgba(250,252,255,.985) 48%, rgba(255,255,255,.98) 100%);
+      transform: translateY(16px) scale(.98);
+      transition: opacity .48s var(--ease), transform .54s var(--ease);
+    }
+
+    .work-detail::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 16%, rgba(235, 255, 124, .16), transparent 36%),
+        radial-gradient(circle at 18% 78%, rgba(147, 199, 255, .14), transparent 42%),
+        radial-gradient(rgba(26, 93, 126, .045) .8px, transparent .8px);
+      background-size: auto, auto, 8px 8px;
+      opacity: .55;
+    }
+
+    .work-card.is-active .work-detail {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .work-card.is-hovered:not(.is-active) {
+      box-shadow: 0 62px 150px rgba(0,0,0,.25);
+    }
+
+    .detail-tag {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.66);
+      border: 1px solid rgba(11,13,16,.08);
+      color: #056dff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      margin-bottom: 12px;
+    }
+
+    .work-detail h3 {
+      position: relative;
+      z-index: 2;
+      margin: 0 0 14px;
+      font-size: clamp(24px, 2.5vw, 34px);
+      line-height: .98;
+      letter-spacing: -0.06em;
+      color: #0b0d10;
+    }
+
+    .detail-inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: .86fr 1.14fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .detail-image-wrap {
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    .work-card .detail-image {
+      position: static;
+      width: 100%;
+      height: 210px;
+      object-fit: cover;
+      display: block;
+      transform: none;
+      opacity: 1;
+    }
+
+    .detail-copy p {
+      margin: 0 0 11px;
+      color: rgba(11,13,16,.70);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .detail-meta {
+      margin-top: 12px;
+      color: rgba(11,13,16,.56);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1120px) {
+      .nav { border-radius: 34px; overflow: visible; }
+      .nav-menu-drawer { top: calc(100% + 10px); right: 0; max-width: min(720px, calc(100vw - 76px)); height: auto; flex-wrap: wrap; justify-content: flex-start; padding: 10px; border-radius: 26px; transform: translate(24px, -8px) scale(.96); }
+      .nav.is-menu-open .nav-menu-drawer { transform: translate(0, 0) scale(1); }
+      .modal-panel { grid-template-columns: 1fr; padding: 34px; gap: 26px; }
+      .modal-actions { right: 64px; top: 28px; }
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: 18px 14px 32px; }
+      .nav { padding: 10px 10px 12px 16px; }
+      .nav-home { font-size: 12px; padding: 0 12px; }
+      .nav-menu-drawer { max-width: calc(100vw - 28px); width: calc(100vw - 28px); right: -10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .nav-menu-drawer .nav-link { justify-content: center; background: rgba(255,255,255,.62); }
+      .hero { padding-top: 38px; }
+      .carousel-section { min-height: 620px; height: 680px; perspective: 760px; overflow: visible; }
+      .works-section { min-height: 520px; height: 560px; }
+      .card { width: 292px; height: 405px; }
+      .work-card { width: 290px; height: 340px; }
+      .detail-inner { grid-template-columns: 1fr; gap: 12px; }
+      .work-card .detail-image { height: 140px; }
+      .work-detail { padding: 18px; }
+      .detail-copy p { font-size: 12px; line-height: 1.58; }
+      .feature-row { grid-template-columns: 1fr; margin-top: 0; }
+      .feature { border-left: 0; border-top: 0; }
+      .exhibition-hero { padding-left: 0; }
+      .modal-panel { padding: 24px; }
+      .modal-image { min-height: 260px; }
+    }
+
+    .intro-page-shell {
+      width: min(1280px, 100%);
+      margin: 34px auto 0;
+      border: 1px solid rgba(35,72,95,.10);
+      border-radius: 34px;
+      overflow: hidden;
+      background: rgba(255,255,255,.34);
+      box-shadow: 0 28px 90px rgba(65,112,148,.10);
+      backdrop-filter: blur(18px);
+    }
+
+    .intro-page-frame {
+      display: block;
+      width: 100%;
+      min-height: 1200px;
+      border: 0;
+      background: transparent;
+    }
+
+  
+    .course-map-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(9, 12, 14, .34);
+      backdrop-filter: blur(10px);
+      transition: opacity .36s var(--ease);
+    }
+
+    .course-map-modal.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .course-map-panel {
+      position: relative;
+      width: min(1280px, 94vw);
+      height: min(780px, 86vh);
+      border: 1px solid rgba(35, 72, 95, .14);
+      border-radius: 30px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(235,255,124,.22), transparent 34%),
+        radial-gradient(circle at 16% 78%, rgba(147,199,255,.22), transparent 38%),
+        rgba(255,255,255,.90);
+      box-shadow: 0 38px 110px rgba(0,0,0,.22);
+      transform: translateY(18px) scale(.96);
+      transition: transform .46s var(--ease);
+    }
+
+    .course-map-modal.is-open .course-map-panel {
+      transform: translateY(0) scale(1);
+    }
+
+    .course-map-head {
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 18px 0 24px;
+      border-bottom: 1px solid rgba(35, 72, 95, .10);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(18px);
+    }
+
+    .course-map-title {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      color: var(--text);
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      font-size: 22px;
+    }
+
+    .course-map-title span {
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      color: rgba(11,13,16,.56);
+    }
+
+    .course-map-close {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(11,13,16,.08);
+      color: #111;
+      cursor: pointer;
+      font-size: 22px;
+      transition: background .25s ease, transform .25s var(--ease);
+    }
+
+    .course-map-close:hover {
+      background: rgba(11,13,16,.12);
+      transform: rotate(90deg);
+    }
+
+    .course-map-frame {
+      width: 100%;
+      height: calc(100% - 66px);
+      border: 0;
+      background: #fff;
+    }
+
+    .course-map-fallback {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2;
+      max-width: 360px;
+      padding: 12px 14px;
+      border: 1px solid rgba(35,72,95,.10);
+      border-radius: 18px;
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(12px);
+      color: rgba(11,13,16,.62);
+      font-size: 12px;
+      line-height: 1.65;
+      box-shadow: 0 14px 36px rgba(0,0,0,.08);
+    }
+
+    .course-map-fallback a {
+      color: #056dff;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    @media (max-width: 760px) {
+      .course-map-modal { padding: 14px; }
+      .course-map-panel {
+        width: calc(100vw - 28px);
+        height: 82vh;
+        border-radius: 24px;
+      }
+      .course-map-title { font-size: 18px; }
+      .course-map-title span { display: none; }
+      .course-map-fallback {
+        left: 18px;
+        max-width: none;
+      }
+    }
+
+  
+
+
+    /* --- Refined Apple-like title scale: softer, calmer, consistent with site palette --- */
+    .hero h1 {
+      width: min(860px, 92vw);
+      font-size: clamp(32px, 4.45vw, 60px);
+      line-height: 1.08;
+      letter-spacing: -0.042em;
+      font-weight: 680;
+      color: #1d1d1f;
+    }
+    .headline-main {
+      font-weight: 700;
+      color: rgba(29, 29, 31, .92);
+    }
+    .headline-serif {
+      font-size: .56em;
+      font-weight: 400;
+      letter-spacing: -0.032em;
+      color: rgba(29, 29, 31, .58);
+    }
+    .subtitle {
+      margin-top: 16px;
+      color: rgba(29, 29, 31, .54);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .exhibition-title {
+      width: min(860px, 92vw);
+      font-size: clamp(34px, 4.7vw, 64px);
+      line-height: 1.04;
+      letter-spacing: -0.052em;
+      font-weight: 680;
+      color: #1d1d1f;
+    }
+    .exhibition-title-main {
+      font-weight: 700;
+      color: rgba(29, 29, 31, .92);
+    }
+    .exhibition-title-serif {
+      font-size: .58em;
+      font-weight: 400;
+      letter-spacing: -0.038em;
+      color: rgba(29, 29, 31, .58);
+    }
+    @media (max-width: 760px) {
+      .hero h1 { font-size: clamp(34px, 11vw, 48px); }
+      .headline-serif { font-size: .54em; }
+      .exhibition-title { font-size: clamp(32px, 10vw, 48px); }
+    }
+
+
+    /* --- Performance refinement for smoother 3D card scrolling --- */
+    .card {
+      backface-visibility: hidden;
+      transform: translateZ(0);
+      contain: layout paint;
+    }
+    .card img {
+      backface-visibility: hidden;
+      will-change: transform, opacity;
+    }
+
+
+    /* --- Muted blue typography only: does not change carousel layout, spacing, transform, or JS motion --- */
+    :root {
+      --text: #476F8A;
+      --muted: #6B8BA3;
+      --blue-ink: #476F8A;
+      --blue-ink-strong: #2E5A78;
+      --blue-ink-soft: #6B8BA3;
+      --blue-ink-pale: #EEF6FA;
+    }
+
+    body { color: var(--blue-ink); }
+
+    body * {
+      color: var(--blue-ink) !important;
+    }
+
+    h1, h2, h3, h4, h5, h6,
+    .headline-main,
+    .exhibition-title-main,
+    .card-title,
+    .work-title,
+    .modal-copy h2,
+    .course-map-title {
+      color: var(--blue-ink-strong) !important;
+    }
+
+    .headline-serif,
+    .exhibition-title-serif,
+    .eyebrow,
+    .exhibition-kicker,
+    .subtitle,
+    .card-desc,
+    .work-meta,
+    .hint,
+    .feature p,
+    .home-contact p,
+    .modal-copy p,
+    .modal-meta,
+    .course-map-title span,
+    .course-map-fallback {
+      color: var(--blue-ink-soft) !important;
+    }
+
+    .nav-home,
+    .nav-link,
+    .ghost,
+    .course-map-fallback a,
+    .card-menu a,
+    .detail-tag {
+      color: var(--blue-ink) !important;
+    }
+
+    .pill,
+    .icon-btn {
+      color: var(--blue-ink-pale) !important;
+      background: linear-gradient(135deg, #6F97B2, #91B2C6) !important;
+    }
+
+    .modal-close,
+    .course-map-close {
+      color: var(--blue-ink-strong) !important;
+      background: rgba(229, 244, 255, .86) !important;
+    }
+
+    .card:not(:hover):not(.is-focused) .card-content,
+    .card:not(:hover):not(.is-focused) .card-content *,
+    .work-card:not(.is-active) .work-content,
+    .work-card:not(.is-active) .work-content * {
+      color: var(--blue-ink-pale) !important;
+      text-shadow: none !important;
+    }
+
+    .card:not(:hover):not(.is-focused) .card-index,
+    .work-card:not(.is-active) .work-index {
+      border-color: rgba(238, 246, 250, .50) !important;
+      background: rgba(72, 108, 134, .20) !important;
+      backdrop-filter: blur(12px);
+    }
+
+    .card:hover .card-content,
+    .card:hover .card-content *,
+    .card.is-focused .card-content,
+    .card.is-focused .card-content *,
+    .work-card.is-active .work-detail,
+    .work-card.is-active .work-detail * {
+      color: var(--blue-ink) !important;
+    }
+
+    .card:hover .card-title,
+    .card.is-focused .card-title,
+    .work-detail h3 {
+      color: var(--blue-ink-strong) !important;
+    }
+
+    .card:hover .card-desc,
+    .card.is-focused .card-desc,
+    .detail-copy p,
+    .detail-meta {
+      color: var(--blue-ink-soft) !important;
+    }
+
+    .card:hover .card-menu,
+    .card.is-focused .card-menu {
+      border-top-color: rgba(72, 108, 134, .16) !important;
+    }
+
+    .card-menu a::after {
+      color: var(--blue-ink) !important;
+      background: rgba(72, 108, 134, .09) !important;
+    }
+
+    .nav-link:hover,
+    .nav-link.is-active,
+    .nav-home:hover {
+      color: var(--blue-ink-strong) !important;
+      background: rgba(238, 246, 250, .86) !important;
+    }
+
+    .hint {
+      border-color: rgba(72, 108, 134, .10) !important;
+      background: rgba(250,253,255,.76) !important;
+    }
+
+</style>
+</head>
+<body>
+  <main class="page">
+    <nav class="nav">
+      <a class="nav-home" href="#home" data-home-link>School of Design</a>
+      <div class="nav-menu-drawer" id="navMenu" aria-hidden="true">
+        <a class="nav-link" href="#home" data-card-index="0">新闻动态</a>
+        <a class="nav-link" href="#home" data-card-index="1">教学科研</a>
+        <a class="nav-link" href="#home" data-card-index="2">学院概况</a>
+        <a class="nav-link" href="#home" data-card-index="3">学生天地</a>
+        <a class="nav-link" href="#home" data-card-index="4">数字展厅</a>
+        <a class="nav-link" href="#home" data-card-index="5">社会服务</a>
+        <a class="nav-link" href="#home" data-card-index="6">校友&合作</a>
+        <a class="nav-link" href="#home" data-card-index="7">党群工作</a>
+      </div>
+      <div class="nav-right">
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="展开目录" aria-controls="navMenu" aria-expanded="false">
+          <span class="menu-toggle-lines"></span>
+        </button>
+      </div>
+    </nav>
+
+    <section class="view is-active" id="homeView">
+      <section class="hero">
+        <div class="eyebrow">Art × Technology × Education</div>
+        <h1>
+          <span class="headline-main">设计面向未来</span><br />
+          <span class="headline-serif">Reimagine Creative Intelligence</span>
+        </h1>
+        <p class="subtitle">以艺术、科技与人文交叉为核心，探索设计教育、具身智能、数字媒体与社会创新的未来形态。</p>
+      </section>
+
+      <section class="carousel-section" id="carousel" aria-label="学院官网一级目录卡片横向滚动">
+        <div class="arc-glow"></div>
+        <div class="track" id="track"></div>
+        <div class="hint"><i class="hint-dot"></i> 拖动卡片横向浏览 · Hover 查看目录</div>
+      </section>
+
+      <section class="feature-row" aria-label="学院联系方式">
+        <article class="feature home-contact">
+          <p>©️2026华东师范大学设计学院<br />
+          地址:上海市普陀区中山北路3663号<br />
+          电话:+86-21-62237313<br />
+          传真:+86-21-62606775<br />
+          邮箱:DESIGN@DESIGN.ECNU.EDU.CN</p>
+        </article>
+      </section>
+    </section>
+
+    <section class="view" id="exhibitionView">
+      <section class="exhibition-hero">
+        <div class="exhibition-kicker">2025 Graduation Exhibition</div>
+        <h1 class="exhibition-title">
+          <span class="exhibition-title-main">设计学院毕业设计展</span><br />
+          <span class="exhibition-title-serif">Graduation Design Exhibition</span>
+        </h1>
+      </section>
+      <section class="works-section" id="worksCarousel" aria-label="毕业设计作品环绕滚动">
+        <div class="arc-glow"></div>
+        <div class="works-track" id="worksTrack"></div>
+        <div class="hint"><i class="hint-dot"></i> 点击作品卡片查看图文信息</div>
+      </section>
+    </section>
+    <section class="view" id="introView">
+      <div class="intro-page-shell">
+        <iframe
+          id="introFrame"
+          class="intro-page-frame"
+          title="学院简介"
+          scrolling="no"
+          srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+  &lt;title&gt;华东师范大学设计学院｜学院介绍&lt;/title&gt;
+  &lt;style&gt;
+    :root{
+      --bg:#f3f7fb;
+      --paper:rgba(255,255,255,.62);
+      --ink:#0b0d10;
+      --muted:#6f7780;
+      --line:rgba(35,72,95,.10);
+      --soft:rgba(35,72,95,.10);
+      --blue:#9ecbff;
+      --green:#eaff8f;
+      --radius:28px;
+      --ease:cubic-bezier(.2,.85,.2,1);
+      --serif:Georgia,&quot;Times New Roman&quot;,serif;
+      --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,&quot;SF Pro Display&quot;,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;
+      --cn:&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{
+      min-height:100vh;
+      color:var(--ink);
+      font-family:var(--sans);
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+      background:
+        radial-gradient(circle at 84% 20%, rgba(235,255,124,.48), transparent 30%),
+        radial-gradient(circle at 18% 68%, rgba(147,199,255,.38), transparent 34%),
+        radial-gradient(circle at 48% 42%, rgba(214,247,244,.34), transparent 33%),
+        linear-gradient(135deg,#f5f8fb 0%,#f4fbff 38%,#f8fbf3 100%);
+    }
+    body::before{
+      content:&quot;&quot;;
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      background-image:
+        radial-gradient(rgba(24,94,126,.13) .7px, transparent .7px),
+        radial-gradient(rgba(186,214,72,.12) .6px, transparent .6px);
+      background-size:7px 7px,11px 11px;
+      background-position:0 0,3px 5px;
+      mask-image:linear-gradient(135deg,transparent 0%,black 18%,black 78%,transparent 100%);
+    }
+
+    a{color:inherit;text-decoration:none;}
+
+    .page{
+      position:relative;
+      z-index:1;
+      width:min(1180px,92vw);
+      margin:0 auto;
+      padding:28px 0 56px;
+    }
+
+    .nav{
+      position:sticky;
+      top:18px;
+      z-index:20;
+      width:min(1180px,92vw);
+      margin:0 auto 22px;
+      min-height:76px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
+      gap:16px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px 10px 18px;
+      background:rgba(255,255,255,.62);
+      backdrop-filter:blur(24px);
+      box-shadow:0 22px 70px rgba(65,112,148,.09);
+      overflow:hidden;
+    }
+    .nav-home{
+      display:inline-flex;
+      align-items:center;
+      width:max-content;
+      height:42px;
+      padding:0 16px;
+      border-radius:999px;
+      color:rgba(11,13,16,.76);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:.02em;
+      background:rgba(255,255,255,.46);
+      transition:background .25s ease,transform .25s var(--ease);
+    }
+    .nav-home:hover{background:rgba(255,255,255,.78);transform:translateY(-1px);}
+    .nav-menu-drawer{
+      position:absolute;
+      top:50%;
+      right:70px;
+      z-index:3;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:6px;
+      max-width:min(880px,calc(100vw - 150px));
+      height:48px;
+      padding:5px 8px;
+      border:1px solid rgba(11,11,13,.07);
+      border-radius:999px;
+      background:rgba(250,253,255,.76);
+      backdrop-filter:blur(18px);
+      box-shadow:0 16px 46px rgba(82,135,168,.10);
+      opacity:0;
+      pointer-events:none;
+      transform:translate(34px,-50%) scaleX(.78);
+      transform-origin:right center;
+      transition:opacity .36s var(--ease),transform .52s var(--ease);
+    }
+    .nav.is-menu-open .nav-menu-drawer{
+      opacity:1;
+      pointer-events:auto;
+      transform:translate(0,-50%) scaleX(1);
+    }
+    .nav-link{
+      display:inline-flex;
+      align-items:center;
+      height:38px;
+      padding:0 11px;
+      border-radius:999px;
+      color:rgba(11,11,13,.76);
+      font-size:13px;
+      font-weight:620;
+      white-space:nowrap;
+      opacity:0;
+      transform:translateX(24px);
+      transition:background .25s ease,opacity .34s var(--ease),transform .44s var(--ease);
+    }
+    .nav.is-menu-open .nav-link{opacity:1;transform:translateX(0);}
+    .nav.is-menu-open .nav-link:nth-child(1){transition-delay:.02s;}
+    .nav.is-menu-open .nav-link:nth-child(2){transition-delay:.04s;}
+    .nav.is-menu-open .nav-link:nth-child(3){transition-delay:.06s;}
+    .nav.is-menu-open .nav-link:nth-child(4){transition-delay:.08s;}
+    .nav.is-menu-open .nav-link:nth-child(5){transition-delay:.10s;}
+    .nav.is-menu-open .nav-link:nth-child(6){transition-delay:.12s;}
+    .nav.is-menu-open .nav-link:nth-child(7){transition-delay:.14s;}
+    .nav.is-menu-open .nav-link:nth-child(8){transition-delay:.16s;}
+    .nav-link:hover,.nav-link.is-active{opacity:1;background:rgba(11,11,13,.055);color:rgba(11,11,13,.9);}
+    .nav-right{position:relative;z-index:4;display:flex;justify-content:flex-end;align-items:center;}
+    .menu-toggle{
+      width:46px;height:46px;
+      display:inline-grid;
+      place-items:center;
+      border:1px solid rgba(11,11,13,.09);
+      border-radius:50%;
+      background:rgba(252,254,255,.82);
+      cursor:pointer;
+      box-shadow:0 10px 28px rgba(82,135,168,.10);
+      transition:transform .3s var(--ease),background .3s var(--ease);
+    }
+    .menu-toggle:hover{transform:translateY(-1px);background:rgba(255,255,255,.95);}
+    .menu-toggle-lines{position:relative;width:18px;height:12px;display:block;}
+    .menu-toggle-lines::before,.menu-toggle-lines::after{
+      content:&quot;&quot;;
+      position:absolute;
+      right:0;
+      width:18px;height:2px;
+      border-radius:999px;
+      background:#056dff;
+      transition:transform .35s var(--ease),top .35s var(--ease),width .35s var(--ease);
+    }
+    .menu-toggle-lines::before{top:1px;}
+    .menu-toggle-lines::after{top:9px;width:13px;}
+    .nav.is-menu-open .menu-toggle-lines::before{top:5px;transform:rotate(45deg);}
+    .nav.is-menu-open .menu-toggle-lines::after{top:5px;width:18px;transform:rotate(-45deg);}
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:26px;
+      align-items:end;
+      padding:54px 0 58px;
+      border-bottom:1px solid rgba(11,13,16,.08);
+    }
+    .hero-kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:9px;
+      margin-bottom:14px;
+      color:rgba(11,11,13,.66);
+      font-family:var(--serif);
+      font-style:italic;
+      font-size:18px;
+      line-height:1.2;
+      font-weight:400;
+      letter-spacing:0;
+      text-transform:none;
+    }
+    .hero-kicker::before,.hero-kicker::after{
+      content:&quot;&quot;;
+      width:36px;
+      height:1px;
+      background:rgba(11,11,13,.16);
+    }
+    .hero h1{
+      width:min(680px,92vw);
+      font-size:clamp(54px,8vw,112px);
+      line-height:.95;
+      letter-spacing:-.075em;
+      font-weight:800;
+      text-transform:none;
+      font-family:var(--sans);
+    }
+    .hero h1 .script,.script{
+      font-family:var(--serif);
+      font-size:.72em;
+      font-weight:400;
+      font-style:italic;
+      letter-spacing:-.065em;
+      text-transform:none;
+    }
+    .hero-aside{
+      display:grid;
+      grid-template-columns:170px 1fr;
+      gap:22px;
+      align-items:end;
+    }
+    .image-card,.image-block,.portrait-band,.floating-thumb,.card-img{
+      position:relative;
+      overflow:hidden;
+      border-radius:var(--radius);
+      background:
+        radial-gradient(circle at 84% 16%,rgba(236,255,126,.26),transparent 38%),
+        radial-gradient(circle at 18% 70%,rgba(143,196,255,.24),transparent 42%),
+        linear-gradient(145deg,rgba(255,255,255,.78),rgba(235,244,255,.80));
+      filter:none;
+      box-shadow:0 28px 80px rgba(65,112,148,.11);
+    }
+    .image-card img,.image-block img,.portrait-band img,.floating-thumb img,.card-img img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      transform:scale(1.035);
+      transition:transform .9s var(--ease), filter .9s var(--ease);
+    }
+    .image-card:hover img,.image-block:hover img,.portrait-band:hover img,.floating-thumb:hover img,.card-img:hover img{
+      transform:scale(1.08);
+      filter:saturate(1.08) contrast(1.03);
+    }
+    .image-card{aspect-ratio:1/1.18;}
+    .intro-text{
+      max-width:520px;
+      font:400 14px/1.9 var(--cn);
+      color:rgba(11,13,16,.70);
+      text-align:justify;
+    }
+    .intro-text strong{
+      font-family:var(--sans);
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      display:block;
+      margin-bottom:8px;
+      color:#056dff;
+    }
+
+    .statement{
+      padding:64px 0 52px;
+      text-align:center;
+    }
+    .statement h2,.quote h2,.big-list h3{
+      font-family:var(--sans);
+      font-weight:800;
+      color:var(--text);
+      letter-spacing:-.07em;
+      text-transform:none;
+    }
+    .statement h2{
+      font-size:clamp(42px,7vw,92px);
+      line-height:.98;
+    }
+    .statement .thin{font-weight:700;letter-spacing:-.04em;}
+    .statement p{
+      width:min(720px,86vw);
+      margin:28px auto 0;
+      font:400 15px/2 var(--cn);
+      color:rgba(11,13,16,.68);
+    }
+
+    .portrait-band{
+      height:min(410px,43vw);
+      min-height:260px;
+      margin-bottom:58px;
+      background:
+        radial-gradient(circle at 20% 70%,rgba(147,199,255,.28),transparent 30%),
+        radial-gradient(circle at 80% 22%,rgba(235,255,124,.38),transparent 32%),
+        linear-gradient(135deg,rgba(255,255,255,.70),rgba(244,251,255,.62));
+    }
+    .portrait-band::after,.image-block::after,.card-img::after,.floating-thumb::after{
+      content:&quot;&quot;;
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background-image:
+        radial-gradient(rgba(26,93,126,.10) .8px, transparent .8px),
+        radial-gradient(rgba(176,205,63,.10) .7px, transparent .7px);
+      background-size:7px 7px,12px 12px;
+      background-position:0 0,4px 6px;
+      opacity:.42;
+    }
+
+    .section-title{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      align-items:end;
+      gap:16px;
+      margin:42px 0 24px;
+    }
+    .section-title h3{
+      font-family:var(--serif);
+      font-weight:400;
+      font-style:italic;
+      font-size:clamp(24px,3vw,38px);
+      letter-spacing:-.03em;
+      text-transform:none;
+      color:rgba(11,13,16,.82);
+    }
+    .section-title .line{
+      height:1px;
+      background:rgba(11,13,16,.10);
+      transform:translateY(-8px);
+    }
+
+    .grid-feature{
+      display:grid;
+      grid-template-columns:1.08fr .92fr;
+      gap:32px;
+      align-items:start;
+      margin-bottom:54px;
+    }
+    .image-block{min-height:300px;}
+    .image-block.small{min-height:220px;}
+    .copy-columns{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:22px;
+      padding-top:8px;
+    }
+    .copy-columns p,.text-block p,.line-row p,.card p,.footer p{
+      font:400 14px/1.9 var(--cn);
+      text-align:justify;
+      color:rgba(11,13,16,.68);
+    }
+    .text-block h4{
+      font-family:var(--serif);
+      font-weight:400;
+      font-size:30px;
+      letter-spacing:-.03em;
+      margin-bottom:16px;
+    }
+
+    .list-lines{margin:34px 0 60px;}
+    .line-row{
+      display:grid;
+      grid-template-columns:220px 1fr;
+      gap:28px;
+      border-top:1px solid rgba(35,72,95,.10);
+      padding:22px 0;
+    }
+    .line-row:last-child{border-bottom:1px solid rgba(35,72,95,.10);}
+    .line-row h4{
+      font-family:var(--sans);
+      font-weight:760;
+      font-size:28px;
+      letter-spacing:-.05em;
+      text-transform:none;
+    }
+    .line-row p{
+      columns:2;
+      column-gap:34px;
+    }
+
+    .quote{
+      padding:68px 0 46px;
+      text-align:center;
+    }
+    .quote h2{
+      font-size:clamp(40px,6.2vw,86px);
+      line-height:.98;
+    }
+    .quote .script{letter-spacing:-.05em;}
+
+    .asymmetric{
+      display:grid;
+      grid-template-columns:.7fr 1.12fr .7fr;
+      grid-template-areas:&quot;left main right&quot; &quot;left text right&quot;;
+      gap:28px;
+      align-items:start;
+      margin-bottom:58px;
+    }
+    .asymmetric .main-img{grid-area:main;min-height:330px;}
+    .asymmetric .left-img{grid-area:left;min-height:190px;margin-top:250px;}
+    .asymmetric .right-img{grid-area:right;min-height:130px;margin-top:390px;}
+    .asymmetric .text{grid-area:text;display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+    .caption{
+      margin-top:10px;
+      font:650 10px/1 var(--sans);
+      letter-spacing:.08em;
+      color:rgba(11,13,16,.48);
+      text-transform:uppercase;
+    }
+
+    .big-list{
+      text-align:center;
+      padding:44px 0 60px;
+      position:relative;
+    }
+    .big-list h3{
+      display:inline-block;
+      font-size:clamp(36px,5.4vw,74px);
+      line-height:1.02;
+    }
+    .big-list .script{font-size:.9em;}
+    .floating-thumb{
+      position:absolute;
+      width:128px;height:86px;border-radius:18px;
+    }
+    .floating-thumb.t1{left:0;top:58px;}
+    .floating-thumb.t2{right:0;bottom:62px;}
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:24px;
+      margin-top:22px;
+    }
+    .card{
+      border:1px solid rgba(35,72,95,.10);
+      border-radius:26px;
+      padding:16px;
+      background:rgba(255,255,255,.48);
+      backdrop-filter:blur(14px);
+      box-shadow:0 22px 60px rgba(65,112,148,.08);
+    }
+    .card-img{
+      height:190px;
+      margin-bottom:14px;
+    }
+    .card h4{
+      font:760 15px/1.2 var(--sans);
+      letter-spacing:-.02em;
+      margin-bottom:8px;
+    }
+
+    .footer{
+      margin-top:70px;
+      padding:28px 0 0;
+      border-top:1px solid rgba(35,72,95,.10);
+      display:grid;
+      grid-template-columns:1fr 1.4fr;
+      gap:30px;
+      color:rgba(11,13,16,.68);
+    }
+    .footer-logo{
+      font-family:var(--sans);
+      font-size:36px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-.06em;
+      text-transform:none;
+    }
+    .footer p{font-size:12px;}
+
+    .reveal{opacity:1;transform:none;transition:opacity .9s ease,transform .9s ease;}
+    .reveal.in{opacity:1;transform:translateY(0);}
+
+    @media (max-width:1120px){
+      .nav{border-radius:34px;overflow:visible;}
+      .nav-menu-drawer{
+        top:calc(100% + 10px);
+        right:0;
+        max-width:min(720px,calc(100vw - 76px));
+        height:auto;
+        flex-wrap:wrap;
+        justify-content:flex-start;
+        padding:10px;
+        border-radius:26px;
+        transform:translate(24px,-8px) scale(.96);
+      }
+      .nav.is-menu-open .nav-menu-drawer{transform:translate(0,0) scale(1);}
+    }
+
+    @media (max-width:860px){
+      .page{width:min(100% - 28px,92vw);padding-top:18px;}
+      .nav{top:12px;width:calc(100vw - 28px);padding:10px 10px 12px 16px;}
+      .nav-home{font-size:12px;padding:0 12px;}
+      .nav-menu-drawer{
+        max-width:calc(100vw - 28px);
+        width:calc(100vw - 28px);
+        right:-10px;
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+      }
+      .nav-menu-drawer .nav-link{justify-content:center;background:rgba(255,255,255,.62);}
+      .hero,.grid-feature,.footer{grid-template-columns:1fr;}
+      .hero-aside{grid-template-columns:110px 1fr;}
+      .copy-columns,.asymmetric .text{grid-template-columns:1fr;}
+      .line-row{grid-template-columns:1fr;gap:12px;}
+      .line-row p{columns:1;}
+      .asymmetric{grid-template-columns:1fr;grid-template-areas:&quot;main&quot; &quot;text&quot; &quot;left&quot; &quot;right&quot;;}
+      .asymmetric .left-img,.asymmetric .right-img{margin-top:0;}
+      .cards{grid-template-columns:1fr;}
+      .floating-thumb{display:none;}
+    }
+  
+    /* --- Final embedded intro contrast fix: darker blue text on light dotted intro page --- */
+    :root{
+      --ink:#2E5A78 !important;
+      --muted:#476F8A !important;
+      --title-ink:#2E5A78 !important;
+      --title-soft:#476F8A !important;
+    }
+    html,body{
+      color:#476F8A !important;
+    }
+    body *{
+      color:#476F8A !important;
+      -webkit-text-fill-color:currentColor !important;
+      text-shadow:none !important;
+    }
+    h1,h2,h3,h4,h5,h6,
+    .hero h1,
+    .statement h2,
+    .quote h2,
+    .big-list h3,
+    .line-row h4,
+    .section-title h3,
+    .footer-logo{
+      color:#2E5A78 !important;
+      -webkit-text-fill-color:#2E5A78 !important;
+      opacity:1 !important;
+      text-shadow:none !important;
+    }
+    .hero-kicker,
+    .intro-text,
+    .intro-text strong,
+    .statement p,
+    .copy-columns p,
+    .text-block p,
+    .line-row p,
+    .card p,
+    .caption,
+    .footer p{
+      color:#476F8A !important;
+      -webkit-text-fill-color:#476F8A !important;
+      opacity:1 !important;
+      text-shadow:none !important;
+    }
+    .script{
+      color:#5F8198 !important;
+      -webkit-text-fill-color:#5F8198 !important;
+      opacity:1 !important;
+    }
+
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;main class=&quot;page&quot;&gt;
+    &lt;section class=&quot;hero reveal&quot; id=&quot;about&quot;&gt;
+      &lt;div&gt;
+        &lt;div class=&quot;hero-kicker&quot;&gt;East China Normal University&lt;/div&gt;
+        &lt;h1&gt;Design&lt;br&gt;&lt;span class=&quot;script&quot;&gt;toward&lt;/span&gt;&lt;br&gt;Future&lt;/h1&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;hero-aside&quot;&gt;
+        &lt;div class=&quot;image-card&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&amp;fit=crop&amp;w=900&amp;q=85&quot; alt=&quot;智能设计与数字实验室&quot; /&gt;&lt;/div&gt;
+        &lt;p class=&quot;intro-text&quot;&gt;&lt;strong&gt;School of Design&lt;/strong&gt;华东师范大学设计学院成立于 2004 年，依托综合性研究型大学的学科优势，以“人文设计”为核心理念，在自然、科技、艺术与人文的交汇处，探索面向未来社会的设计教育、设计研究与设计实践。&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;statement reveal&quot;&gt;
+      &lt;h2&gt;THE&amp;nbsp;&amp;nbsp;DESIRE&amp;nbsp;&amp;nbsp;TO&lt;br&gt;CREATE &lt;span class=&quot;script&quot;&gt;a new&lt;/span&gt; WAY&lt;br&gt;OF&amp;nbsp;&amp;nbsp;LIVING&lt;/h2&gt;
+      &lt;p&gt;学院关注设计与人的关系，强调设计不仅是形式与功能的创造，更是对生活方式、社会问题、技术变革与文化价值的综合回应。在快速变化的时代语境中，学院致力于培养具有国际视野、批判意识、创新能力和社会责任感的高层次设计人才。&lt;/p&gt;
+    &lt;/section&gt;
+
+    &lt;div class=&quot;portrait-band reveal&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&amp;fit=crop&amp;w=1600&amp;q=85&quot; alt=&quot;机器人与人工智能设计场景&quot; /&gt;&lt;/div&gt;
+
+    &lt;section class=&quot;reveal&quot; id=&quot;discipline&quot;&gt;
+      &lt;div class=&quot;section-title&quot;&gt;&lt;h3&gt;DISCIPLINE&lt;/h3&gt;&lt;div class=&quot;line&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;grid-feature&quot;&gt;
+        &lt;div&gt;
+          &lt;div class=&quot;image-block&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&amp;fit=crop&amp;w=1400&amp;q=85&quot; alt=&quot;跨学科设计教育与空间构成&quot; /&gt;&lt;/div&gt;
+          &lt;div class=&quot;caption&quot;&gt;Humanistic Design / Cross-disciplinary Education&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;copy-columns&quot;&gt;
+          &lt;p&gt;学院现设公共艺术、环境设计、视觉传达设计、产品设计等本科专业方向，形成涵盖空间环境、公共艺术、品牌视觉、数字媒体、产品与交互等领域的综合性设计教育体系。&lt;/p&gt;
+          &lt;p&gt;学院重视跨专业、跨年级、跨学段的融合式教学，围绕城市更新、公共空间、品牌传播、数字艺术、产品创新、乡村振兴和未来生活方式等议题，构建以项目实践为核心的教学模式。&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;list-lines reveal&quot;&gt;
+      &lt;div class=&quot;line-row&quot;&gt;
+        &lt;h4&gt;PUBLIC ART&lt;/h4&gt;
+        &lt;p&gt;公共艺术关注城市空间、文化场景与社会参与，通过材料、媒介、装置、影像和公共项目实践，回应人与环境之间的关系，探索艺术介入公共生活的多种方式。&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;line-row&quot;&gt;
+        &lt;h4&gt;ENVIRONMENT&lt;/h4&gt;
+        &lt;p&gt;环境设计强调空间体验、城市更新、社区营造与可持续生活方式，训练学生从空间、行为、生态和文化多重维度理解设计问题，并提出具有公共价值的解决方案。&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;line-row&quot;&gt;
+        &lt;h4&gt;VISUAL COMM.&lt;/h4&gt;
+        &lt;p&gt;视觉传达设计面向品牌、出版、动态影像、信息可视化与数字媒介，关注图像、文字、叙事与传播系统之间的关系，培养面向当代传播环境的视觉创新能力。&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;line-row&quot;&gt;
+        &lt;h4&gt;PRODUCT&lt;/h4&gt;
+        &lt;p&gt;产品设计聚焦生活方式、服务系统、交互体验与智能产品，将用户研究、原型实验、材料工艺和数字技术结合起来，探索人与物、人与系统、人与技术之间的新关系。&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;quote reveal&quot; id=&quot;future&quot;&gt;
+      &lt;h2&gt;AI CAN&lt;br&gt;SERVE AS A &lt;span class=&quot;script&quot;&gt;bridge&lt;/span&gt; BETWEEN&lt;br&gt;HUMAN AND REALITY.&lt;/h2&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;asymmetric reveal&quot;&gt;
+      &lt;div&gt;
+        &lt;div class=&quot;image-block small left-img&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&amp;fit=crop&amp;w=900&amp;q=85&quot; alt=&quot;沉浸式交互与未来界面&quot; /&gt;&lt;/div&gt;
+        &lt;div class=&quot;caption&quot;&gt;Urban / Body / Interaction&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;div class=&quot;image-block main-img&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1531746790731-6c087fecd65a?auto=format&amp;fit=crop&amp;w=1400&amp;q=85&quot; alt=&quot;人工智能与人机协同&quot; /&gt;&lt;/div&gt;
+        &lt;div class=&quot;caption&quot;&gt;Embodied Intelligence Forum&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;div class=&quot;image-block small right-img&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&amp;fit=crop&amp;w=900&amp;q=85&quot; alt=&quot;生成式人工智能视觉&quot; /&gt;&lt;/div&gt;
+        &lt;div class=&quot;caption&quot;&gt;AI Design Lab&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;text&quot;&gt;
+        &lt;p&gt;面对人工智能、生成式设计、数字孪生、虚拟现实和具身智能等新技术的发展，学院积极推动设计学科与智能科技的深度融合。近年来，学生作品展、项目实践与学术活动持续呈现 AI 辅助设计教育系统、数字虚拟空间、未来生活场景、服务机器人与沉浸式交互等方向的探索。&lt;/p&gt;
+        &lt;p&gt;学院认为，人工智能并不会替代设计的价值判断与人文关怀，而是促使设计师重新理解创造力、身体经验、工具关系与人机协同。具身智能的发展提示设计教育重新重视身体、材料、空间、动作与环境之间的关系，推动设计从“数字化表达”走向“物理世界中的智能交互”。&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;big-list reveal&quot;&gt;
+      &lt;div class=&quot;floating-thumb t1&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?auto=format&amp;fit=crop&amp;w=600&amp;q=85&quot; alt=&quot;智能装置缩略图&quot; /&gt;&lt;/div&gt;
+      &lt;h3&gt;HUMANISTIC DESIGN&lt;br&gt;AI &lt;span class=&quot;script&quot;&gt;co-creation&lt;/span&gt;&lt;br&gt;EMBODIED INTELLIGENCE&lt;br&gt;PUBLIC VALUE&lt;br&gt;SUSTAINABLE FUTURE&lt;/h3&gt;
+      &lt;div class=&quot;floating-thumb t2&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&amp;fit=crop&amp;w=600&amp;q=85&quot; alt=&quot;科技设计缩略图&quot; /&gt;&lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;reveal&quot; id=&quot;practice&quot;&gt;
+      &lt;div class=&quot;section-title&quot;&gt;&lt;h3&gt;RECENT DIRECTIONS&lt;/h3&gt;&lt;div class=&quot;line&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;cards&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;div class=&quot;card-img&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&amp;fit=crop&amp;w=900&amp;q=85&quot; alt=&quot;AI 辅助设计教育&quot; /&gt;&lt;/div&gt;
+          &lt;h4&gt;AI + Design Education&lt;/h4&gt;
+          &lt;p&gt;围绕生成式工具、智能辅助创作与设计教学流程，探索人工智能时代的设计学习方式，形成从调研、构思、原型到表达的协同创新路径。&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;div class=&quot;card-img&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&amp;fit=crop&amp;w=900&amp;q=85&quot; alt=&quot;具身交互与机器人&quot; /&gt;&lt;/div&gt;
+          &lt;h4&gt;Embodied Interaction&lt;/h4&gt;
+          &lt;p&gt;关注身体、空间、动作与技术系统之间的交互关系，将具身智能、多模态感知和服务机器人等议题融入未来产品与空间体验研究。&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;div class=&quot;card-img&quot;&gt;&lt;img src=&quot;https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&amp;fit=crop&amp;w=900&amp;q=85&quot; alt=&quot;社会创新与数字技术&quot; /&gt;&lt;/div&gt;
+          &lt;h4&gt;Social Innovation&lt;/h4&gt;
+          &lt;p&gt;通过城市更新、公共艺术、社区设计与可持续实践，推动设计进入真实社会现场，使设计成为连接知识、技术、产业与公共价值的重要媒介。&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;footer class=&quot;footer reveal&quot;&gt;
+      &lt;div class=&quot;footer-logo&quot;&gt;ECNU&lt;br&gt;DESIGN&lt;/div&gt;
+      &lt;p&gt;华东师范大学设计学院&lt;br&gt;地址：上海市普陀区中山北路3663号　电话：+86-21-62237313　传真：+86-21-62606775&lt;br&gt;邮箱：DESIGN@DESIGN.ECNU.EDU.CN&lt;br&gt;2019 华东师范大学设计学院。该网站版权属于华东师范大学设计学院，任何个人与单位不得在未经华东师范大学设计学院允许并授权的许可下擅自盗用、改动网站内容。&lt;/p&gt;
+    &lt;/footer&gt;
+  &lt;/main&gt;
+  &lt;script&gt;
+    function revealAll(){
+      document.querySelectorAll(&#x27;.reveal&#x27;).forEach(el =&gt; el.classList.add(&#x27;in&#x27;));
+      const height = Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0);
+      window.parent &amp;&amp; window.parent.postMessage({ type: &#x27;intro-resize&#x27;, height }, &#x27;*&#x27;);
+    }
+    window.addEventListener(&#x27;load&#x27;, revealAll);
+    window.addEventListener(&#x27;resize&#x27;, revealAll);
+    revealAll();
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;">
+        </iframe>
+      </div>
+    </section>
+  </main>
+
+  <div class="work-modal" id="workModal" aria-hidden="true">
+    <div class="modal-panel">
+      <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
+      <div class="modal-image"><img id="modalImage" src="" alt="作品图片" /><div class="play-dot"></div></div>
+      <article class="modal-copy">
+        <div class="modal-actions"><button class="icon-btn" aria-label="收藏">♡</button><button class="icon-btn" aria-label="点赞">♧</button><button class="icon-btn" aria-label="评论">□</button></div>
+        <h2 id="modalTitle">未完待续</h2>
+        <div class="en" id="modalEn">TO BE CONTINUED</div>
+        <p id="modalTextA"></p><p id="modalTextB"></p><div class="modal-meta" id="modalMeta"></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="course-map-modal" id="courseMapModal" aria-hidden="true">
+    <section class="course-map-panel" role="dialog" aria-modal="true" aria-label="课程地图">
+      <header class="course-map-head">
+        <div class="course-map-title">课程地图 <span>Curriculum Map</span></div>
+        <button class="course-map-close" id="courseMapClose" type="button" aria-label="关闭课程地图">×</button>
+      </header>
+      <iframe
+        class="course-map-frame"
+        id="courseMapFrame"
+        title="课程地图 Canvas 页面"
+        src="about:blank"
+        data-src="./课程地图.html"
+        allow="clipboard-read; clipboard-write"
+        loading="lazy">
+      </iframe>
+      <div class="course-map-fallback">
+        若页面因平台限制无法嵌入显示，可
+        <a href="./课程地图.html">在新标签页打开</a>。
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const nav = document.querySelector('.nav');
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
+    const homeView = document.getElementById('homeView');
+    const exhibitionView = document.getElementById('exhibitionView');
+    const introView = document.getElementById('introView');
+
+    function closeMenu() {
+      nav.classList.remove('is-menu-open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.setAttribute('aria-label', '展开目录');
+      navMenu.setAttribute('aria-hidden', 'true');
+    }
+
+    function showView(viewName) {
+      const isHome = viewName === 'home';
+      const isExhibition = viewName === 'exhibition';
+      const isIntro = viewName === 'intro';
+      homeView.classList.toggle('is-active', isHome);
+      exhibitionView.classList.toggle('is-active', isExhibition);
+      introView.classList.toggle('is-active', isIntro);
+      closeMenu();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (isIntro) setTimeout(resizeIntroFrame, 120);
+    }
+
+    menuToggle.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('is-menu-open');
+      menuToggle.setAttribute('aria-expanded', String(isOpen));
+      menuToggle.setAttribute('aria-label', isOpen ? '收起目录' : '展开目录');
+      navMenu.setAttribute('aria-hidden', String(!isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!nav.contains(event.target) && nav.classList.contains('is-menu-open')) closeMenu();
+    });
+
+    document.querySelector('[data-home-link]').addEventListener('click', (event) => {
+      event.preventDefault();
+      showView('home');
+    });
+
+    const data = [
+      { title: '新闻动态', desc: 'News & Updates', menu: ['学院要闻', '教研动态', '通知公告', '活动预告'], image: './images/card-01-news.jpg' },
+      { title: '教学科研', desc: 'Teaching & Research', menu: ['教学改革', '教师名录', '科研项目', '荣誉奖项'], image: './images/card-02-research.jpg' },
+      { title: '学院概况', desc: 'About the School', menu: ['学院简介', '学院历史', '学院空间', '组织架构'], image: './images/card-03-about.jpg' },
+      { title: '学生天地', desc: 'Student Life', menu: ['课程地图', '校园活动', '资料中心', '就业升学'], image: './images/card-04-student.jpg' },
+      { title: '数字展厅', desc: 'Digital Gallery', menu: ['年度毕业展', '课程作业展', '作品档案', '虚拟实验室'], image: './images/card-05-gallery.jpg' },
+      { title: '社会服务', desc: 'Social Service', menu: ['社会创新', '设计赋能', '公共项目', '成果转化'], image: './images/card-06-service.jpg' },
+      { title: '校友&合作', desc: 'Alumni & Partnership', menu: ['校友网络', '国际交流', '合作伙伴', '行业链接'], image: './images/card-07-alumni.jpg' },
+      { title: '党群工作', desc: 'Party & Community Work', menu: ['党建动态', '组织生活', '工会活动', '思想建设'], image: './images/card-08-party.jpg' }
+    ];
+
+    const carousel = document.getElementById('carousel');
+    const track = document.getElementById('track');
+    let offset = 0, velocity = 0, isDragging = false, lastX = 0, lastTime = 0;
+    const auto = 0.00045;
+    let hoveredIndex = null;
+
+    const cards = data.map((item, index) => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      const pageLinks = {
+        '新闻动态|学院要闻': './学院要闻.html',
+        '新闻动态|活动预告': './活动预告.html',
+        '教学科研|教师名录': './教师名录.html',
+        '教学科研|荣誉奖项': './荣誉奖项.html',
+        '学院概况|学院简介': './学院简介.html',
+        '学生天地|课程地图': './课程地图.html',
+        '学生天地|资料中心': './资料中心.html',
+        '校友&合作|国际交流': './国际交流.html',
+        '校友&合作|合作伙伴': './合作伙伴.html',
+        '校友&合作|行业链接': './行业链接.html',
+        '党群工作|党建动态': './党建动态.html'
+      };
+      const menuHtml = item.menu.map((menuItem) => {
+        const linkKey = `${item.title}|${menuItem}`;
+        const pageHref = pageLinks[linkKey];
+        const isGraduation = item.title === '数字展厅' && (menuItem === '毕业展' || menuItem === '年度毕业展');
+        const isCourseMap = item.title === '学生天地' && menuItem === '课程地图';
+        const href = pageHref || (isGraduation ? '#graduation-exhibition' : (isCourseMap ? './课程地图.html' : '#'));
+        const attrs = pageHref ? '' : (isGraduation ? 'data-graduation-link' : '');
+        return `<a href="${href}" ${attrs}>${menuItem}</a>`;
+      }).join('');
+      card.innerHTML = `<img src="${item.image}" alt="${item.title}" draggable="false" decoding="async" /><div class="card-fill"></div><div class="card-content"><div class="card-index">${String(index + 1).padStart(2, '0')}</div><div class="card-title">${item.title}</div><div class="card-desc">${item.desc}</div><nav class="card-menu" aria-label="${item.title} 子目录">${menuHtml}</nav></div>`;
+      card.addEventListener('pointerenter', () => { if (!isDragging) hoveredIndex = index; });
+      card.addEventListener('pointerleave', () => { hoveredIndex = null; });
+      track.appendChild(card);
+      return card;
+    });
+
+
+    const courseMapModal = document.getElementById('courseMapModal');
+    const courseMapFrame = document.getElementById('courseMapFrame');
+    const courseMapClose = document.getElementById('courseMapClose');
+
+    function openCourseMap(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if (!courseMapModal || !courseMapFrame) return;
+
+      // 先弹窗，再加载，避免部分浏览器拦截 iframe 尺寸初始化
+      courseMapModal.classList.add('is-open');
+      courseMapModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+
+      if (!courseMapFrame.dataset.loaded) {
+        courseMapFrame.src = courseMapFrame.dataset.src;
+        courseMapFrame.dataset.loaded = 'true';
+      }
+    }
+
+    function closeCourseMap() {
+      if (!courseMapModal) return;
+      courseMapModal.classList.remove('is-open');
+      courseMapModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    function openGraduationExhibition(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      hoveredIndex = 4;
+      velocity = 0;
+      isDragging = false;
+      carousel.classList.remove('dragging');
+      setActiveNav(4);
+      showView('exhibition');
+      setTimeout(renderWorks, 80);
+    }
+
+    function openCollegeIntro(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      hoveredIndex = 2;
+      velocity = 0;
+      isDragging = false;
+      carousel.classList.remove('dragging');
+      setActiveNav(2);
+      showView('intro');
+    }
+
+    function resizeIntroFrame() {
+      const frame = document.getElementById('introFrame');
+      if (!frame) return;
+      try {
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        const height = Math.max(
+          doc.documentElement.scrollHeight,
+          doc.body ? doc.body.scrollHeight : 0,
+          1200
+        );
+        frame.style.height = `${height + 24}px`;
+      } catch (error) {
+        frame.style.height = '4200px';
+      }
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'intro-resize' && event.data.height) {
+        const frame = document.getElementById('introFrame');
+        if (frame) frame.style.height = `${Math.ceil(event.data.height) + 32}px`;
+      } else {
+        resizeIntroFrame();
+      }
+    });
+    document.getElementById('introFrame')?.addEventListener('load', resizeIntroFrame);
+
+    track.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('[data-graduation-link], [data-intro-link], [data-external-intro-link]')) {
+        event.stopPropagation();
+      }
+    }, true);
+
+    track.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-graduation-link]');
+      if (!link) return;
+      openGraduationExhibition(event);
+    });
+
+    track.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-intro-link]');
+      if (!link) return;
+      openCollegeIntro(event);
+    });
+
+    document.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-graduation-link]');
+      if (!link) return;
+      openGraduationExhibition(event);
+    }, true);
+
+    document.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-intro-link]');
+      if (!link) return;
+      openCollegeIntro(event);
+    }, true);
+
+
+    if (courseMapClose) {
+      courseMapClose.addEventListener('click', closeCourseMap);
+    }
+    if (courseMapModal) {
+      courseMapModal.addEventListener('click', (event) => {
+        if (event.target === courseMapModal) closeCourseMap();
+      });
+    }
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeCourseMap();
+    });
+
+
+    const navLinks = Array.from(navMenu.querySelectorAll('[data-card-index]'));
+    function setActiveNav(index) { navLinks.forEach((link, i) => link.classList.toggle('is-active', i === index)); }
+    navLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        showView('home');
+        const index = Number(link.dataset.cardIndex);
+        hoveredIndex = index;
+        velocity = 0;
+        isDragging = false;
+        setActiveNav(index);
+      });
+    });
+
+
+    function focusHomeCardFromHash() {
+      const match = String(window.location.hash || '').match(/^#card-(\d+)$/);
+      if (!match) return;
+      const index = Math.max(0, Math.min(cards.length - 1, Number(match[1])));
+      showView('home');
+      hoveredIndex = index;
+      velocity = 0;
+      isDragging = false;
+      setActiveNav(index);
+      requestAnimationFrame(() => { offset = getCenteredOffset(index); renderHomeCarousel(); });
+    }
+    window.addEventListener('hashchange', focusHomeCardFromHash);
+    focusHomeCardFromHash();
+
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function getSpacing() { return Math.max(cards[0].offsetWidth * 1.05, window.innerWidth * 0.245); }
+    function getCenteredOffset(index) { return -index * getSpacing(); }
+    function shortestOffsetPath(current, target, total) { const delta = ((target - current + total / 2) % total + total) % total - total / 2; return current + delta; }
+
+    function renderHomeCarousel() {
+      if (!cards.length) return;
+      const count = cards.length, vw = window.innerWidth, cardWidth = cards[0].offsetWidth, cardHeight = cards[0].offsetHeight, spacing = getSpacing(), total = spacing * count, depthRange = Math.min(760, Math.max(500, vw * 0.48)), sideAngle = 58;
+      cards.forEach((card, i) => {
+        let x = ((i * spacing + offset) % total + total) % total;
+        if (x > total / 2) x -= total;
+        const side = Math.sign(x) || 1, centerPower = 1 - clamp(Math.abs(x) / (spacing * 1.25), 0, 1), edgePower = clamp(Math.abs(x) / (total / 2), 0, 1), isFocused = hoveredIndex === i && !isDragging, hasFocus = hoveredIndex !== null && !isDragging;
+        const curve = Math.sin(edgePower * Math.PI * .5), z = -curve * depthRange - Math.pow(edgePower, 2) * 220, y = -cardHeight / 2 + Math.pow(edgePower, 1.8) * 56, rotateY = -side * lerp(0, sideAngle, curve), rotateZ = side * lerp(0, 5.5, edgePower);
+        let scale = lerp(.70, 1.18, centerPower), opacity = clamp(1 - Math.pow(edgePower, 2.1) * .92, 0, 1), zIndex = Math.round((1 - edgePower) * 1000);
+        const blur = lerp(0, 3.2, edgePower), brightness = lerp(1.06, .78, edgePower);
+        if (isFocused) { scale *= 1.06; opacity = 1; zIndex = 2000; setActiveNav(i); }
+        else if (hasFocus) opacity *= .72;
+        card.classList.toggle('is-focused', isFocused);
+        card.style.transform = `translate3d(${x - cardWidth / 2}px, ${y}px, ${z}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`;
+        card.style.opacity = opacity;
+        card.style.filter = `blur(${blur}px) brightness(${brightness}) saturate(${lerp(1.08, .78, edgePower)})`;
+        card.style.zIndex = zIndex;
+        card.style.pointerEvents = opacity > .18 ? 'auto' : 'none';
+      });
+    }
+
+    function tickHome() {
+      if (hoveredIndex !== null && !isDragging) {
+        const total = getSpacing() * cards.length;
+        const centered = shortestOffsetPath(offset, getCenteredOffset(hoveredIndex), total);
+        offset = lerp(offset, centered, .045);
+        velocity = 0;
+      } else if (!isDragging) {
+        offset += auto * Math.max(window.innerWidth, 900) + velocity;
+        velocity *= .89;
+      }
+      renderHomeCarousel();
+      requestAnimationFrame(tickHome);
+    }
+
+    carousel.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.card-menu a')) return;
+      hoveredIndex = null;
+      isDragging = true;
+      carousel.classList.add('dragging');
+      carousel.setPointerCapture(e.pointerId);
+      lastX = e.clientX;
+      lastTime = performance.now();
+      velocity = 0;
+    });
+    carousel.addEventListener('pointermove', (e) => { if (!isDragging) return; const now = performance.now(); const dx = e.clientX - lastX; offset += dx * .82; velocity = dx / Math.max(16, now - lastTime) * 12; lastX = e.clientX; lastTime = now; });
+    function endHomeDrag() { isDragging = false; carousel.classList.remove('dragging'); }
+    carousel.addEventListener('pointerup', endHomeDrag);
+    carousel.addEventListener('pointercancel', endHomeDrag);
+    carousel.addEventListener('pointerleave', () => { if (isDragging) endHomeDrag(); });
+    carousel.addEventListener('wheel', (e) => { e.preventDefault(); hoveredIndex = null; offset += (e.deltaY + e.deltaX) * .42; velocity += (e.deltaY + e.deltaX) * .008; }, { passive: false });
+
+    const works = [
+      {
+        title: '仿生陪伴体',
+        en: 'BIONIC COMPANION',
+        author: '林若安',
+        advisor: '徐江 教授',
+        major: '人工智能与产品设计',
+        image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=85',
+        cover: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=85',
+        textA: '《仿生陪伴体》聚焦未来陪伴型机器人在教育、养老与情绪支持场景中的应用。作品尝试以柔和、可亲近的交互方式，重新定义人与智能机器之间的关系。',
+        textB: '设计综合了形态语言、语音反馈、情绪识别与服务流程建模，提出一种兼具科技理性与人文温度的机器人产品系统。'
+      },
+      {
+        title: '生成式城市界面',
+        en: 'GENERATIVE CITY INTERFACE',
+        author: '周芷晴',
+        advisor: '陈澜 副教授',
+        major: '数字媒体设计',
+        image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85',
+        cover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85',
+        textA: '本项目探索人工智能辅助下的城市信息可视化界面设计，通过实时数据、生成式图形与交互逻辑，构建面向公众的动态城市感知平台。',
+        textB: '作品强调“数据即空间体验”的理念，使交通、环境、能耗与公共活动等复杂信息转化为可理解、可参与的视觉界面。'
+      },
+      {
+        title: '机器人感知实验室',
+        en: 'ROBOTIC SENSING LAB',
+        author: '陈一诺',
+        advisor: '李牧 副教授',
+        major: '空间与交互设计',
+        image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=85',
+        cover: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=85',
+        textA: '《机器人感知实验室》以未来教学与研究空间为原型，构建一个结合机器人视觉、传感交互与实验展示的复合式展陈系统。',
+        textB: '设计通过开放式空间布局与多层级信息交互，让复杂的人工智能研究成果以更直观、可体验的方式进入公众视野。'
+      },
+      {
+        title: 'AI 健康辅助终端',
+        en: 'AI HEALTH TERMINAL',
+        author: '王嘉禾',
+        advisor: '沈予 老师',
+        major: '服务设计',
+        image: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=1200&q=85',
+        cover: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=1200&q=85',
+        textA: '该作品聚焦智慧医疗语境下的服务终端设计，利用人工智能算法为用户提供健康咨询、情绪陪伴与基础诊断辅助。',
+        textB: '项目从交互流程、设备形态与服务触点三方面展开，力求塑造一种更可信、更友好的智能医疗体验。'
+      },
+      {
+        title: '未来制造工作站',
+        en: 'FUTURE FABRICATION HUB',
+        author: '赵予川',
+        advisor: '陆行 教授',
+        major: '工业设计',
+        image: 'https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?auto=format&fit=crop&w=1200&q=85',
+        cover: 'https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?auto=format&fit=crop&w=1200&q=85',
+        textA: '《未来制造工作站》探讨机器人协作、数字孪生与柔性制造环境中的工作界面设计，呈现未来智能生产的新型工作场景。',
+        textB: '作品关注“人机协作”的体验边界，让自动化系统既高效运行，也为人的决策与创造力保留空间。'
+      },
+      {
+        title: '情感计算装置',
+        en: 'AFFECTIVE COMPUTING DEVICE',
+        author: '叶隽洁',
+        advisor: '林知远 副教授',
+        major: '交互设计',
+        image: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1200&q=85',
+        cover: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1200&q=85',
+        textA: '该项目围绕情感计算与可穿戴交互展开，尝试通过生理数据、动作识别与环境反馈，建立更具共情能力的智能装置。',
+        textB: '设计不仅关注技术识别能力，也强调情绪表达的视觉语言，使设备在功能之外具备更强的审美与叙事特征。'
+      }
+    ];
+
+    const worksCarousel = document.getElementById('worksCarousel');
+    const worksTrack = document.getElementById('worksTrack');
+    let worksOffset = 0, worksVelocity = 0, worksDragging = false, worksLastX = 0, worksLastTime = 0;
+    let activeWorkIndex = null;
+    let hoveredWorkIndex = null;
+
+    const workCards = works.map((work, index) => {
+      const card = document.createElement('article');
+      card.className = 'work-card';
+      card.innerHTML = `
+        <img class="work-cover" src="${work.cover}" alt="${work.title}" draggable="false" />
+        <div class="work-content">
+          <div class="work-index">${String(index + 1).padStart(2, '0')}</div>
+          <div class="work-title">${work.title}</div>
+          <div class="work-meta">${work.major}</div>
+        </div>
+        <div class="work-detail">
+          <div class="detail-tag">${work.en}</div>
+          <h3>${work.title}</h3>
+          <div class="detail-inner">
+            <div class="detail-image-wrap">
+              <img class="detail-image" src="${work.image}" alt="${work.title}" />
+            </div>
+            <div class="detail-copy">
+              <p>${work.textA}</p>
+              <p>${work.textB}</p>
+              <div class="detail-meta">作品名称：${work.title}<br>作者：${work.author}<br>指导老师：${work.advisor}<br>专业：${work.major}</div>
+            </div>
+          </div>
+        </div>`;
+      card.addEventListener('pointerenter', () => {
+        if (!worksDragging && activeWorkIndex === null) hoveredWorkIndex = index;
+      });
+      card.addEventListener('pointerleave', () => {
+        if (hoveredWorkIndex === index && activeWorkIndex === null) hoveredWorkIndex = null;
+      });
+      card.addEventListener('click', (event) => {
+        event.stopPropagation();
+        activeWorkIndex = activeWorkIndex === index ? null : index;
+        hoveredWorkIndex = activeWorkIndex === null ? null : index;
+        worksVelocity = 0;
+        worksDragging = false;
+        worksCarousel.classList.remove('dragging');
+        renderWorks();
+      });
+      worksTrack.appendChild(card);
+      return card;
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.work-card')) {
+        activeWorkIndex = null;
+        hoveredWorkIndex = null;
+        renderWorks();
+      }
+    });
+
+    function workSpacing() { return Math.max(workCards[0].offsetWidth * 1.12, window.innerWidth * .245); }
+    function getWorkCenteredOffset(index) { return -index * workSpacing(); }
+    function renderWorks() {
+      if (!workCards.length) return;
+      const count = workCards.length;
+      const vw = window.innerWidth;
+      const cardWidth = workCards[0].offsetWidth;
+      const cardHeight = workCards[0].offsetHeight;
+      const spacing = workSpacing();
+      const total = spacing * count;
+      const depthRange = Math.min(680, Math.max(440, vw * .42));
+
+      workCards.forEach((card, i) => {
+        let x = ((i * spacing + worksOffset) % total + total) % total;
+        if (x > total / 2) x -= total;
+
+        const side = Math.sign(x) || 1;
+        const edgePower = clamp(Math.abs(x) / (total / 2), 0, 1);
+        const centerPower = 1 - clamp(Math.abs(x) / (spacing * 1.18), 0, 1);
+        const curve = Math.sin(edgePower * Math.PI * .5);
+        const isActive = activeWorkIndex === i;
+        const isHovered = hoveredWorkIndex === i && activeWorkIndex === null && !worksDragging;
+        const hasActive = activeWorkIndex !== null;
+
+        let z = -curve * depthRange - Math.pow(edgePower, 2) * 210;
+        let y = -cardHeight / 2 + Math.pow(edgePower, 1.5) * 34;
+        let rotateY = -side * lerp(0, 48, curve);
+        let rotateZ = side * lerp(0, 8, edgePower);
+        let scale = lerp(.76, 1.1, centerPower);
+        let opacity = clamp(1 - Math.pow(edgePower, 2.1) * .9, 0, 1);
+        let blur = lerp(0, 2.6, edgePower);
+        let brightness = lerp(1.05, .82, edgePower);
+        let zIndex = Math.round((1 - edgePower) * 1000);
+
+        if (isActive) {
+          x = 0;
+          z = 120;
+          y = -cardHeight / 2 - 24;
+          rotateY = 0;
+          rotateZ = 0;
+          scale = 1.34;
+          opacity = 1;
+          blur = 0;
+          brightness = 1;
+          zIndex = 3000;
+        } else if (isHovered) {
+          z += 80;
+          rotateY = 0;
+          rotateZ = 0;
+          scale *= 1.08;
+          opacity = 1;
+          blur = 0;
+          brightness = 1.04;
+          zIndex = 2200;
+        } else if (hasActive) {
+          opacity *= .45;
+          blur += 1.5;
+          scale *= .86;
+        }
+
+        card.classList.toggle('is-active', isActive);
+        card.classList.toggle('is-hovered', isHovered);
+        card.style.transform = `translate3d(${x - cardWidth / 2}px, ${y}px, ${z}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`;
+        card.style.opacity = opacity;
+        card.style.filter = `blur(${blur}px) brightness(${brightness})`;
+        card.style.zIndex = zIndex;
+        card.style.pointerEvents = opacity > .18 ? 'auto' : 'none';
+      });
+    }
+
+    function tickWorks() {
+      if (hoveredWorkIndex !== null && activeWorkIndex === null && !worksDragging) {
+        const total = workSpacing() * workCards.length;
+        const centered = shortestOffsetPath(worksOffset, getWorkCenteredOffset(hoveredWorkIndex), total);
+        worksOffset = lerp(worksOffset, centered, .055);
+        worksVelocity = 0;
+      } else if (!worksDragging && activeWorkIndex === null) {
+        worksOffset += .00062 * Math.max(window.innerWidth, 900) + worksVelocity;
+        worksVelocity *= .9;
+      } else if (activeWorkIndex !== null) {
+        worksVelocity = 0;
+      }
+      renderWorks();
+      requestAnimationFrame(tickWorks);
+    }
+    worksCarousel.addEventListener('pointerdown', (e) => {
+      if (activeWorkIndex !== null && e.target.closest('.work-card.is-active')) return;
+      activeWorkIndex = null;
+      hoveredWorkIndex = null;
+      worksDragging = true;
+      worksCarousel.classList.add('dragging');
+      worksCarousel.setPointerCapture(e.pointerId);
+      worksLastX = e.clientX;
+      worksLastTime = performance.now();
+      worksVelocity = 0;
+    });
+    worksCarousel.addEventListener('pointermove', (e) => { if (!worksDragging) return; const now = performance.now(); const dx = e.clientX - worksLastX; worksOffset += dx * .78; worksVelocity = dx / Math.max(16, now - worksLastTime) * 10; worksLastX = e.clientX; worksLastTime = now; renderWorks(); });
+    function endWorksDrag() { worksDragging = false; worksCarousel.classList.remove('dragging'); }
+    worksCarousel.addEventListener('pointerup', endWorksDrag);
+    worksCarousel.addEventListener('pointercancel', endWorksDrag);
+    worksCarousel.addEventListener('pointerleave', () => { if (worksDragging) endWorksDrag(); });
+    worksCarousel.addEventListener('wheel', (e) => { e.preventDefault(); worksOffset += (e.deltaY + e.deltaX) * .42; worksVelocity += (e.deltaY + e.deltaX) * .006; renderWorks(); }, { passive: false });
+
+    // 作品详情已改为卡片内部展开，因此不再使用独立弹窗。
+
+    window.addEventListener('resize', () => { renderHomeCarousel(); renderWorks(); resizeIntroFrame(); });
+    renderHomeCarousel();
+    renderWorks();
+    tickHome();
+    tickWorks();
+</script>
+</body>
+</html>

@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>荣誉奖项 - 华东师范大学设计学院</title>
+  <style>
+    /* 核心样式变量 与教师页完全统一 */
+    :root {
+      --bg: #f2f8fb;
+      --fg: #07090c;
+      --muted: rgba(29,42,54,.58);
+      --line: rgba(21,45,67,.12);
+      --soft: rgba(255,255,255,.64);
+      --accent: #0b74ff;
+      --cyan: #d9f2ff;
+      --lime: #eefccf;
+      --gold: #f59e0b;
+      --silver: #94a3b8;
+      --bronze: #cd7f32;
+      --panel: rgba(255,255,255,.72);
+      --ease: cubic-bezier(.19,1,.22,1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--bg); font-family: Inter, system-ui, -apple-system, sans-serif; }
+    body {
+      min-height: 100vh; overflow-x: hidden; color: var(--fg);
+      background: radial-gradient(circle at 82% 36%, rgba(236,252,204,.88), transparent 34vw),
+                  radial-gradient(circle at 24% 30%, rgba(228,245,255,.9), transparent 32vw),
+                  linear-gradient(115deg,#f7fbff 0%,#eef8ff 43%,#f5ffd9 100%);
+      position: relative;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(circle, rgba(85,126,154,.18) 1.1px, transparent 1.2px);
+      background-size: 10px 10px;
+    }
+    .noise { position: fixed; inset: 0; pointer-events: none; opacity: .018; mix-blend-mode: multiply; z-index: 60; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+    .cursor { position: fixed; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(11,116,255,.12), transparent 66%); pointer-events: none; z-index: 1; transform: translate(-50%,-50%); filter: blur(8px); opacity: .55; }
+
+    /* 头部导航 完全统一 */
+    header {
+      position: fixed; top: 26px; left: 50%; width: calc(100% - 52px); transform: translateX(-50%); z-index: 100;
+      display: flex; align-items: center; justify-content: space-between; padding: 22px 24px 22px 34px;
+      border-radius: 999px; background: rgba(255,255,255,.66); border: 1px solid rgba(39,61,81,.10);
+      backdrop-filter: blur(22px); box-shadow: 0 18px 60px rgba(52,78,104,.08), inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .brand { font-size: 20px; font-weight: 760; color: #45484d; }
+    nav { display: flex; gap: 8px; align-items: center; }
+    .nav-link { color: #39424c; text-decoration: none; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; padding: 9px 12px; border-radius: 999px; background: rgba(255,255,255,.42); transition: .35s var(--ease); }
+    .nav-link.active { color: var(--accent); background: #fff; border: 1px solid rgba(11,116,255,.14); }
+    .intro-btn { border: 1px solid rgba(11,116,255,.22); color: var(--accent); background: rgba(255,255,255,.58); border-radius: 999px; padding: 10px 15px; font-size: 12px; text-transform: uppercase; cursor: pointer; transition: .35s var(--ease); }
+
+    section { position: relative; padding: 120px 6vw; z-index: 2; }
+    .kicker { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+    .reveal { opacity: 0; transform: translateY(48px); transition: 1s var(--ease); }
+    .reveal.show { opacity: 1; transform: translateY(0); }
+
+    /* 英雄区 标题优化：中文>英文，整体收窄尺寸 */
+    .hero {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 170px; padding-bottom: 80px;
+      text-align: center; min-height: 50vh; position: relative;
+    }
+    .hero::before {
+      content: 'Excellence in Design & Research'; position: absolute; top: 26%; left: 50%; transform: translate(-50%, -50%);
+      font-family: Georgia, serif; font-style: italic; font-size: clamp(16px, 1.6vw, 22px); color: rgba(33,42,48,.55); white-space: nowrap;
+    }
+    /* 英文主标题基础字号 */
+    .hero-title { 
+      font-size: clamp(24px, 3.8vw, 52px); 
+      line-height: 1.1; 
+      letter-spacing: -.06em; 
+      font-weight: 750; 
+      margin-top: 1rem; 
+    }
+    .hero-title span { display: block; transform: translateY(120px); opacity: 0; animation: rise 1.2s var(--ease) forwards; }
+    /* 中文标题字号大于英文 */
+    .hero-title-cn { 
+      font-size: clamp(34px, 5.6vw, 76px); 
+      line-height: 1.2; 
+      letter-spacing: -.05em;
+      margin-bottom: .15em; 
+      font-weight: 800;
+    }
+    .hero-sub { margin-top: 32px; font-size: 16px; font-weight: 600; color: var(--muted); max-width: 680px; margin-left: auto; margin-right: auto; }
+    .scroll-hint { position: absolute; left: 6vw; top: 130px; display: flex; gap: 12px; font-size: 13px; color: rgba(43,58,70,.48); }
+    .wheel { width: 34px; height: 54px; border: 1px solid rgba(43,58,70,.18); border-radius: 999px; position: relative; }
+    .wheel::after { content: ""; position: absolute; top: 10px; left: 50%; width: 4px; height: 9px; background: var(--accent); border-radius: 99px; transform: translateX(-50%); animation: wheel 1.6s infinite; }
+
+    /* 数据概览看板 */
+    .stats-board {
+      max-width: 1300px; margin: 0 auto 48px auto;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,.65); backdrop-filter: blur(12px);
+      border: 1px solid var(--line); border-radius: 20px;
+      padding: 24px; text-align: center; transition: .35s var(--ease);
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(11,116,255,.1); }
+    .stat-number { font-size: 42px; font-weight: 800; color: var(--accent); letter-spacing: -.04em; margin-bottom: 4px; }
+    .stat-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+    /* 搜索筛选区 */
+    .search-section { padding-top: 0; padding-bottom: 32px; }
+    .search-container { max-width: 1300px; margin: 0 auto; }
+    .search-input { width: 100%; padding: 18px 24px 18px 56px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.58); backdrop-filter: blur(18px); font-size: 16px; outline: none; }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,116,255,.1); }
+    .search-icon { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); }
+    .filter-tabs { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    .tab-btn { border: 1px solid rgba(38,70,96,.12); border-radius: 999px; padding: 10px 18px; background: rgba(255,255,255,.58); cursor: pointer; transition: .35s var(--ease); font-size: 12px; text-transform: uppercase; }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* 奖项等级筛选 */
+    .level-filter {
+      display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;
+    }
+    .level-tag {
+      padding: 6px 14px; border-radius: 999px; font-size: 12px; cursor: pointer;
+      border: 1px solid transparent; background: rgba(255,255,255,.5); transition: .25s;
+    }
+    .level-tag.active-all { background: var(--accent); color: white; }
+    .level-tag.active-gold { background: rgba(245,158,11,.12); color: var(--gold); border-color: rgba(245,158,11,.3); }
+    .level-tag.active-silver { background: rgba(148,163,184,.15); color: var(--silver); border-color: rgba(148,163,184,.3); }
+    .level-tag.active-bronze { background: rgba(205,127,50,.12); color: var(--bronze); border-color: rgba(205,127,50,.3); }
+
+    /* 奖项卡片网格 */
+    .awards-wrapper {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+    .awards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .empty-state { text-align: center; padding: 48px; color: var(--muted); grid-column: 1/-1; }
+
+    /* 奖项卡片 */
+    .award-card {
+      background: rgba(255,255,255,.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      cursor: pointer;
+      transition: .35s var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .award-card::before {
+      content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--accent); opacity: 0; transition: .3s;
+    }
+    .award-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 50px rgba(11,116,255,.12);
+      background: rgba(255,255,255,.9);
+    }
+    .award-card:hover::before { opacity: 1; }
+    .award-card.gold::before { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+    .award-card.silver::before { background: linear-gradient(180deg, #94a3b8, #cbd5e1); }
+    .award-card.bronze::before { background: linear-gradient(180deg, #cd7f32, #daa06d); }
+
+    .award-level-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px;
+    }
+    .badge-gold { background: rgba(245,158,11,.12); color: var(--gold); }
+    .badge-silver { background: rgba(148,163,184,.15); color: var(--silver); }
+    .badge-bronze { background: rgba(205,127,50,.12); color: var(--bronze); }
+    .badge-honor { background: rgba(11,116,255,.12); color: var(--accent); }
+
+    .award-title {
+      font-size: 18px; font-weight: 700; line-height: 1.4; margin-bottom: 10px;
+      color: var(--fg);
+    }
+    .award-project {
+      font-size: 14px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;
+    }
+    .award-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: var(--muted);
+      padding-top: 14px; border-top: 1px solid var(--line);
+    }
+    .award-winner { font-weight: 600; color: #475569; }
+    .award-year { font-family: Georgia, serif; font-style: italic; }
+
+    /* 居中弹出详情面板 */
+    .detail-panel {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      opacity: 0; visibility: hidden;
+      width: 90vw; max-width: 720px; max-height: 85vh;
+      transition: all 0.4s var(--ease);
+      z-index: 300;
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(28px);
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      box-shadow: 0 30px 80px rgba(61,91,120,.18);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .detail-panel.expanded {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1; visibility: visible;
+    }
+    .close-panel-btn {
+      position: absolute; top: 20px; right: 20px;
+      background: rgba(255,255,255,.9); border: 1px solid var(--line);
+      width: 36px; height: 36px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: .3s var(--ease); z-index: 10; font-weight: bold; font-size: 16px;
+    }
+    .close-panel-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .detail-scroll {
+      flex: 1; overflow-y: auto;
+      padding: 40px 40px 32px 40px;
+    }
+
+    /* 详情内容样式 */
+    .detail-award-header {
+      text-align: center; margin-bottom: 32px;
+    }
+    .detail-level-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 20px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px;
+    }
+    .detail-award-title {
+      font-size: 30px; font-weight: 800; line-height: 1.3; letter-spacing: -.03em;
+      margin-bottom: 8px;
+    }
+    .detail-project-name {
+      font-size: 16px; color: var(--muted); font-style: italic;
+      margin-bottom: 16px;
+    }
+    .detail-info-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-bottom: 28px;
+    }
+    .info-item {
+      background: rgba(255,255,255,.6); border-radius: 16px;
+      padding: 16px; border: 1px solid var(--line);
+    }
+    .info-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+    .info-value { font-size: 15px; font-weight: 600; }
+
+    .detail-section { margin-bottom: 28px; }
+    .detail-section h3 {
+      font-size: 17px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
+      border-left: 3px solid var(--accent); padding-left: 12px;
+    }
+    .detail-section p {
+      font-size: 14px; line-height: 1.8; color: rgba(20,31,42,.78);
+    }
+    .detail-links-group {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .detail-link-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 999px;
+      text-decoration: none; font-size: 13px; font-weight: 600;
+      background: rgba(11,116,255,.1); color: var(--accent);
+      transition: .3s;
+    }
+    .detail-link-btn:hover {
+      background: var(--accent); color: white;
+    }
+
+    /* 遮罩层 */
+    .panel-mask {
+      position: fixed; inset: 0;
+      background: rgba(15, 30, 45, 0.25);
+      backdrop-filter: blur(6px);
+      z-index: 299;
+      opacity: 0; visibility: hidden;
+      transition: all 0.3s var(--ease);
+    }
+    .panel-mask.show { opacity: 1; visibility: visible; }
+
+    /* 动画 */
+    @keyframes rise { to { transform: translateY(0); opacity: 1; } }
+    @keyframes wheel { 0% { opacity: 0; transform: translate(-50%,0); } 100% { opacity: 0; transform: translate(-50%,22px); } }
+
+    /* 滚动条 */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(11,116,255,.2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(11,116,255,.35); }
+
+    /* 响应式 */
+    @media (max-width: 980px) {
+      .stats-board { grid-template-columns: repeat(2, 1fr); }
+      .awards-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+      .detail-info-grid { grid-template-columns: 1fr; }
+      section { padding: 90px 20px; }
+      .hero::before { font-size: 12px; white-space: normal; top: 22%; }
+    }
+    @media (max-width: 640px) {
+      .stats-board { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .stat-number { font-size: 32px; }
+      .awards-grid { grid-template-columns: 1fr; }
+      .detail-scroll { padding: 32px 24px 24px 24px; }
+      .detail-award-title { font-size: 24px; }
+    }
+  
+
+    /* ===== Unified typography / layout refinement, aligned with previous pages ===== */
+    .cursor { display: none; }
+
+    /* Top navigation: same style and behavior as the recent pages */
+    .nav {
+      min-height: 76px;
+      position: sticky;
+      top: 24px;
+      left: auto;
+      width: min(1480px, calc(100% - 48px));
+      margin: 28px auto 0;
+      transform: none;
+      z-index: 100;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid rgba(35, 72, 95, .12);
+      border-radius: 999px;
+      padding: 10px 14px 10px 18px;
+      background: rgba(255,255,255,.66);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 22px 70px rgba(65, 112, 148, .09);
+      overflow: hidden;
+    }
+    .nav-home {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      color: rgba(11,13,16,.78);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 720;
+      letter-spacing: .01em;
+      background: rgba(255,255,255,.5);
+      transition: background .25s ease, transform .25s var(--ease);
+    }
+    .nav-home:hover { background: rgba(255,255,255,.78); transform: translateY(-1px); }
+    .nav-menu-drawer {
+      position: absolute;
+      top: 50%;
+      right: 70px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      max-width: min(880px, calc(100vw - 150px));
+      height: 48px;
+      padding: 5px 8px;
+      border: 1px solid rgba(11,11,13,.07);
+      border-radius: 999px;
+      background: rgba(250,253,255,.78);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 16px 46px rgba(82, 135, 168, .10);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(34px, -50%) scaleX(.78);
+      transform-origin: right center;
+      transition: opacity .34s var(--ease), transform .5s var(--ease);
+    }
+    .nav.is-menu-open .nav-menu-drawer {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(0, -50%) scaleX(1);
+    }
+    .nav .nav-link {
+      display: inline-flex;
+      align-items: center;
+      height: 38px;
+      padding: 0 11px;
+      border-radius: 999px;
+      color: rgba(11,11,13,.76);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 620;
+      letter-spacing: 0;
+      text-transform: none;
+      white-space: nowrap;
+      background: transparent;
+      border: 0;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: background .25s ease, color .25s ease, opacity .32s var(--ease), transform .42s var(--ease);
+    }
+    .nav.is-menu-open .nav-link { opacity: 1; transform: translateX(0); }
+    .nav.is-menu-open .nav-link:nth-child(1) { transition-delay: .02s; }
+    .nav.is-menu-open .nav-link:nth-child(2) { transition-delay: .04s; }
+    .nav.is-menu-open .nav-link:nth-child(3) { transition-delay: .06s; }
+    .nav.is-menu-open .nav-link:nth-child(4) { transition-delay: .08s; }
+    .nav.is-menu-open .nav-link:nth-child(5) { transition-delay: .10s; }
+    .nav.is-menu-open .nav-link:nth-child(6) { transition-delay: .12s; }
+    .nav.is-menu-open .nav-link:nth-child(7) { transition-delay: .14s; }
+    .nav.is-menu-open .nav-link:nth-child(8) { transition-delay: .16s; }
+    .nav .nav-link:hover,
+    .nav .nav-link.is-active { background: rgba(7,102,235,.08); color: var(--accent); }
+    .nav-right { position: relative; z-index: 4; display: flex; justify-content: flex-end; align-items: center; }
+    .menu-toggle {
+      width: 46px;
+      height: 46px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid rgba(11,11,13,.09);
+      border-radius: 50%;
+      background: rgba(252,254,255,.82);
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(82, 135, 168, .10);
+      transition: transform .3s var(--ease), background .3s var(--ease);
+    }
+    .menu-toggle:hover { transform: translateY(-1px); background: rgba(255,255,255,.95); }
+    .menu-toggle-lines { position: relative; width: 18px; height: 12px; display: block; }
+    .menu-toggle-lines::before,
+    .menu-toggle-lines::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: transform .35s var(--ease), top .35s var(--ease), width .35s var(--ease);
+    }
+    .menu-toggle-lines::before { top: 1px; }
+    .menu-toggle-lines::after { top: 9px; width: 13px; }
+    .nav.is-menu-open .menu-toggle-lines::before { top: 5px; transform: rotate(45deg); }
+    .nav.is-menu-open .menu-toggle-lines::after { top: 5px; width: 18px; transform: rotate(-45deg); }
+
+    /* Hero / title system */
+    section { padding-left: 6vw; padding-right: 6vw; }
+    .hero {
+      min-height: auto;
+      padding: 74px 6vw 46px;
+      display: block;
+      text-align: center;
+    }
+    .hero::before { display: none; }
+    .scroll-hint { display: none; }
+    .breadcrumb {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding: 8px 14px;
+      border: 1px solid rgba(35,72,95,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.45);
+      color: rgba(29, 29, 31, .50);
+      font-size: 12px;
+      line-height: 1;
+    }
+    .breadcrumb b { color: var(--accent); font-weight: 720; }
+    .hero-title {
+      margin: 0 auto;
+      width: min(860px, 92vw);
+      font-size: clamp(30px, 4.15vw, 56px);
+      line-height: 1.06;
+      letter-spacing: -0.045em;
+      font-weight: 690;
+      color: rgba(29, 29, 31, .92);
+    }
+    .hero-title span {
+      transform: translateY(38px);
+      animation-duration: .9s;
+    }
+    .hero-title-cn {
+      font-size: 1em;
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: rgba(29,29,31,.93);
+    }
+    .hero-title-en {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+      font-size: .58em;
+      line-height: 1.12;
+      letter-spacing: -0.036em;
+      font-weight: 400;
+      color: rgba(29,29,31,.58);
+    }
+    .hero-sub {
+      max-width: 720px;
+      margin-top: 18px;
+      color: rgba(29, 29, 31, .52);
+      font-size: 14px;
+      line-height: 1.8;
+      font-weight: 440;
+    }
+
+    /* Text hierarchy and cards */
+    .stats-board { margin: 0 auto 42px; gap: 16px; }
+    .stat-card {
+      background: rgba(255,255,255,.66);
+      border-color: rgba(35,72,95,.10);
+      box-shadow: 0 18px 50px rgba(65,112,148,.07);
+    }
+    .stat-number {
+      font-size: clamp(30px, 3vw, 38px);
+      font-weight: 720;
+      color: var(--accent);
+      letter-spacing: -0.04em;
+    }
+    .stat-label {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 560;
+      letter-spacing: .04em;
+      color: rgba(29, 29, 31, .52);
+      text-transform: none;
+    }
+    .search-section { padding-top: 0; padding-bottom: 30px; }
+    .search-input {
+      color: rgba(29,29,31,.82);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 430;
+      border-color: rgba(35,72,95,.10);
+      background: rgba(255,255,255,.62);
+      box-shadow: 0 18px 46px rgba(65,112,148,.045);
+    }
+    .tab-btn,
+    .level-tag {
+      font-size: 12px;
+      font-weight: 580;
+      letter-spacing: 0;
+      text-transform: none;
+      color: rgba(29,29,31,.66);
+      background: rgba(255,255,255,.58);
+    }
+    .tab-btn.active,
+    .level-tag.active-all {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 10px 24px rgba(11,116,255,.12);
+    }
+    .awards-grid { gap: 18px; }
+    .award-card {
+      padding: 22px 20px;
+      border-color: rgba(35,72,95,.10);
+      background: rgba(255,255,255,.66);
+      box-shadow: 0 10px 34px rgba(65,112,148,.055);
+    }
+    .award-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 54px rgba(65,112,148,.12);
+    }
+    .award-level-badge {
+      font-size: 10.5px;
+      font-weight: 620;
+      letter-spacing: .04em;
+      margin-bottom: 12px;
+    }
+    .award-title {
+      font-size: 16.5px;
+      line-height: 1.42;
+      letter-spacing: -0.018em;
+      font-weight: 660;
+      color: rgba(29,29,31,.90);
+    }
+    .award-project {
+      font-size: 13px;
+      line-height: 1.65;
+      color: rgba(29,29,31,.54);
+    }
+    .award-meta {
+      font-size: 12px;
+      color: rgba(29,29,31,.48);
+    }
+    .award-winner { font-weight: 560; color: rgba(29,29,31,.62); }
+    .award-year { color: rgba(29,29,31,.48); }
+    #searchResults { color: rgba(29,29,31,.48) !important; font-weight: 520; }
+
+    /* Detail modal typography */
+    .detail-panel {
+      background: rgba(255,255,255,.90);
+      border-color: rgba(35,72,95,.12);
+      box-shadow: 0 34px 96px rgba(65,112,148,.18);
+    }
+    .detail-award-title {
+      font-size: clamp(24px, 3vw, 30px);
+      line-height: 1.24;
+      letter-spacing: -0.04em;
+      font-weight: 700;
+      color: rgba(29,29,31,.90);
+    }
+    .detail-project-name,
+    .detail-section p,
+    .info-label {
+      color: rgba(29,29,31,.56);
+    }
+    .info-value,
+    .detail-section h3 {
+      color: rgba(29,29,31,.86);
+      font-weight: 650;
+    }
+
+    /* Footer: same centered school information as previous pages */
+    .site-footer {
+      width: min(1480px, calc(100% - 48px));
+      margin: 42px auto 56px;
+      padding: 24px 0 0;
+      border-top: 1px solid rgba(35,72,95,.12);
+      color: rgba(29,29,31,.48);
+      font-size: 12px;
+      line-height: 1.9;
+      text-align: center;
+      display: block;
+      background: transparent;
+    }
+
+    @media (max-width: 1080px) {
+      .nav { border-radius: 34px; overflow: visible; }
+      .nav-menu-drawer {
+        top: calc(100% + 10px);
+        right: 0;
+        max-width: min(720px, calc(100vw - 76px));
+        height: auto;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        padding: 10px;
+        border-radius: 26px;
+        transform: translate(24px, -8px) scale(.96);
+      }
+      .nav.is-menu-open .nav-menu-drawer { transform: translate(0, 0) scale(1); }
+    }
+    @media (max-width: 760px) {
+      .nav { top: 12px; width: min(100% - 28px, 1320px); min-height: 64px; margin-top: 16px; padding: 10px 10px 12px 16px; }
+      .nav-home { font-size: 12px; padding: 0 12px; }
+      .nav-menu-drawer {
+        max-width: none;
+        width: 100%;
+        right: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .nav .nav-link { justify-content: center; background: rgba(255,255,255,.62); }
+      .hero { padding: 54px 20px 32px; }
+      .hero-title { font-size: clamp(32px, 10vw, 48px); }
+      .hero-title-en { font-size: .56em; }
+      .site-footer { width: min(100% - 28px, 1320px); }
+    }
+
+  
+
+/* --- Unified homepage-style top navigation across linked pages --- */
+.unified-site-nav {
+  min-height: 76px !important;
+  z-index: 120 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  border: 1px solid rgba(35, 72, 95, .10) !important;
+  border-radius: 999px !important;
+  padding: 10px 14px 10px 18px !important;
+  background: rgba(255,255,255,.62) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  backdrop-filter: blur(24px) !important;
+  box-shadow: 0 22px 70px rgba(65, 112, 148, .09) !important;
+  overflow: hidden !important;
+  color: #0b0d10 !important;
+}
+body > .unified-site-nav {
+  position: fixed !important;
+  top: 28px !important;
+  left: 38px !important;
+  right: 38px !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+.page > .unified-site-nav {
+  position: sticky !important;
+  top: 24px !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+.unified-site-nav .nav-home {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: max-content !important;
+  height: 42px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  color: rgba(11,13,16,.76) !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em !important;
+  background: rgba(255,255,255,.46) !important;
+  transition: background .25s ease, transform .25s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav .nav-home:hover {
+  background: rgba(255,255,255,.78) !important;
+  transform: translateY(-1px) !important;
+}
+.unified-site-nav .nav-menu-drawer {
+  position: absolute !important;
+  top: 50% !important;
+  right: 70px !important;
+  z-index: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  max-width: min(880px, calc(100vw - 150px)) !important;
+  height: 48px !important;
+  padding: 5px 8px !important;
+  border: 1px solid rgba(11,11,13,.07) !important;
+  border-radius: 999px !important;
+  background: rgba(250,253,255,.76) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  backdrop-filter: blur(18px) !important;
+  box-shadow: 0 16px 46px rgba(82, 135, 168, .10) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translate(34px, -50%) scaleX(.78) !important;
+  transform-origin: right center !important;
+  transition: opacity .36s cubic-bezier(.2,.85,.2,1), transform .52s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav.is-menu-open .nav-menu-drawer {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translate(0, -50%) scaleX(1) !important;
+}
+.unified-site-nav .nav-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 38px !important;
+  padding: 0 11px !important;
+  border-radius: 999px !important;
+  color: rgba(11,11,13,.76) !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 620 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
+  transform: translateX(24px) !important;
+  background: transparent !important;
+  border: 0 !important;
+  transition: background .25s ease, color .25s ease, opacity .34s cubic-bezier(.2,.85,.2,1), transform .44s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav.is-menu-open .nav-link { opacity: 1 !important; transform: translateX(0) !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(1) { transition-delay: .02s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(2) { transition-delay: .04s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(3) { transition-delay: .06s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(4) { transition-delay: .08s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(5) { transition-delay: .10s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(6) { transition-delay: .12s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(7) { transition-delay: .14s !important; }
+.unified-site-nav.is-menu-open .nav-link:nth-child(8) { transition-delay: .16s !important; }
+.unified-site-nav .nav-link:hover,
+.unified-site-nav .nav-link.is-active {
+  opacity: 1 !important;
+  background: rgba(11,11,13,.055) !important;
+  color: rgba(11,11,13,.9) !important;
+}
+.unified-site-nav .nav-right {
+  position: relative !important;
+  z-index: 4 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+.unified-site-nav .menu-toggle {
+  width: 46px !important;
+  height: 46px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(11,11,13,.09) !important;
+  border-radius: 50% !important;
+  background: rgba(252,254,255,.82) !important;
+  cursor: pointer !important;
+  box-shadow: 0 10px 28px rgba(82, 135, 168, .10) !important;
+  transition: transform .3s cubic-bezier(.2,.85,.2,1), background .3s cubic-bezier(.2,.85,.2,1) !important;
+  padding: 0 !important;
+}
+.unified-site-nav .menu-toggle:hover { transform: translateY(-1px) !important; background: rgba(255,255,255,.95) !important; }
+.unified-site-nav .menu-toggle-lines { position: relative !important; width: 18px !important; height: 12px !important; display: block !important; }
+.unified-site-nav .menu-toggle-lines::before,
+.unified-site-nav .menu-toggle-lines::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 0 !important;
+  width: 18px !important;
+  height: 2px !important;
+  border-radius: 999px !important;
+  background: #056dff !important;
+  transition: transform .35s cubic-bezier(.2,.85,.2,1), top .35s cubic-bezier(.2,.85,.2,1), width .35s cubic-bezier(.2,.85,.2,1) !important;
+}
+.unified-site-nav .menu-toggle-lines::before { top: 1px !important; }
+.unified-site-nav .menu-toggle-lines::after { top: 9px !important; width: 13px !important; }
+.unified-site-nav.is-menu-open .menu-toggle-lines::before { top: 5px !important; transform: rotate(45deg) !important; }
+.unified-site-nav.is-menu-open .menu-toggle-lines::after { top: 5px !important; width: 18px !important; transform: rotate(-45deg) !important; }
+@media (max-width: 1120px) {
+  .unified-site-nav { border-radius: 34px !important; overflow: visible !important; }
+  .unified-site-nav .nav-menu-drawer {
+    top: calc(100% + 10px) !important;
+    right: 0 !important;
+    max-width: min(720px, calc(100vw - 76px)) !important;
+    height: auto !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    padding: 10px !important;
+    border-radius: 26px !important;
+    transform: translate(24px, -8px) scale(.96) !important;
+  }
+  .unified-site-nav.is-menu-open .nav-menu-drawer { transform: translate(0, 0) scale(1) !important; }
+}
+@media (max-width: 760px) {
+  body > .unified-site-nav { top: 18px !important; left: 14px !important; right: 14px !important; }
+  .page > .unified-site-nav { top: 12px !important; }
+  .unified-site-nav { padding: 10px 10px 12px 16px !important; }
+  .unified-site-nav .nav-home { font-size: 12px !important; padding: 0 12px !important; }
+  .unified-site-nav .nav-menu-drawer {
+    max-width: calc(100vw - 28px) !important;
+    width: calc(100vw - 28px) !important;
+    right: -10px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .unified-site-nav .nav-link { justify-content: center !important; background: rgba(255,255,255,.62) !important; }
+}
+
+
+
+/* --- Unified subpage title style: matched with 学院要闻 page --- */
+main > .hero {
+  min-height: auto !important;
+  padding: 74px 6vw 46px !important;
+  display: block !important;
+  text-align: center !important;
+  position: relative !important;
+}
+main > .hero::before,
+main > .hero .scroll-hint {
+  content: none !important;
+  display: none !important;
+}
+main > .hero .breadcrumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 20px !important;
+  padding: 8px 14px !important;
+  border: 1px solid rgba(35, 72, 95, .12) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.52) !important;
+  color: rgba(29,29,31,.50) !important;
+  font-size: 12px !important;
+  font-weight: 560 !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+}
+main > .hero .breadcrumb b {
+  color: var(--accent, #0766eb) !important;
+  font-weight: 700 !important;
+}
+main > .hero h1 {
+  width: min(820px, 92vw) !important;
+  margin: 0 auto !important;
+  font-size: clamp(32px, 4.05vw, 54px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.044em !important;
+  font-weight: 700 !important;
+  color: rgba(29,29,31,.92) !important;
+}
+main > .hero .hero-en {
+  display: block !important;
+  margin-top: 5px !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(19px, 2.18vw, 30px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.032em !important;
+  font-weight: 400 !important;
+  font-style: italic !important;
+  color: rgba(29,29,31,.58) !important;
+}
+main > .hero .hero-copy {
+  max-width: 720px !important;
+  margin: 20px auto 0 !important;
+  color: rgba(29,29,31,.54) !important;
+  font-size: 14px !important;
+  line-height: 1.82 !important;
+  font-weight: 400 !important;
+  letter-spacing: .005em !important;
+}
+@media (max-width: 760px) {
+  main > .hero { padding: 52px 18px 34px !important; }
+  main > .hero h1 { font-size: clamp(32px, 10vw, 48px) !important; }
+  main > .hero .hero-en { font-size: clamp(20px, 6vw, 30px) !important; }
+}
+
+
+
+/* --- Final correction: force Honors & Awards title to match 学院要闻 title format --- */
+body main.page > section.hero {
+  min-height: auto !important;
+  height: auto !important;
+  padding: 74px 6vw 46px !important;
+  margin: 0 !important;
+  display: block !important;
+  text-align: center !important;
+  position: relative !important;
+  overflow: visible !important;
+  background: none !important;
+}
+body main.page > section.hero::before,
+body main.page > section.hero::after,
+body main.page > section.hero .scroll-hint {
+  content: none !important;
+  display: none !important;
+}
+body main.page > section.hero > .breadcrumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 20px !important;
+  padding: 8px 14px !important;
+  border: 1px solid rgba(35, 72, 95, .12) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.52) !important;
+  color: rgba(29,29,31,.50) !important;
+  font-size: 12px !important;
+  font-weight: 560 !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+  transform: none !important;
+}
+body main.page > section.hero > .breadcrumb span {
+  color: rgba(29,29,31,.28) !important;
+}
+body main.page > section.hero > .breadcrumb b {
+  color: var(--accent, #0766eb) !important;
+  font-weight: 700 !important;
+}
+body main.page > section.hero > h1 {
+  display: block !important;
+  width: min(820px, 92vw) !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+  font-size: clamp(32px, 4.05vw, 54px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.044em !important;
+  font-weight: 700 !important;
+  color: rgba(29,29,31,.92) !important;
+  text-transform: none !important;
+  text-align: center !important;
+  transform: none !important;
+  opacity: 1 !important;
+  animation: none !important;
+}
+body main.page > section.hero > h1 > .hero-en {
+  display: block !important;
+  margin: 5px 0 0 !important;
+  padding: 0 !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(19px, 2.18vw, 30px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.032em !important;
+  font-weight: 400 !important;
+  font-style: italic !important;
+  color: rgba(29,29,31,.58) !important;
+  text-transform: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+  animation: none !important;
+}
+body main.page > section.hero > .hero-copy {
+  max-width: 720px !important;
+  margin: 20px auto 0 !important;
+  color: rgba(29,29,31,.54) !important;
+  font-size: 14px !important;
+  line-height: 1.82 !important;
+  font-weight: 400 !important;
+  letter-spacing: .005em !important;
+  text-align: center !important;
+}
+@media (max-width: 760px) {
+  body main.page > section.hero { padding: 52px 18px 34px !important; }
+  body main.page > section.hero > h1 { font-size: clamp(32px, 10vw, 48px) !important; }
+  body main.page > section.hero > h1 > .hero-en { font-size: clamp(20px, 6vw, 30px) !important; }
+}
+
+
+
+/* --- Ensure Honors page breadcrumb matches other subpage title paths --- */
+body main.page > section.hero > .breadcrumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 20px !important;
+  padding: 8px 14px !important;
+  border: 1px solid rgba(35, 72, 95, .12) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.52) !important;
+  color: rgba(29,29,31,.50) !important;
+  font-size: 12px !important;
+  font-weight: 560 !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+body main.page > section.hero > .breadcrumb span {
+  color: rgba(29,29,31,.28) !important;
+}
+body main.page > section.hero > .breadcrumb b {
+  color: var(--accent, #0766eb) !important;
+  font-weight: 700 !important;
+}
+
+
+/* === Color sync with homepage: muted blue typography only; layout and functions unchanged === */
+:root {
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #6B8BA3 !important;
+  --blue: #6F97B2 !important;
+  --accent: #6F97B2 !important;
+  --theme: #6F97B2 !important;
+  --theme-dark: #476F8A !important;
+  --theme-light: #DCEBF4 !important;
+  --blue-soft: rgba(111, 151, 178, .10) !important;
+  --line: rgba(72, 108, 134, .16) !important;
+}
+
+body {
+  color: #476F8A !important;
+}
+
+body * {
+  text-shadow: none !important;
+}
+
+body :where(div, span, p, a, li, button, small, time, label, input, textarea, select, b, strong, em) {
+  color: #476F8A !important;
+}
+
+body :where(h1, h2, h3, h4, h5, h6, .title-cn, .title-en, .hero-title, .hero-title-cn, .hero-title-en, .hero-title-school, .brand, .num, .section-title h3, .news-item h3, .list-header h2, .card h4, .card h3, .modal-copy h2) {
+  color: #2E5A78 !important;
+}
+
+body :where(.muted, .sub, .desc, .hero-copy, .hero-en, .label, .kicker, .breadcrumb, .caption, .date, .notice time, footer, footer *, .aside-title, .side-title, .detail-meta, .meta, .en) {
+  color: #6B8BA3 !important;
+}
+
+body :where(.carousel-slide .slide-title, .carousel-slide .slide-desc, .carousel-slide .slide-tag, .hero-visual *, .cover *, .image-hero *, .banner *) {
+  color: #EEF6FA !important;
+}
+
+body :where(a:hover, .nav-link:hover, .nav-link.active, .nav-link.is-active, .active, .breadcrumb b, .more-link, .arrow) {
+  color: #2E5A78 !important;
+}
+
+body :where(.pager a.active, .tag, .pill, .btn-primary) {
+  color: #EEF6FA !important;
+}
+
+</style>
+
+<style id="final-homepage-blue-color-fix">
+/* Final typography color fix — only color/contrast; no layout, content, or interaction changes */
+:root {
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #5F8198 !important;
+  --blue: #6F97B2 !important;
+  --accent: #6F97B2 !important;
+  --theme: #6F97B2 !important;
+  --theme-dark: #476F8A !important;
+  --theme-light: #DCEBF4 !important;
+  --blue-soft: rgba(111, 151, 178, .11) !important;
+  --line: rgba(72, 108, 134, .16) !important;
+  --title-ink: #2E5A78 !important;
+  --title-soft: #5F8198 !important;
+  --body-soft: #5F8198 !important;
+}
+
+html, body {
+  color: #476F8A !important;
+}
+
+body * {
+  text-shadow: none !important;
+}
+
+/* 通用正文文字 */
+body :is(p, li, a, span, div, button, small, time, label, input, textarea, select, td, th, b, strong, em) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* 所有标题、主视觉标题、卡片标题、数字标题 */
+body :is(h1, h2, h3, h4, h5, h6,
+  [class*="title"], [class*="Title"], [class*="headline"], [class*="Headline"],
+  [class*="heading"], [class*="Heading"], [class*="brand"], [class*="Brand"],
+  [class*="name"], [class*="Name"], [class*="num"], [class*="Num"],
+  .hero-title, .hero-title-cn, .hero-title-en, .hero-title-school,
+  .title-cn, .title-en, .section-title, .section-title *,
+  .list-header h2, .news-item h3, .card h3, .card h4, .modal-copy h2) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  text-shadow: none !important;
+}
+
+/* 副标题、说明文字、元信息：比上一版加深，避免发浅 */
+body :is(.muted, .sub, .desc, .hero-copy, .hero-en, .label, .kicker, .breadcrumb,
+  .caption, .date, .meta, .en, .notice time, footer, footer *,
+  [class*="copy"], [class*="Copy"], [class*="desc"], [class*="Desc"],
+  [class*="meta"], [class*="Meta"], [class*="caption"], [class*="Caption"],
+  [class*="sub"], [class*="Sub"], [class*="kicker"], [class*="Kicker"]) {
+  color: #5F8198 !important;
+  -webkit-text-fill-color: #5F8198 !important;
+  text-shadow: none !important;
+}
+
+/* 玻璃/白色面板里的文本更深，提升可读性 */
+body :is(.main, .aside, .side, .panel, .card, .content, .list, .news-item, .quick, .notice, .breadcrumb) * {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+body :is(.main, .aside, .side, .panel, .card, .content, .list, .news-item, .quick, .notice, .breadcrumb)
+  :is(h1, h2, h3, h4, h5, h6, [class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"]) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+/* 图片/深色封面上的文字保持浅蓝白，保证在图像上清楚 */
+body :is(.carousel-slide, .slide-content, .cover, .banner, .image-hero, .hero-visual, .visual, .poster, .thumbnail)
+  :is(h1, h2, h3, h4, p, span, a, b, strong, small, div, [class*="title"], [class*="Title"], [class*="tag"], [class*="Tag"], [class*="desc"], [class*="Desc"]) {
+  color: #EEF6FA !important;
+  -webkit-text-fill-color: #EEF6FA !important;
+  text-shadow: none !important;
+}
+
+/* 链接 hover / active */
+body :is(a:hover, .nav-link:hover, .nav-link.active, .nav-link.is-active, .active,
+  .breadcrumb b, .more-link, .arrow, .side a:hover, .side a.active, .quick a:hover) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+/* 按钮深底情况 */
+body :is(.pager a.active, .tag, .pill, .btn-primary, .intro-btn:hover) {
+  color: #EEF6FA !important;
+  -webkit-text-fill-color: #EEF6FA !important;
+}
+</style>
+
+
+<style id="final-hover-soften-fix">
+/* Final hover row fix — target clickable controls only, never the whole row/container */
+:root {
+  --hover-soft-bg: rgba(111, 151, 178, .12);
+  --hover-soft-bg-strong: rgba(111, 151, 178, .16);
+  --hover-soft-border: rgba(72, 108, 134, .18);
+  --hover-soft-text: #2E5A78;
+}
+
+/* 容器本身不允许出现 hover 背景，避免整行底色 */
+body :is(
+  .filter-tabs,
+  .level-filter,
+  .category-tabs,
+  .category-filter,
+  .tab-list,
+  .tabs,
+  .filter-list,
+  .button-row,
+  .button-group,
+  .controls,
+  .toolbar,
+  .search-container
+),
+body :is(
+  .filter-tabs,
+  .level-filter,
+  .category-tabs,
+  .category-filter,
+  .tab-list,
+  .tabs,
+  .filter-list,
+  .button-row,
+  .button-group,
+  .controls,
+  .toolbar,
+  .search-container
+):hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 默认按钮/标签状态 */
+body :is(
+  button,
+  a.tab-btn,
+  button.tab-btn,
+  .level-tag,
+  a.filter-tag,
+  button.filter-tag,
+  a.filter-btn,
+  button.filter-btn,
+  a.category-tab,
+  button.category-tab,
+  a.category-btn,
+  button.category-btn,
+  a.chip,
+  button.chip,
+  a.tag,
+  button.tag,
+  a.pill,
+  button.pill,
+  .side a,
+  .quick a,
+  .pager a,
+  .nav-link,
+  .intro-btn
+) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  border-color: var(--hover-soft-border) !important;
+}
+
+/* 仅实际按钮 hover/active 变浅色，不作用于父级整行 */
+body :is(
+  button:hover,
+  button.active,
+  button.is-active,
+  a.tab-btn:hover,
+  a.tab-btn.active,
+  button.tab-btn:hover,
+  button.tab-btn.active,
+  .level-tag:hover,
+  .level-tag.active,
+  .level-tag.active-all,
+  a.filter-tag:hover,
+  a.filter-tag.active,
+  button.filter-tag:hover,
+  button.filter-tag.active,
+  a.filter-btn:hover,
+  a.filter-btn.active,
+  button.filter-btn:hover,
+  button.filter-btn.active,
+  a.category-tab:hover,
+  a.category-tab.active,
+  button.category-tab:hover,
+  button.category-tab.active,
+  a.category-btn:hover,
+  a.category-btn.active,
+  button.category-btn:hover,
+  button.category-btn.active,
+  a.chip:hover,
+  a.chip.active,
+  button.chip:hover,
+  button.chip.active,
+  a.tag:hover,
+  a.tag.active,
+  button.tag:hover,
+  button.tag.active,
+  a.pill:hover,
+  a.pill.active,
+  button.pill:hover,
+  button.pill.active,
+  .side a:hover,
+  .side a.active,
+  .quick a:hover,
+  .quick a.active,
+  .pager a:hover,
+  .pager a.active,
+  .nav-link:hover,
+  .nav-link.active,
+  .nav-link.is-active,
+  .intro-btn:hover
+) {
+  background: var(--hover-soft-bg) !important;
+  color: var(--hover-soft-text) !important;
+  -webkit-text-fill-color: var(--hover-soft-text) !important;
+  border-color: var(--hover-soft-border) !important;
+  box-shadow: 0 8px 24px rgba(72, 108, 134, .07) !important;
+}
+
+/* 荣誉奖项页筛选按钮单独精修 */
+body .filter-tabs .tab-btn,
+body .level-filter .level-tag {
+  display: inline-flex;
+  width: auto !important;
+  background: rgba(255,255,255,.54) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  border: 1px solid rgba(72, 108, 134, .12) !important;
+  box-shadow: none !important;
+}
+
+body .filter-tabs .tab-btn:hover,
+body .filter-tabs .tab-btn.active,
+body .level-filter .level-tag:hover,
+body .level-filter .level-tag.active,
+body .level-filter .level-tag.active-all {
+  background: rgba(111, 151, 178, .14) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  border-color: rgba(72, 108, 134, .18) !important;
+  box-shadow: 0 8px 24px rgba(72, 108, 134, .07) !important;
+}
+
+/* 防止父级因为旧样式残留显示整行背景 */
+body .filter-tabs:hover *,
+body .level-filter:hover * {
+  box-shadow: none;
+}
+
+/* 不影响轮播圆点/箭头 */
+body :is(.carousel-btn, .carousel-indicators button) {
+  -webkit-text-fill-color: currentColor !important;
+}
+</style>
+
+</head>
+<body>
+<div class="noise"></div>
+<div class="cursor" id="cursor"></div>
+
+<!-- 遮罩层 -->
+<div class="panel-mask" id="panelMask"></div>
+
+<!-- 头部导航：统一为前面页面同款汉堡菜单 -->
+<header class="nav unified-site-nav" id="siteNav">
+  <a class="nav-home" href="./index.html#home">School of Design</a>
+  <div class="nav-menu-drawer" id="navMenu" aria-hidden="true" aria-label="主导航">
+      <a class="nav-link" href="./index.html#card-0">新闻动态</a>
+      <a class="nav-link is-active" href="./index.html#card-1">教学科研</a>
+      <a class="nav-link" href="./index.html#card-2">学院概况</a>
+      <a class="nav-link" href="./index.html#card-3">学生天地</a>
+      <a class="nav-link" href="./index.html#card-4">数字展厅</a>
+      <a class="nav-link" href="./index.html#card-5">社会服务</a>
+      <a class="nav-link" href="./index.html#card-6">校友&合作</a>
+      <a class="nav-link" href="./index.html#card-7">党群工作</a>
+  </div>
+  <div class="nav-right">
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="展开目录" aria-controls="navMenu" aria-expanded="false">
+      <span class="menu-toggle-lines"></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- 英雄区 -->
+  <section class="hero">
+    <div class="breadcrumb">首页 <span>/</span> 教学科研 <span>/</span> <b>荣誉奖项</b></div>
+    <h1>荣誉奖项<span class="hero-en">Honors &amp; Awards</span></h1>
+    <p class="hero-copy">国际设计赛事、教学成果与科研成果持续汇聚，呈现学院面向未来的创新能力。</p>
+  </section>
+
+  <!-- 数据概览 -->
+  <div class="stats-board reveal show" style="padding: 0 6vw;">
+    <div class="stat-card">
+      <div class="stat-number">186</div>
+      <div class="stat-label">累计获奖</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">42</div>
+      <div class="stat-label">国际奖项</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">68</div>
+      <div class="stat-label">国家级奖项</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">12</div>
+      <div class="stat-label">顶级赛事金奖</div>
+    </div>
+  </div>
+
+  <!-- 搜索筛选区 -->
+  <section class="search-section reveal show">
+    <div class="search-container">
+      <div class="search-box" style="position:relative">
+        <span class="search-icon" style="position:absolute; left:20px; top:50%; transform:translateY(-50%);">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索奖项名称、项目、获奖人...">
+      </div>
+      
+      <div class="filter-tabs" id="filterTabs"></div>
+      
+      <div class="level-filter" id="levelFilter">
+        <span class="level-tag active-all" data-level="all">全部等级</span>
+        <span class="level-tag" data-level="gold">🥇 金奖 / 一等奖</span>
+        <span class="level-tag" data-level="silver">🥈 银奖 / 二等奖</span>
+        <span class="level-tag" data-level="bronze">🥉 铜奖 / 三等奖</span>
+      </div>
+      
+      <div class="search-results" id="searchResults" style="text-align:right; margin-top:16px; font-size:13px; color:var(--muted)"></div>
+    </div>
+  </section>
+
+  <!-- 奖项卡片网格 -->
+  <div class="awards-wrapper">
+    <div class="awards-grid" id="awardsGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;"><div>🏆</div><div>没有找到匹配的奖项</div></div>
+  </div>
+
+  <!-- 详情弹窗 -->
+  <div class="detail-panel" id="detailPanel">
+    <button class="close-panel-btn" id="closePanel">×</button>
+    <div class="detail-scroll" id="detailContent"></div>
+  </div>
+
+  <footer class="site-footer">
+    <div>©️2026华东师范大学设计学院</div>
+    <div>地址:上海市普陀区中山北路3663号</div>
+    <div>电话:+86-21-62237313</div>
+    <div>传真:+86-21-62606775</div>
+    <div>邮箱:DESIGN@DESIGN.ECNU.EDU.CN</div>
+  </footer>
+</main>
+
+<!-- 通用弹窗 -->
+<div class="modal" id="modal" style="position:fixed; inset:0; background:rgba(235,245,252,.58); backdrop-filter:blur(20px); z-index:400; display:none; align-items:center; justify-content:center; padding:20px;">
+  <div class="modal-card" style="background:rgba(255,255,255,.9); border-radius:32px; padding:28px; width:min(680px,96vw);">
+    <div class="modal-top" style="display:flex; justify-content:space-between; margin-bottom:48px;">
+      <div><div class="kicker">01 / 03</div><strong>What’s your name?</strong></div>
+      <button class="close" id="closeModal" style="background:none; border:1px solid #ccc; border-radius:50%; width:36px; height:36px; cursor:pointer;">×</button>
+    </div>
+    <input class="field" placeholder="Your name" style="width:100%; font-size:32px; border:none; border-bottom:1px solid #ccc; padding:12px 0; outline:none;">
+    <button class="next" style="margin-top:24px; background:var(--accent); color:white; border:none; border-radius:999px; padding:12px 20px; cursor:pointer;">Next step</button>
+  </div>
+</div>
+
+<script>
+
+  // ----- 统一导航菜单 -----
+  const siteNav = document.getElementById('siteNav');
+  const menuToggle = document.getElementById('menuToggle');
+  menuToggle?.addEventListener('click', () => {
+    const isOpen = siteNav.classList.toggle('is-menu-open');
+    menuToggle.setAttribute('aria-expanded', String(isOpen));
+    menuToggle.setAttribute('aria-label', isOpen ? '关闭菜单' : '打开菜单');
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      siteNav?.classList.remove('is-menu-open');
+      menuToggle?.setAttribute('aria-expanded', 'false');
+      menuToggle?.setAttribute('aria-label', '打开菜单');
+    }
+  });
+
+  // ---------- 奖项数据 ----------
+  const awardsData = [
+    // 视觉传达
+    {
+      id: 'award1',
+      title: '德国红点设计奖 · 至尊奖',
+      level: 'gold',
+      levelText: '至尊奖 Best of the Best',
+      project: '「城市呼吸」城市视觉识别系统设计',
+      winner: '张明 / 孙浩 / 林晓',
+      year: '2024',
+      category: 'visual',
+      organization: 'Red Dot Design Award',
+      description: '在全球超过60个国家、上万件参赛作品中脱颖而出，获得红点设计最高荣誉至尊奖。作品以极简的视觉语言诠释了城市与自然共生的设计理念，被评审团评价为"具有东方美学意境的当代视觉典范"。',
+      newsUrl: 'https://news.ecnu.edu.cn/reddot2024',
+      officialUrl: 'https://red-dot.de/pd/online-exhibition/work/?lang=en&code=24-12345',
+      team: ['张明', '孙浩', '林晓', '王一', '李然']
+    },
+    {
+      id: 'award2',
+      title: 'D&AD 黄铅笔奖',
+      level: 'gold',
+      levelText: '黄铅笔奖 Yellow Pencil',
+      project: '汉字动态图形实验系列',
+      winner: '孙浩 指导',
+      year: '2023',
+      category: 'visual',
+      organization: 'D&AD (英国设计与艺术指导协会)',
+      description: '全球创意设计领域最具含金量的奖项之一，本次获奖作品以汉字结构为切入点，探索动态图形在数字媒介中的叙事可能性，是中国大陆高校首次在该类别获得黄铅笔奖。',
+      newsUrl: 'https://news.ecnu.edu.cn/dad2023',
+      officialUrl: 'https://www.dandad.org/awards/professional/2023/',
+      team: ['孙浩（指导）', '2020级视觉传达本科生团队']
+    },
+    {
+      id: 'award3',
+      title: '东京字体指导俱乐部奖',
+      level: 'silver',
+      levelText: '提名奖 TDC Nomination',
+      project: '「宋韵」可变字体设计研究',
+      winner: '林晓',
+      year: '2024',
+      category: 'visual',
+      organization: 'Tokyo TDC',
+      description: '全球最具影响力的字体设计赛事之一，作品探索了宋体字在数字时代的可变形态与应用边界，获得评审团高度评价。',
+      newsUrl: 'https://news.ecnu.edu.cn/tdc2024',
+      officialUrl: 'https://tokyotdc.jp/',
+      team: ['林晓', '陈雨']
+    },
+
+    // 交互设计
+    {
+      id: 'award4',
+      title: 'IF 设计奖 · 产品交互类',
+      level: 'gold',
+      levelText: '金奖 Gold Award',
+      project: '老年智能陪伴系统交互设计',
+      winner: '李婷 / 唐丽',
+      year: '2024',
+      category: 'interaction',
+      organization: 'iF Design Award',
+      description: '针对老龄化社会设计的智能陪伴产品交互系统，以极简的交互逻辑降低老年用户学习成本，同时兼顾情感化设计。在全球50多个国家的参赛作品中获得产品交互类金奖。',
+      newsUrl: 'https://news.ecnu.edu.cn/if2024',
+      officialUrl: 'https://ifdesign.com/en/winner-ranking/',
+      team: ['李婷', '唐丽', '周宇', '张小明']
+    },
+    {
+      id: 'award5',
+      title: 'CHI 人机交互大会最佳论文提名',
+      level: 'silver',
+      levelText: 'Best Paper Honorable Mention',
+      project: '可穿戴触觉反馈交互研究',
+      winner: '周宇',
+      year: '2023',
+      category: 'interaction',
+      organization: 'ACM CHI',
+      description: '人机交互领域顶级会议，论文提出了新型可穿戴触觉反馈交互范式，入选最佳论文提名（前5%），是国内设计院校首次在该领域获此荣誉。',
+      newsUrl: 'https://news.ecnu.edu.cn/chi2023',
+      officialUrl: 'https://chi2023.acm.org/',
+      team: ['周宇', '李婷', '合作单位研究者']
+    },
+    {
+      id: 'award6',
+      title: '中国设计红星奖',
+      level: 'gold',
+      levelText: '金奖',
+      project: '无障碍公共服务终端交互设计',
+      winner: '唐丽 / 李婷',
+      year: '2023',
+      category: 'interaction',
+      organization: '中国设计红星奖',
+      description: '国内最具权威性的产品设计奖项，作品聚焦残障群体公共服务体验，提出了多模态无障碍交互解决方案，获得评委全票通过。',
+      newsUrl: 'https://news.ecnu.edu.cn/redstar2023',
+      officialUrl: 'https://www.redstaraward.org/',
+      team: ['唐丽', '李婷', '研究团队']
+    },
+
+    // 数字媒体
+    {
+      id: 'award7',
+      title: '威尼斯双年展参展',
+      level: 'gold',
+      levelText: '官方入选 Official Selection',
+      project: '「流变」沉浸式数字艺术装置',
+      winner: '王强',
+      year: '2024',
+      category: 'digital',
+      organization: 'La Biennale di Venezia',
+      description: '全球当代艺术最高殿堂，作品以东方水墨美学为灵感，通过实时生成技术打造沉浸式数字空间，是本届双年展为数不多的数字艺术参展作品。',
+      newsUrl: 'https://news.ecnu.edu.cn/venice2024',
+      officialUrl: 'https://www.labiennale.org/',
+      team: ['王强', '黄伟', '技术团队']
+    },
+    {
+      id: 'award8',
+      title: '中国动漫金龙奖',
+      level: 'gold',
+      levelText: '最佳动画短片奖',
+      project: '《星河入梦》实验动画',
+      winner: '吴梅 指导',
+      year: '2023',
+      category: 'digital',
+      organization: '中国动漫金龙奖',
+      description: '中国动漫最高奖项，由研究生团队创作的实验动画短片，融合传统工笔与数字技术，获得最佳实验动画奖。',
+      newsUrl: 'https://news.ecnu.edu.cn/jinlong2023',
+      officialUrl: 'http://www.comicfans.com/',
+      team: ['吴梅（指导）', '2021级研究生团队']
+    },
+    {
+      id: 'award9',
+      title: '丽水国际摄影节最佳新媒体作品',
+      level: 'silver',
+      levelText: '最佳新媒体艺术奖',
+      project: '「时间切片」AI生成影像系列',
+      winner: '黄伟',
+      year: '2024',
+      category: 'digital',
+      organization: '丽水国际摄影节',
+      description: '探索人工智能与影像艺术的边界，作品通过生成式AI重构城市记忆，获得评审团特别推荐。',
+      newsUrl: 'https://news.ecnu.edu.cn/lishui2024',
+      officialUrl: 'http://www.lsphoto.org/',
+      team: ['黄伟', '创作团队']
+    },
+
+    // 产品设计
+    {
+      id: 'award10',
+      title: '德国红点设计奖 · 产品设计类',
+      level: 'gold',
+      levelText: '红点奖 Winner',
+      project: '生物基材料家居产品系列',
+      winner: '陈雪 / 郑刚',
+      year: '2024',
+      category: 'product',
+      organization: 'Red Dot Design Award',
+      description: '与上汽集团联合研发的生物基材料家居产品，100%可降解，同时兼具优良的使用体验与美学品质，推动可持续设计产业化。',
+      newsUrl: 'https://news.ecnu.edu.cn/reddot-product2024',
+      officialUrl: 'https://red-dot.de/pd/',
+      team: ['陈雪', '郑刚', '企业合作团队']
+    },
+    {
+      id: 'award11',
+      title: '意大利金罗盘设计奖',
+      level: 'silver',
+      levelText: '入选奖 Selection',
+      project: '乡村公共服务设施系统设计',
+      winner: '郑刚',
+      year: '2023',
+      category: 'product',
+      organization: 'Compasso d\'Oro',
+      description: '全球历史最悠久的设计奖项，作品以社会创新设计视角，为中国乡村打造模块化公共服务设施系统，获得国际评审关注。',
+      newsUrl: 'https://news.ecnu.edu.cn/compasso2023',
+      officialUrl: 'https://www.compassodoro.it/',
+      team: ['郑刚', '社会创新实验室团队']
+    },
+    {
+      id: 'award12',
+      title: 'IF 新秀设计奖',
+      level: 'bronze',
+      levelText: '新秀奖 Talent Award',
+      project: '应急医疗产品概念设计',
+      winner: '陈雪 指导',
+      year: '2024',
+      category: 'product',
+      organization: 'iF Design Talent Award',
+      description: '本科生设计作品，针对户外急救场景设计的模块化医疗包，获得全球新秀设计奖。',
+      newsUrl: 'https://news.ecnu.edu.cn/iftalent2024',
+      officialUrl: 'https://ifdesign.com/en/talent-award/',
+      team: ['陈雪（指导）', '2021级本科生']
+    },
+
+    // 环境设计
+    {
+      id: 'award13',
+      title: '中国建筑学会建筑创作奖',
+      level: 'gold',
+      levelText: '一等奖',
+      project: '上海愚园路城市更新微改造',
+      winner: '刘伟',
+      year: '2023',
+      category: 'environment',
+      organization: '中国建筑学会',
+      description: '以微介入的方式活化历史街区公共空间，通过景观与装置设计提升社区活力，成为上海城市更新标杆项目。',
+      newsUrl: 'https://news.ecnu.edu.cn/arch2023',
+      officialUrl: 'http://www.chinaacsc.org/',
+      team: ['刘伟', '邱明', '设计团队']
+    },
+    {
+      id: 'award14',
+      title: '国际景观设计师联合会奖',
+      level: 'silver',
+      levelText: '荣誉奖 Honor Award',
+      project: '城市废弃铁路景观再生设计',
+      winner: '刘伟 / 邱明',
+      year: '2024',
+      category: 'environment',
+      organization: 'IFLA',
+      description: '全球景观设计最高奖项，将废弃铁路改造为线性城市公园，融合生态修复与公共艺术，获得国际评审肯定。',
+      newsUrl: 'https://news.ecnu.edu.cn/ifla2024',
+      officialUrl: 'https://www.iflaonline.org/',
+      team: ['刘伟', '邱明', '景观团队']
+    },
+
+    // 艺术理论
+    {
+      id: 'award15',
+      title: '教育部高等学校科学研究优秀成果奖',
+      level: 'gold',
+      levelText: '一等奖',
+      project: '《中国当代设计美学体系研究》',
+      winner: '赵琳',
+      year: '2023',
+      category: 'theory',
+      organization: '教育部人文社科奖',
+      description: '国内人文社科领域最高奖项，著作系统构建了中国当代设计美学理论框架，填补了该领域的学术空白。',
+      newsUrl: 'https://news.ecnu.edu.cn/moe2023',
+      officialUrl: 'http://www.moe.gov.cn/',
+      team: ['赵琳', '研究团队']
+    },
+    {
+      id: 'award16',
+      title: '全国美展 · 理论评论奖',
+      level: 'silver',
+      levelText: '获奖',
+      project: '数字时代的视觉文化转向研究',
+      winner: '陈静',
+      year: '2024',
+      category: 'theory',
+      organization: '全国美术作品展览',
+      description: '五年一届的国家级美术最高奖，论文深入分析了数字技术对当代视觉文化的重塑作用。',
+      newsUrl: 'https://news.ecnu.edu.cn/nationalart2024',
+      officialUrl: 'http://www.caanet.org.cn/',
+      team: ['陈静']
+    }
+  ];
+
+  // 全局状态
+  let currentCategory = 'all';
+  let currentLevel = 'all';
+  let currentSearch = '';
+
+  // DOM 元素
+  const awardsGrid = document.getElementById('awardsGrid');
+  const emptyState = document.getElementById('emptyState');
+  const detailPanel = document.getElementById('detailPanel');
+  const detailContent = document.getElementById('detailContent');
+  const closePanelBtn = document.getElementById('closePanel');
+  const panelMask = document.getElementById('panelMask');
+  const searchInput = document.getElementById('searchInput');
+  const filterTabsDiv = document.getElementById('filterTabs');
+  const levelFilterDiv = document.getElementById('levelFilter');
+  const searchResultsSpan = document.getElementById('searchResults');
+
+  // 渲染专业分类标签
+  function renderFilterTabs() {
+    const categories = ['all','visual','interaction','digital','product','environment','theory'];
+    const labels = {
+      all:'全部专业',
+      visual:'视觉传达',
+      interaction:'交互设计',
+      digital:'数字媒体',
+      product:'产品设计',
+      environment:'环境设计',
+      theory:'艺术理论'
+    };
+    filterTabsDiv.innerHTML = categories.map(cat => 
+      `<button class="tab-btn ${currentCategory===cat ? 'active':''}" data-category="${cat}">${labels[cat]}</button>`
+    ).join('');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentCategory = btn.dataset.category;
+        renderFilterTabs();
+        renderAwards();
+      });
+    });
+  }
+
+  // 等级筛选事件
+  levelFilterDiv.addEventListener('click', (e) => {
+    if (e.target.classList.contains('level-tag')) {
+      currentLevel = e.target.dataset.level;
+      document.querySelectorAll('.level-tag').forEach(tag => {
+        tag.classList.remove('active-all', 'active-gold', 'active-silver', 'active-bronze');
+      });
+      if (currentLevel === 'all') {
+        e.target.classList.add('active-all');
+      } else if (currentLevel === 'gold') {
+        e.target.classList.add('active-gold');
+      } else if (currentLevel === 'silver') {
+        e.target.classList.add('active-silver');
+      } else if (currentLevel === 'bronze') {
+        e.target.classList.add('active-bronze');
+      }
+      renderAwards();
+    }
+  });
+
+  // 获取筛选后的数据
+  function getFilteredAwards() {
+    return awardsData.filter(award => {
+      const matchCategory = currentCategory === 'all' || award.category === currentCategory;
+      const matchLevel = currentLevel === 'all' || award.level === currentLevel;
+      let matchSearch = true;
+      if (currentSearch) {
+        const s = currentSearch.toLowerCase();
+        matchSearch = award.title.toLowerCase().includes(s) ||
+                      award.project.toLowerCase().includes(s) ||
+                      award.winner.toLowerCase().includes(s) ||
+                      award.organization.toLowerCase().includes(s);
+      }
+      return matchCategory && matchLevel && matchSearch;
+    });
+  }
+
+  // 渲染奖项卡片
+  function renderAwards() {
+    const filtered = getFilteredAwards();
+    awardsGrid.innerHTML = '';
+
+    if (filtered.length === 0) {
+      emptyState.style.display = 'block';
+      awardsGrid.style.display = 'none';
+    } else {
+      emptyState.style.display = 'none';
+      awardsGrid.style.display = 'grid';
+    }
+
+    filtered.forEach(award => {
+      const card = document.createElement('div');
+      card.className = `award-card ${award.level}`;
+      
+      const badgeClass = award.level === 'gold' ? 'badge-gold' : 
+                        award.level === 'silver' ? 'badge-silver' : 
+                        award.level === 'bronze' ? 'badge-bronze' : 'badge-honor';
+      const levelIcon = award.level === 'gold' ? '🥇' : 
+                        award.level === 'silver' ? '🥈' : 
+                        award.level === 'bronze' ? '🥉' : '🏅';
+
+      card.innerHTML = `
+        <div class="award-level-badge ${badgeClass}">${levelIcon} ${award.levelText}</div>
+        <div class="award-title">${award.title}</div>
+        <div class="award-project">${award.project}</div>
+        <div class="award-meta">
+          <span class="award-winner">${award.winner}</span>
+          <span class="award-year">${award.year}</span>
+        </div>
+      `;
+      
+      card.addEventListener('click', () => showAwardDetail(award));
+      awardsGrid.appendChild(card);
+    });
+
+    searchResultsSpan.innerText = `共 ${filtered.length} 项获奖成果`;
+  }
+
+  // 打开面板
+  function openPanel() {
+    detailPanel.classList.add('expanded');
+    panelMask.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // 关闭面板
+  function closePanel() {
+    detailPanel.classList.remove('expanded');
+    panelMask.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // 显示奖项详情
+  function showAwardDetail(award) {
+    const badgeClass = award.level === 'gold' ? 'badge-gold' : 
+                      award.level === 'silver' ? 'badge-silver' : 
+                      award.level === 'bronze' ? 'badge-bronze' : 'badge-honor';
+    const levelIcon = award.level === 'gold' ? '🥇' : 
+                      award.level === 'silver' ? '🥈' : 
+                      award.level === 'bronze' ? '🥉' : '🏅';
+
+    detailContent.innerHTML = `
+      <div class="detail-award-header">
+        <div class="detail-level-badge ${badgeClass}">${levelIcon} ${award.levelText}</div>
+        <h2 class="detail-award-title">${award.title}</h2>
+        <div class="detail-project-name">「${award.project}」</div>
+      </div>
+
+      <div class="detail-info-grid">
+        <div class="info-item">
+          <div class="info-label">颁奖机构</div>
+          <div class="info-value">${award.organization}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">获奖年份</div>
+          <div class="info-value">${award.year}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">所属专业</div>
+          <div class="info-value">${getCategoryName(award.category)}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">核心获奖人</div>
+          <div class="info-value">${award.winner}</div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3>奖项介绍</h3>
+        <p>${award.description}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>获奖团队</h3>
+        <p>${award.team.join('、')}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>相关链接</h3>
+        <div class="detail-links-group">
+          <a href="${award.newsUrl}" class="detail-link-btn" target="_blank">📰 学院新闻报道</a>
+          <a href="${award.officialUrl}" class="detail-link-btn" target="_blank">🌐 赛事官方页面</a>
+        </div>
+      </div>
+    `;
+
+    openPanel();
+  }
+
+  // 专业名称映射
+  function getCategoryName(cat) {
+    const map = {
+      visual: '视觉传达设计',
+      interaction: '交互设计',
+      digital: '数字媒体艺术',
+      product: '产品设计',
+      environment: '环境设计',
+      theory: '艺术理论'
+    };
+    return map[cat] || cat;
+  }
+
+  // 事件绑定
+  searchInput.addEventListener('input', (e) => {
+    currentSearch = e.target.value;
+    renderAwards();
+  });
+  closePanelBtn.addEventListener('click', closePanel);
+  panelMask.addEventListener('click', closePanel);
+
+  // 弹窗控制
+  const modal = document.getElementById('modal');
+  const openModal = document.getElementById('openModal');
+  const closeModal = document.getElementById('closeModal');
+  openModal?.addEventListener('click', () => modal.style.display = 'flex');
+  closeModal?.addEventListener('click', () => modal.style.display = 'none');
+  modal?.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
+
+  // 自定义光标
+  const cursorDiv = document.getElementById('cursor');
+  window.addEventListener('mousemove', e => {
+    cursorDiv.style.left = e.clientX + 'px';
+    cursorDiv.style.top = e.clientY + 'px';
+  });
+
+  // 滚动显隐动画
+  const revealElements = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('show');
+    });
+  }, { threshold: 0.1 });
+  revealElements.forEach(el => revealObserver.observe(el));
+
+  // 初始化
+  renderFilterTabs();
+  renderAwards();
+</script>
+
+<script>
+(function(){
+  const nav = document.querySelector('.unified-site-nav');
+  if (!nav) return;
+  const toggle = nav.querySelector('.menu-toggle');
+  const menu = nav.querySelector('.nav-menu-drawer');
+  function closeUnifiedMenu(){
+    nav.classList.remove('is-menu-open');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', '展开目录');
+    }
+    if (menu) menu.setAttribute('aria-hidden', 'true');
+  }
+  if (toggle && menu) {
+    toggle.addEventListener('click', function(event){
+      event.stopPropagation();
+      const isOpen = nav.classList.toggle('is-menu-open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.setAttribute('aria-label', isOpen ? '收起目录' : '展开目录');
+      menu.setAttribute('aria-hidden', String(!isOpen));
+    });
+    document.addEventListener('click', function(event){
+      if (!nav.contains(event.target) && nav.classList.contains('is-menu-open')) closeUnifiedMenu();
+    });
+    document.addEventListener('keydown', function(event){
+      if (event.key === 'Escape') closeUnifiedMenu();
+    });
+  }
+})();
+</script>
+
+
+
+<script id="unified-menu-hotfix">
+(function () {
+  function setupUnifiedMenuHotfix() {
+    const nav = document.querySelector('.unified-site-nav');
+    const toggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
+    if (!nav || !toggle || !navMenu || toggle.dataset.hotfixBound === 'true') return;
+    toggle.dataset.hotfixBound = 'true';
+
+    function setMenuState(isOpen) {
+      nav.classList.toggle('is-menu-open', isOpen);
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.setAttribute('aria-label', isOpen ? '收起目录' : '展开目录');
+      navMenu.setAttribute('aria-hidden', String(!isOpen));
+    }
+
+    function toggleMenu(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      setMenuState(!nav.classList.contains('is-menu-open'));
+    }
+
+    // Capture phase binding prevents older duplicated click handlers from toggling twice.
+    toggle.addEventListener('click', toggleMenu, true);
+
+    navMenu.addEventListener('click', function (event) {
+      const link = event.target.closest('a');
+      if (link) setMenuState(false);
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!nav.contains(event.target)) setMenuState(false);
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') setMenuState(false);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupUnifiedMenuHotfix);
+  } else {
+    setupUnifiedMenuHotfix();
+  }
+})();
+</script>
+
+</body>
+</html>

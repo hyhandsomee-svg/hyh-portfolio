@@ -1,0 +1,4360 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能体驱动的设计学院课程地图</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        --blue: #0766eb;
+        --lime: #cdff05;
+        --red: #0766eb;
+        --green: #cdff05;
+        --signal: #0766eb;
+        --ink: #111111;
+        --muted: rgba(17, 17, 17, 0.48);
+        --white: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        overflow: hidden;
+        color: var(--ink);
+        background: #f7faf8;
+        font-family:
+          "Helvetica Neue", Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei",
+          sans-serif;
+      }
+
+      .stage {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        min-height: 720px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 52% 52%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.12) 42%, transparent 70%),
+          radial-gradient(circle at 7% 7%, rgba(7, 102, 235, 0.1), transparent 6px),
+          radial-gradient(circle at 93% 7%, rgba(7, 102, 235, 0.1), transparent 6px),
+          linear-gradient(180deg, #fbfdfb, #eef3f0);
+      }
+
+      .stage::before {
+        content: "";
+        position: absolute;
+        inset: 28px 42px 20px;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 1;
+        mix-blend-mode: multiply;
+        border: 1px solid rgba(7, 102, 235, 0.06);
+        background:
+          radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.78), transparent 46%),
+          linear-gradient(rgba(7, 102, 235, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(7, 102, 235, 0.06) 1px, transparent 1px),
+          linear-gradient(rgba(7, 102, 235, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(7, 102, 235, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 249, 0.98));
+        background-size: auto, 80px 80px, 80px 80px, 20px 20px, 20px 20px, auto;
+        box-shadow:
+          0 22px 58px rgba(12, 32, 72, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      }
+
+      .stage::after {
+        content: "";
+        position: absolute;
+        inset: 28px 42px 20px;
+        z-index: 3;
+        pointer-events: none;
+        opacity: 0.12;
+        mix-blend-mode: multiply;
+        background-image:
+          linear-gradient(45deg, transparent 49.4%, rgba(7, 102, 235, 0.045) 49.6% 50.4%, transparent 50.6%),
+          linear-gradient(-45deg, transparent 49.5%, rgba(7, 102, 235, 0.035) 49.7% 50.3%, transparent 50.5%);
+        background-size: 320px 320px, 360px 360px;
+      }
+
+      .graph {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+      }
+
+      .graph:active {
+        cursor: grabbing;
+      }
+
+      #edges,
+      #nodes {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+
+      .graph:not(.has-path):not(.is-dragging-node) #edges,
+      .graph:not(.has-path):not(.is-dragging-node) #nodes {
+        animation: graphFloat 7.2s ease-in-out infinite;
+      }
+
+      @keyframes graphFloat {
+        0%,
+        100% {
+          transform: translate3d(0, 0, 0);
+        }
+        45% {
+          transform: translate3d(0, -10px, 0);
+        }
+        72% {
+          transform: translate3d(6px, -4px, 0);
+        }
+      }
+
+      .edge {
+        fill: none;
+        marker-end: none;
+        stroke-linecap: square;
+        transition: opacity 0.28s ease, stroke 0.28s ease, stroke-width 0.28s ease;
+      }
+
+      .edge.primary {
+        stroke: rgba(7, 102, 235, 0.14);
+        stroke-width: 1;
+      }
+
+      .edge.secondary,
+      .edge.computer {
+        stroke: rgba(7, 102, 235, 0.1);
+        stroke-width: 0.9;
+      }
+
+      .edge.knowledge {
+        stroke: rgba(7, 102, 235, 0.1);
+        stroke-width: 0.85;
+      }
+
+      .edge.cross,
+      .edge.faint {
+        stroke: rgba(7, 102, 235, 0.14);
+        stroke-width: 0.9;
+      }
+
+      .edge.contact {
+        stroke: rgba(7, 102, 235, 0.16);
+        stroke-width: 1;
+      }
+
+      .graph.has-path .edge {
+        stroke: rgba(7, 102, 235, 0.08);
+        stroke-width: 0.75;
+      }
+
+      .route-edge {
+        fill: none;
+        marker-end: none;
+        stroke: var(--green);
+        stroke-linecap: round;
+        stroke-width: 2.2;
+        opacity: 0;
+        filter: drop-shadow(0 0 6px rgba(205, 255, 5, 0.42));
+        transition: opacity 0.28s ease;
+      }
+
+      .graph.has-path .route-edge {
+        opacity: 0;
+      }
+
+      .bridge-link {
+        fill: none;
+        stroke: var(--lime);
+        stroke-width: 1.65;
+        stroke-dasharray: 6 5;
+        opacity: 0;
+        marker-end: none;
+        filter: drop-shadow(0 0 5px rgba(205, 255, 5, 0.42));
+        transition: opacity 0.28s ease;
+      }
+
+      .graph.has-path .bridge-link {
+        opacity: 0.95;
+      }
+
+      .ownership-link {
+        fill: none;
+        stroke: var(--blue);
+        stroke-width: 1.1;
+        stroke-linecap: round;
+        stroke-dasharray: 4 5;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.28s ease;
+      }
+
+      .graph.has-path .ownership-link {
+        opacity: 0.55;
+      }
+
+      .bridge-card {
+        opacity: 0;
+        transition: opacity 0.28s ease;
+      }
+
+      .graph.has-path .bridge-card {
+        opacity: 1;
+      }
+
+      .bridge-card-bg {
+        fill: rgba(245, 255, 219, 0.86);
+        stroke: var(--lime);
+        stroke-width: 1.4;
+      }
+
+      .bridge-card-title {
+        fill: rgba(17, 17, 17, 0.86);
+        font-size: 12px;
+        font-weight: 900;
+        paint-order: stroke;
+        stroke: rgba(245, 255, 219, 0.72);
+        stroke-width: 3px;
+      }
+
+      .bridge-card-copy {
+        fill: rgba(17, 17, 17, 0.62);
+        font-size: 10px;
+        font-weight: 720;
+        paint-order: stroke;
+        stroke: rgba(245, 255, 219, 0.72);
+        stroke-width: 3px;
+      }
+
+      .node {
+        cursor: grab;
+        transition: opacity 0.28s ease, filter 0.28s ease;
+      }
+
+      .node:active {
+        cursor: grabbing;
+      }
+
+      .node-hit {
+        fill: transparent;
+        pointer-events: all;
+      }
+
+      .node-halo {
+        fill: none;
+        stroke-width: 0.75;
+      }
+
+      .node-core {
+        fill: var(--red);
+        stroke: rgba(83, 68, 67, 0.78);
+        stroke-width: 0.85;
+        filter: none;
+      }
+
+      .node-core.design-node {
+        fill: var(--red);
+      }
+
+      .node-core.computer-node {
+        fill: var(--green);
+      }
+
+      .node-core.cross-node {
+        fill: rgba(255, 255, 255, 0.82);
+        stroke: rgba(7, 102, 235, 0.24);
+      }
+
+      .node-core.domain,
+      .node-core.computerdomain,
+      .node-core.embodieddomain,
+      .node-core.bridge {
+        stroke-width: 0.9;
+      }
+
+      .node-grain {
+        fill: url(#retroNodeTexture);
+        opacity: 0.18;
+        pointer-events: none;
+        mix-blend-mode: multiply;
+      }
+
+      .node-scan {
+        display: none;
+        pointer-events: none;
+      }
+
+      .node-figure {
+        display: none;
+      }
+
+      .node-shadow-mark {
+        display: none;
+      }
+
+      .node-line {
+        display: none;
+        stroke-linecap: round;
+        stroke-width: 1.1;
+        pointer-events: none;
+      }
+
+      .node-dot {
+        display: none;
+      }
+
+      .node-green-wash {
+        fill: var(--lime);
+        opacity: 0;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        transition: opacity 0.28s ease;
+      }
+
+      .node.hover .node-core {
+        stroke: rgba(17, 17, 17, 0.76);
+        stroke-width: 2.2;
+        filter: drop-shadow(0 2px 5px rgba(17, 17, 17, 0.18));
+      }
+
+      .graph.has-path .node:not(.path) {
+        opacity: 0.2;
+      }
+
+      .node.path .node-core {
+        stroke: rgba(17, 17, 17, 0.9);
+        stroke-width: 2;
+        filter: drop-shadow(0 0 6px rgba(205, 255, 5, 0.48));
+      }
+
+      .node.path .node-halo {
+        stroke: var(--lime);
+        stroke-width: 2;
+        opacity: 0.92;
+      }
+
+      .node.path .node-green-wash {
+        opacity: 0.5;
+      }
+
+      .node-index {
+        fill: rgba(255, 255, 255, 0.68);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 8px;
+        font-weight: 850;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+
+      .root-index {
+        fill: #fff;
+        font-size: 12px;
+      }
+
+      .label {
+        fill: rgba(17, 17, 17, 0.74);
+        font-weight: 760;
+        paint-order: stroke;
+        stroke: rgba(255, 255, 255, 0.86);
+        stroke-width: 3px;
+      }
+
+      .label.root,
+      .label.computerroot {
+        fill: rgba(17, 17, 17, 0.86);
+        font-size: 23px;
+      }
+
+      .label.domain,
+      .label.computerdomain,
+      .label.embodieddomain {
+        font-size: 12px;
+      }
+
+      .label.method,
+      .label.bridge,
+      .label.embodiedmethod,
+      .label.computermethod {
+        font-size: 8px;
+        opacity: 0.72;
+      }
+
+      .label.leaf {
+        font-size: 7px;
+        font-weight: 720;
+        opacity: 0;
+        stroke-width: 2px;
+      }
+
+      .sub {
+        display: none;
+        fill: rgba(7, 38, 150, 0.62);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 7px;
+        paint-order: stroke;
+        stroke: rgba(255, 255, 255, 0.88);
+        stroke-width: 2px;
+      }
+
+      .micro-dot {
+        fill: rgba(7, 102, 235, 0.12);
+      }
+
+      .zone-band {
+        fill: rgba(255, 255, 255, 0.18);
+        stroke: rgba(7, 102, 235, 0.055);
+        stroke-width: 1;
+        stroke-dasharray: 4 10;
+        pointer-events: none;
+      }
+
+      .zone-label,
+      .data-tick {
+        fill: rgba(7, 102, 235, 0.22);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+
+      .zone-label {
+        font-size: 12px;
+        fill: rgba(7, 102, 235, 0.28);
+      }
+
+      .tooltip {
+        position: fixed;
+        z-index: 8;
+        max-width: 300px;
+        padding: 13px 14px 14px;
+        border: 1px solid rgba(7, 102, 235, 0.18);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.84);
+        box-shadow: 0 18px 45px rgba(7, 102, 235, 0.14);
+        backdrop-filter: blur(18px) saturate(140%);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition: opacity 0.14s ease, transform 0.14s ease;
+      }
+
+      .tooltip.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .tooltip strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--ink);
+        font-size: 15px;
+      }
+
+      .tooltip span {
+        display: block;
+        color: var(--blue);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .tooltip p {
+        margin: 10px 0 0;
+        color: rgba(17, 17, 17, 0.68);
+        font-size: 12px;
+        line-height: 1.65;
+      }
+
+      .chat-card {
+        position: absolute;
+        z-index: 6;
+        top: 42px;
+        left: 68px;
+        width: min(470px, calc(100vw - 44px));
+        min-height: 132px;
+        padding: 14px 16px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        border-radius: 2px;
+        background:
+          radial-gradient(circle at 16% 100%, rgba(7, 38, 150, 0.12), transparent 28%),
+          radial-gradient(circle at 84% 0%, rgba(205, 255, 5, 0.08), transparent 30%),
+          rgba(255, 255, 255, 0.68);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(16px) saturate(120%);
+        transition: width 0.42s ease, min-height 0.42s ease, background 0.42s ease;
+      }
+
+      .chat-card.is-expanded {
+        width: min(520px, calc(100vw - 90px));
+        min-height: 680px;
+        background:
+          radial-gradient(circle at 18% 8%, rgba(205, 255, 5, 0.18), transparent 26%),
+          rgba(255, 255, 255, 0.78);
+      }
+
+      .chat-card h2 {
+        margin: 0 0 10px 22px;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .composer-glass {
+        display: grid;
+        grid-template-columns: 1fr 40px;
+        gap: 12px;
+        align-items: start;
+        min-height: 76px;
+        padding: 14px 16px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96);
+      }
+
+      .prompt-copy {
+        width: 100%;
+        min-height: 42px;
+        border: 0;
+        outline: 0;
+        resize: none;
+        background: transparent;
+        color: rgba(17, 17, 17, 0.32);
+        font: inherit;
+        font-size: 17px;
+        font-weight: 760;
+        line-height: 1.45;
+      }
+
+      .prompt-copy::placeholder {
+        color: rgba(17, 17, 17, 0.32);
+      }
+
+      .send {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        margin-top: 4px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--blue);
+        color: var(--white);
+        font-size: 21px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .path-panel {
+        display: none;
+        margin-top: 18px;
+        padding: 22px 18px 18px;
+        border-top: 1px solid rgba(17, 17, 17, 0.22);
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.34s ease, transform 0.34s ease;
+      }
+
+      .path-panel.is-visible {
+        display: block;
+      }
+
+      .path-panel.is-ready {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .path-panel.is-building {
+        opacity: 0.02;
+      }
+
+      .path-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+
+      .path-title {
+        margin: 0;
+        color: #000;
+        font-size: 24px;
+        font-weight: 950;
+        letter-spacing: 0;
+      }
+
+      .path-title span {
+        margin-left: 10px;
+        color: rgba(17, 17, 17, 0.48);
+        font-size: 15px;
+        font-weight: 850;
+      }
+
+      .save-path {
+        height: 34px;
+        padding: 0 16px;
+        border: 1px solid rgba(17, 17, 17, 0.28);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #111;
+        font-weight: 850;
+      }
+
+      .path-list {
+        position: relative;
+        display: grid;
+        gap: 14px;
+        margin: 0;
+        padding: 0 0 0 14px;
+        list-style: none;
+      }
+
+      .path-list::before {
+        content: "";
+        position: absolute;
+        left: 29px;
+        top: 14px;
+        bottom: 28px;
+        width: 2px;
+        background: rgba(17, 17, 17, 0.25);
+      }
+
+      .path-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 52px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        min-height: 58px;
+        padding: 10px 12px 10px 0;
+        border-radius: 18px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.32s ease, transform 0.32s ease;
+      }
+
+      .path-panel.is-ready .path-item {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .path-item.is-hovered,
+      .path-item.is-selected-path {
+        margin-left: -14px;
+        padding-left: 14px;
+        background: rgba(205, 255, 5, 0.24);
+        border: 1px solid var(--blue);
+      }
+
+      .path-num {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 2px solid rgba(17, 17, 17, 0.28);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--blue);
+        font-size: 17px;
+        font-weight: 950;
+      }
+
+      .path-item.is-hovered .path-num,
+      .path-item.is-selected-path .path-num {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .path-name {
+        display: block;
+        color: #000;
+        font-size: 17px;
+        font-weight: 950;
+        line-height: 1.1;
+      }
+
+      .path-en {
+        display: block;
+        margin-top: 7px;
+        color: rgba(17, 17, 17, 0.24);
+        font-size: 14px;
+        font-weight: 850;
+      }
+
+      .path-tag {
+        min-width: 82px;
+        padding: 8px 13px;
+        border-radius: 999px;
+        background: rgba(7, 102, 235, 0.1);
+        color: var(--blue);
+        font-size: 13px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .path-item.is-done .path-tag {
+        background: rgba(205, 255, 5, 0.22);
+        color: var(--blue);
+      }
+
+      .path-item.is-hovered .path-tag,
+      .path-item.is-selected-path .path-tag {
+        background: rgba(205, 255, 5, 0.24);
+        color: var(--blue);
+      }
+
+      .fly-block {
+        position: fixed;
+        z-index: 20;
+        width: 22px;
+        height: 22px;
+        border: 2px solid rgba(17, 17, 17, 0.72);
+        background: var(--lime);
+        pointer-events: none;
+        transition:
+          transform 0.72s cubic-bezier(0.18, 0.86, 0.22, 1),
+          opacity 0.72s ease,
+          width 0.72s cubic-bezier(0.18, 0.86, 0.22, 1),
+          height 0.72s cubic-bezier(0.18, 0.86, 0.22, 1);
+      }
+
+      .stage {
+        background:
+          radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.98), rgba(250, 252, 250, 0.9) 42%, rgba(238, 242, 239, 0.92) 74%),
+          linear-gradient(180deg, #f6f7f5, #edf1ee);
+      }
+
+      .stage::before {
+        inset: 36px 54px 34px;
+        opacity: 0.72;
+        border-color: rgba(42, 54, 58, 0.055);
+        background:
+          linear-gradient(rgba(86, 105, 104, 0.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(86, 105, 104, 0.07) 1px, transparent 1px),
+          linear-gradient(rgba(86, 105, 104, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(86, 105, 104, 0.035) 1px, transparent 1px);
+        background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      }
+
+      .stage::after {
+        inset: 36px 54px 34px;
+        opacity: 0.08;
+        background-size: 460px 460px, 520px 520px;
+      }
+
+      .graph {
+        z-index: 2;
+      }
+
+      .edge.primary,
+      .edge.secondary,
+      .edge.computer,
+      .edge.knowledge,
+      .edge.cross,
+      .edge.contact,
+      .edge.faint {
+        stroke: rgba(81, 92, 98, 0.14);
+        stroke-width: 1;
+        marker-end: none;
+      }
+
+      .edge.primary,
+      .edge.computer {
+        stroke: rgba(81, 92, 98, 0.18);
+        stroke-width: 1.25;
+      }
+
+      .edge.contact {
+        stroke: rgba(81, 92, 98, 0.16);
+        stroke-width: 1.05;
+      }
+
+      .graph.has-path .edge {
+        opacity: 0.22;
+        stroke: rgba(81, 92, 98, 0.12);
+      }
+
+      .graph.has-path .edge.is-route-related {
+        opacity: 0.72;
+        stroke: rgba(205, 255, 5, 0.82);
+        stroke-width: 2.2;
+      }
+
+      .route-edge {
+        stroke: rgba(205, 255, 5, 0.88);
+        stroke-width: 3.1;
+        opacity: 0;
+        filter: drop-shadow(0 0 5px rgba(205, 255, 5, 0.34));
+      }
+
+      .graph.has-path .route-edge {
+        opacity: 0.78;
+      }
+
+      .bridge-link {
+        stroke: rgba(205, 255, 5, 0.72);
+        stroke-dasharray: none;
+        stroke-width: 2.1;
+      }
+
+      .bridge-card {
+        display: none;
+      }
+
+      .node {
+        transition: opacity 0.26s ease, transform 0.26s ease, filter 0.26s ease;
+      }
+
+      .node-core {
+        stroke: rgba(30, 41, 46, 0.34);
+        stroke-width: 1;
+        filter: none;
+      }
+
+      .node-core.design-node {
+        fill: rgba(255, 255, 255, 0.72);
+      }
+
+      .node-core.computer-node {
+        fill: rgba(255, 255, 255, 0.72);
+      }
+
+      .node-core.cross-node {
+        fill: rgba(255, 255, 255, 0.72);
+      }
+
+      .node-core.root,
+      .node-core.computerroot {
+        stroke-width: 1.35;
+      }
+
+      .node-grain {
+        opacity: 0.09;
+      }
+
+      .node-halo {
+        opacity: 0.32;
+      }
+
+      .node.hover .node-core,
+      .node.is-linked-hover .node-core {
+        stroke: var(--blue);
+        stroke-width: 2.4;
+        filter: drop-shadow(0 4px 12px rgba(7, 102, 235, 0.2));
+      }
+
+      .graph.has-path .node:not(.path) {
+        opacity: 0.28;
+      }
+
+      .node.path .node-core {
+        stroke: rgba(205, 255, 5, 0.95);
+        stroke-width: 2.3;
+        filter: drop-shadow(0 0 8px rgba(205, 255, 5, 0.32));
+      }
+
+      .node.path .node-halo {
+        stroke: rgba(205, 255, 5, 0.82);
+        stroke-width: 2.2;
+        opacity: 0.82;
+      }
+
+      .node.path .node-green-wash {
+        opacity: 0.2;
+      }
+
+      .step-badge-bg,
+      .step-badge-text {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.24s ease;
+      }
+
+      .node.has-step .step-badge-bg,
+      .node.has-step .step-badge-text {
+        opacity: 1;
+      }
+
+      .step-badge-bg {
+        fill: rgba(255, 255, 255, 0.94);
+        stroke: rgba(205, 255, 5, 0.96);
+        stroke-width: 1.6;
+      }
+
+      .step-badge-text {
+        fill: rgba(7, 102, 235, 0.96);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        font-weight: 900;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+
+      .label {
+        fill: rgba(24, 31, 35, 0.76);
+        font-weight: 760;
+        stroke: rgba(248, 250, 248, 0.9);
+        stroke-width: 4px;
+      }
+
+      .label.root,
+      .label.computerroot {
+        fill: rgba(17, 17, 17, 0.88);
+        font-size: 28px;
+        font-weight: 900;
+      }
+
+      .label.domain,
+      .label.computerdomain,
+      .label.embodieddomain {
+        font-size: 15px;
+        font-weight: 840;
+      }
+
+      .label.method,
+      .label.bridge,
+      .label.embodiedmethod,
+      .label.computermethod {
+        font-size: 10px;
+        opacity: 0.82;
+      }
+
+      .label.leaf {
+        font-size: 9px;
+        opacity: 0.62;
+      }
+
+      .sub {
+        display: block;
+        fill: rgba(28, 40, 45, 0.34);
+        font-size: 7.5px;
+        letter-spacing: 0.035em;
+      }
+
+      .node-index {
+        fill: rgba(255, 255, 255, 0.82);
+        font-size: 8px;
+      }
+
+      .root-index {
+        font-size: 13px;
+      }
+
+      .tooltip {
+        border: 1px solid rgba(90, 106, 110, 0.16);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 12px 30px rgba(39, 52, 56, 0.1);
+      }
+
+      .chat-card {
+        position: absolute;
+        z-index: 8;
+        top: 32px;
+        left: 50%;
+        width: 590px;
+        min-height: 136px;
+        padding: 16px 18px 18px;
+        border: 1px solid rgba(70, 82, 88, 0.12);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.68);
+        box-shadow: 0 10px 34px rgba(35, 46, 52, 0.055);
+        backdrop-filter: blur(18px) saturate(135%);
+        transform: translateX(-50%);
+        transition: width 0.42s ease, min-height 0.42s ease, padding 0.42s ease, transform 0.42s ease;
+      }
+
+      .chat-card.is-expanded {
+        width: 590px;
+        min-height: 72px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.62);
+      }
+
+      .agent-kicker {
+        margin-bottom: 4px;
+        color: rgba(41, 52, 57, 0.48);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .chat-card h2 {
+        margin: 0 0 12px;
+        color: rgba(17, 17, 17, 0.88);
+        font-size: 21px;
+        font-weight: 880;
+        line-height: 1.16;
+      }
+
+      .composer-glass {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        min-height: 50px;
+        padding: 5px 6px 5px 16px;
+        border: 1px solid rgba(70, 82, 88, 0.11);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.66);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      .prompt-copy {
+        min-height: 26px;
+        height: 26px;
+        padding: 0;
+        color: rgba(25, 32, 36, 0.78);
+        font-size: 14px;
+        font-weight: 640;
+        line-height: 26px;
+      }
+
+      .prompt-copy::placeholder {
+        color: rgba(25, 32, 36, 0.34);
+      }
+
+      .send {
+        width: auto;
+        height: 38px;
+        margin: 0;
+        padding: 0 18px;
+        border: 1px solid rgba(7, 102, 235, 0.16);
+        border-radius: 999px;
+        background: rgba(7, 102, 235, 0.1);
+        color: rgba(7, 102, 235, 0.92);
+        font-size: 13px;
+        font-weight: 840;
+      }
+
+      .agent-status {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 48px;
+        color: rgba(28, 38, 43, 0.74);
+        font-size: 14px;
+        font-weight: 760;
+      }
+
+      .agent-status button {
+        height: 34px;
+        padding: 0 15px;
+        border: 1px solid rgba(70, 82, 88, 0.15);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.62);
+        color: rgba(17, 17, 17, 0.68);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .chat-card.is-expanded .agent-kicker,
+      .chat-card.is-expanded h2,
+      .chat-card.is-expanded .composer-glass {
+        display: none;
+      }
+
+      .chat-card.is-expanded .agent-status {
+        display: flex;
+      }
+
+      .path-panel {
+        position: fixed;
+        z-index: 7;
+        top: 128px;
+        left: 56px;
+        display: none;
+        width: min(500px, 35vw);
+        max-height: calc(100vh - 176px);
+        margin: 0;
+        padding: 22px 20px 20px;
+        overflow: auto;
+        border: 1px solid rgba(70, 82, 88, 0.13);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.68);
+        box-shadow: 0 18px 46px rgba(35, 46, 52, 0.07);
+        backdrop-filter: blur(20px) saturate(135%);
+        opacity: 0;
+        transform: translateX(-18px) scale(0.985);
+      }
+
+      .path-panel.is-visible {
+        display: block;
+      }
+
+      .path-panel.is-ready {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+
+      .path-panel.is-building {
+        opacity: 0.18;
+      }
+
+      .path-head {
+        margin-bottom: 8px;
+      }
+
+      .path-title {
+        font-size: 24px;
+        font-weight: 920;
+      }
+
+      .path-title span {
+        display: inline-block;
+        margin-left: 8px;
+        color: rgba(17, 17, 17, 0.43);
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .path-summary {
+        margin: 0 0 12px;
+        color: rgba(29, 39, 44, 0.56);
+        font-size: 13px;
+        font-weight: 620;
+        line-height: 1.55;
+      }
+
+      .save-path {
+        height: 34px;
+        border-color: rgba(70, 82, 88, 0.18);
+        background: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+      }
+
+      .path-list {
+        gap: 8px;
+        padding-left: 0;
+      }
+
+      .path-list::before {
+        left: 18px;
+        top: 34px;
+        bottom: 34px;
+        width: 1px;
+        background: rgba(90, 106, 110, 0.22);
+      }
+
+      .path-item {
+        grid-template-columns: 42px 1fr;
+        min-height: 82px;
+        padding: 10px 14px 10px 0;
+        border: 1px solid transparent;
+        border-radius: 18px;
+        cursor: pointer;
+      }
+
+      .path-panel.is-ready .path-item {
+        opacity: 1;
+      }
+
+      .path-item.is-hovered,
+      .path-item.is-selected-path {
+        margin-left: 0;
+        padding-left: 0;
+        border-color: var(--blue);
+        background: rgba(205, 255, 5, 0.24);
+      }
+
+      .path-num {
+        width: 34px;
+        height: 34px;
+        border: 1.5px solid rgba(90, 106, 110, 0.24);
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--blue);
+        font-size: 14px;
+      }
+
+      .path-item.is-hovered .path-num,
+      .path-item.is-selected-path .path-num {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .path-name {
+        color: rgba(17, 17, 17, 0.9);
+        font-size: 16px;
+        font-weight: 850;
+      }
+
+      .path-desc {
+        display: block;
+        margin-top: 5px;
+        color: rgba(27, 36, 40, 0.62);
+        font-size: 12px;
+        font-weight: 560;
+        line-height: 1.45;
+      }
+
+      .path-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .path-tag {
+        min-width: 0;
+        padding: 5px 9px;
+        border: 1px solid rgba(70, 82, 88, 0.09);
+        background: rgba(7, 102, 235, 0.07);
+        color: rgba(7, 102, 235, 0.82);
+        font-size: 11px;
+        font-weight: 760;
+      }
+
+      .path-tag.state {
+        background: rgba(255, 255, 255, 0.64);
+        color: rgba(35, 45, 50, 0.58);
+      }
+
+      .path-tag.role {
+        background: rgba(205, 255, 5, 0.24);
+        color: rgba(95, 126, 12, 0.86);
+      }
+
+      .path-tag.priority {
+        background: rgba(7, 102, 235, 0.08);
+        color: rgba(7, 102, 235, 0.86);
+      }
+
+      .legend {
+        position: absolute;
+        right: 72px;
+        bottom: 62px;
+        z-index: 5;
+        display: grid;
+        gap: 8px;
+        padding: 12px 14px;
+        border: 1px solid rgba(70, 82, 88, 0.09);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.48);
+        color: rgba(25, 35, 40, 0.54);
+        font-size: 12px;
+        font-weight: 680;
+        backdrop-filter: blur(16px) saturate(130%);
+      }
+
+      .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+
+      .legend-mark {
+        width: 12px;
+        height: 12px;
+        border: 1px solid rgba(31, 41, 46, 0.16);
+        border-radius: 3px;
+      }
+
+      .legend-mark.design {
+        background: var(--blue);
+      }
+
+      .legend-mark.cross {
+        background: var(--lime);
+      }
+
+      .legend-mark.computer {
+        background: var(--blue);
+      }
+
+      .legend-line {
+        width: 22px;
+        height: 1px;
+        background: rgba(81, 92, 98, 0.22);
+      }
+
+      .legend-line.path {
+        height: 2px;
+        background: rgba(205, 255, 5, 0.88);
+      }
+
+      .system-status {
+        position: absolute;
+        right: 76px;
+        top: 122px;
+        z-index: 4;
+        display: grid;
+        gap: 5px;
+        color: rgba(7, 102, 235, 0.3);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 10px;
+        font-weight: 650;
+        letter-spacing: 0.03em;
+        pointer-events: none;
+        text-transform: uppercase;
+      }
+
+      .chat-card,
+      .chat-card.is-expanded,
+      .path-panel {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(7, 102, 235, 0.1);
+        box-shadow: 0 18px 48px rgba(12, 32, 72, 0.1);
+        backdrop-filter: blur(16px) saturate(130%);
+      }
+
+      .chat-card {
+        width: 660px;
+        min-height: 142px;
+        padding: 18px 22px 20px;
+      }
+
+      .chat-card.is-expanded {
+        width: 660px;
+        min-height: 72px;
+      }
+
+      .agent-kicker {
+        color: var(--blue);
+        opacity: 0.9;
+      }
+
+      .composer-glass {
+        min-height: 54px;
+        padding: 6px 7px 6px 18px;
+        border-radius: 18px;
+      }
+
+      .prompt-copy {
+        height: 30px;
+        min-height: 30px;
+        line-height: 30px;
+      }
+
+      .send {
+        height: 42px;
+        padding: 0 22px;
+      }
+
+      .composer-glass {
+        border-color: rgba(7, 102, 235, 0.16);
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .composer-glass:focus-within {
+        border-color: rgba(7, 102, 235, 0.48);
+      }
+
+      .send {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .route-edge,
+      .bridge-link {
+        stroke: var(--blue);
+        filter: none;
+      }
+
+      .graph.has-path .route-edge,
+      .graph.has-path .edge.is-route-related {
+        stroke: var(--blue);
+      }
+
+      .graph.has-path .route-edge {
+        opacity: 1;
+        stroke-width: 2;
+      }
+
+      .graph.has-path .route-edge.is-hovered {
+        stroke-width: 3;
+      }
+
+      .graph.has-path .bridge-link {
+        opacity: 0.42;
+        stroke-width: 1.4;
+      }
+
+      .graph.has-path .ownership-link {
+        opacity: 0.52;
+        stroke: var(--blue);
+        stroke-width: 1.15;
+      }
+
+      .graph.has-path .edge.is-route-related {
+        opacity: 0.34;
+        stroke-width: 1.1;
+      }
+
+      .edge.primary,
+      .edge.secondary,
+      .edge.computer,
+      .edge.knowledge,
+      .edge.cross,
+      .edge.contact {
+        opacity: 0.1;
+        stroke: rgba(7, 102, 235, 0.1);
+        stroke-width: 0.85;
+      }
+
+      .edge.primary,
+      .edge.computer {
+        opacity: 0.13;
+        stroke-width: 1;
+      }
+
+      .edge.cross,
+      .edge.contact {
+        opacity: 0.14;
+        stroke: rgba(7, 102, 235, 0.14);
+      }
+
+      .node-point {
+        fill: var(--blue);
+        stroke: rgba(255, 255, 255, 0.9);
+        stroke-width: 1.4;
+        pointer-events: none;
+      }
+
+      .node.current-step .node-point,
+      .node.is-linked-hover .node-point,
+      .node.hover .node-point {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 1;
+      }
+
+      .node.path .node-point {
+        fill: var(--blue);
+        stroke: rgba(255, 255, 255, 0.95);
+        stroke-width: 1.6;
+      }
+
+      .graph.has-path .node:not(.related):not(.path) {
+        opacity: 0.24;
+      }
+
+      .node.related {
+        opacity: 0.94;
+      }
+
+      .node.related-major .node-core {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 2;
+        filter: drop-shadow(0 6px 18px rgba(7, 102, 235, 0.12));
+      }
+
+      .node.related-major .label {
+        fill: rgba(17, 24, 28, 0.96);
+        font-weight: 900;
+      }
+
+      .node.related-major .sub {
+        fill: var(--blue);
+      }
+
+      .node.is-major.related-major .node-halo {
+        display: none;
+      }
+
+      .node.related-major .node-core-outline {
+        display: none;
+      }
+
+      .node.related-knowledge .node-point {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 1;
+      }
+
+      .node.related-knowledge .label {
+        fill: rgba(17, 24, 28, 0.88);
+        font-weight: 820;
+      }
+
+      .node.related-knowledge .sub {
+        fill: rgba(7, 102, 235, 0.5);
+      }
+
+      .node.current-step .node-point,
+      .node.is-linked-hover .node-point,
+      .node.hover .node-point {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 1;
+      }
+
+      .node:not(.is-major) .node-core,
+      .node:not(.is-major) .node-halo,
+      .node:not(.is-major) .node-grain,
+      .node:not(.is-major) .node-green-wash,
+      .node:not(.is-major) .node-scan,
+      .node:not(.is-major) .node-figure,
+      .node:not(.is-major) .node-line,
+      .node:not(.is-major) .node-dot,
+      .node:not(.is-major) .node-shadow-mark,
+      .node:not(.is-major) .node-index {
+        display: none;
+      }
+
+      .node.is-major .node-point {
+        display: none;
+      }
+
+      .node.is-major .node-core {
+        fill: #ffffff;
+        stroke: var(--blue);
+        stroke-width: 2;
+        filter: drop-shadow(0 6px 18px rgba(7, 102, 235, 0.12));
+      }
+
+      .node.is-major .node-hit,
+      .node.is-major .node-core {
+        rx: 12px;
+      }
+
+      .node.is-major .node-grain,
+      .node.is-major .node-green-wash,
+      .node.is-major .node-scan,
+      .node.is-major .node-figure,
+      .node.is-major .node-line,
+      .node.is-major .node-dot,
+      .node.is-major .node-shadow-mark,
+      .node.is-major .node-index {
+        display: none;
+      }
+
+      .node.is-major .node-halo {
+        display: none;
+      }
+
+      .node.is-major.path .node-core {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 2;
+        filter: drop-shadow(0 6px 18px rgba(7, 102, 235, 0.12));
+      }
+
+      .node.is-major.current-step .node-core,
+      .node.is-major.is-linked-hover .node-core,
+      .node.is-major.hover .node-core {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 2;
+        filter: drop-shadow(0 6px 18px rgba(7, 102, 235, 0.12));
+      }
+
+      .node.is-major.related-major .node-core {
+        fill: var(--lime);
+        stroke: var(--blue);
+        stroke-width: 2;
+        filter: drop-shadow(0 6px 18px rgba(7, 102, 235, 0.12));
+      }
+
+      .node.is-major .label {
+        font-size: 15px;
+        font-weight: 880;
+        stroke-width: 0;
+      }
+
+      .node.is-major.root .label,
+      .node.is-major.computerroot .label {
+        font-size: 20px;
+      }
+
+      .node.is-major .sub {
+        display: block;
+        fill: var(--blue);
+        font-size: 7.5px;
+        text-transform: uppercase;
+      }
+
+      .label.root,
+      .label.computerroot,
+      .label.domain,
+      .label.computerdomain,
+      .label.embodieddomain {
+        fill: rgba(17, 24, 28, 0.9);
+      }
+
+      .node:not(.is-major) .label {
+        fill: rgba(19, 27, 31, 0.78);
+        font-size: 11px;
+        font-weight: 760;
+        opacity: 0.9;
+        stroke: rgba(248, 250, 248, 0.9);
+        stroke-width: 3px;
+      }
+
+      .node:not(.is-major) .sub {
+        display: block;
+        fill: rgba(7, 102, 235, 0.36);
+        font-size: 7px;
+        opacity: 0.78;
+      }
+
+      .node.has-step .step-badge-bg {
+        fill: var(--blue);
+        stroke: #fff;
+      }
+
+      .node.has-step .step-badge-text {
+        fill: #fff;
+      }
+
+      .path-panel {
+        width: min(450px, 31vw);
+        padding: 22px 18px 18px;
+        overflow: hidden;
+      }
+
+      .path-list {
+        max-height: calc(100vh - 300px);
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      .path-list::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .path-list::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(7, 102, 235, 0.18);
+      }
+
+      .path-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .path-item {
+        grid-template-columns: 42px 1fr auto;
+        gap: 10px;
+        min-height: 92px;
+        padding: 12px;
+        border: 1px solid rgba(7, 102, 235, 0.1);
+        border-radius: 14px;
+        background: #ffffff;
+      }
+
+      .path-item.is-hovered,
+      .path-item.is-selected-path {
+        background: rgba(205, 255, 5, 0.24);
+        border-color: var(--blue);
+      }
+
+      .path-num {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .path-item.is-hovered .path-num,
+      .path-item.is-selected-path .path-num {
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .path-tag.role,
+      .path-tag.state,
+      .path-tag.priority {
+        background: rgba(205, 255, 5, 0.18);
+        color: rgba(17, 24, 28, 0.72);
+      }
+
+      .course-select {
+        align-self: center;
+        height: 32px;
+        min-width: 56px;
+        padding: 0 13px;
+        border: 1px solid rgba(7, 102, 235, 0.35);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--blue);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 780;
+        cursor: pointer;
+        transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+      }
+
+      .course-select:hover {
+        border-color: var(--blue);
+        background: rgba(205, 255, 5, 0.18);
+        color: var(--blue);
+      }
+
+      .course-select.is-selected {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .fly-block {
+        background: var(--blue);
+        border-color: var(--blue);
+        border-radius: 999px;
+      }
+
+      @media (max-width: 700px) {
+        body {
+          overflow: auto;
+          background: #f7faf8;
+        }
+
+        .stage {
+          box-sizing: border-box;
+          display: flex;
+          min-height: 100dvh;
+          height: auto;
+          padding: max(28px, env(safe-area-inset-top)) 18px max(30px, env(safe-area-inset-bottom));
+          overflow: visible;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 0;
+          transition: padding 0.48s cubic-bezier(0.22, 1, 0.36, 1), gap 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .stage.is-generated {
+          justify-content: flex-start;
+          padding-top: max(52px, calc(env(safe-area-inset-top) + 42px));
+          gap: 28px;
+        }
+
+        .graph,
+        .system-status,
+        .tooltip {
+          display: none;
+        }
+
+        .stage::before {
+          opacity: 0.72;
+        }
+
+        .stage::after {
+          opacity: 0.42;
+        }
+
+        .chat-card {
+          position: relative;
+          inset: auto;
+          box-sizing: border-box;
+          width: 100%;
+          max-width: 460px;
+          min-height: 0;
+          margin: 0 auto;
+          padding: 18px 16px 16px;
+          border-radius: 26px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 18px 44px rgba(12, 32, 72, 0.1);
+          transform: none;
+        }
+
+        .chat-card.is-expanded {
+          width: 100%;
+          max-width: 460px;
+          min-height: 0;
+          transform: none;
+        }
+
+        .chat-card.is-expanded .agent-kicker,
+        .chat-card.is-expanded h2,
+        .chat-card.is-expanded .composer-glass {
+          display: block;
+        }
+
+        .chat-card.is-expanded .composer-glass {
+          display: grid;
+        }
+
+        .chat-card.is-expanded .agent-status {
+          display: none;
+        }
+
+        .agent-kicker {
+          margin-left: 4px;
+          font-size: 11px;
+        }
+
+        .chat-card h2 {
+          margin: 2px 4px 14px;
+          font-size: clamp(25px, 8vw, 34px);
+          line-height: 1.08;
+        }
+
+        .composer-glass {
+          grid-template-columns: 1fr;
+          min-height: 0;
+          gap: 12px;
+          padding: 14px;
+          border-radius: 20px;
+        }
+
+        .prompt-copy {
+          font-size: 16px;
+          min-height: 72px;
+          height: 72px;
+          line-height: 1.45;
+        }
+
+        .send {
+          justify-self: stretch;
+          width: 100%;
+          height: 46px;
+          margin: 0;
+          border-radius: 999px;
+          font-size: 15px;
+        }
+
+        .path-panel {
+          position: relative;
+          inset: auto;
+          box-sizing: border-box;
+          width: 100%;
+          max-width: 460px;
+          max-height: none;
+          margin: 0 auto;
+          padding: 20px 16px 18px;
+          overflow: visible;
+          border-radius: 26px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 18px 44px rgba(12, 32, 72, 0.1);
+          transform: translateY(18px);
+          transition: opacity 0.42s ease, transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .path-panel.is-visible {
+          display: block;
+        }
+
+        .path-panel.is-ready {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .path-panel.is-building {
+          opacity: 0.2;
+        }
+
+        .path-head {
+          gap: 10px;
+          margin-bottom: 8px;
+        }
+
+        .path-title {
+          font-size: 24px;
+          line-height: 1.08;
+        }
+
+        .path-title span {
+          display: block;
+          margin: 7px 0 0;
+          font-size: 13px;
+        }
+
+        .save-path {
+          height: 34px;
+          padding: 0 12px;
+          white-space: nowrap;
+        }
+
+        .path-summary {
+          margin-bottom: 14px;
+          font-size: 13px;
+          line-height: 1.55;
+        }
+
+        .path-list {
+          max-height: none;
+          overflow: visible;
+          gap: 10px;
+          padding-right: 0;
+        }
+
+        .path-list::before {
+          display: none;
+        }
+
+        .path-item {
+          grid-template-columns: 44px 1fr;
+          padding: 12px;
+          min-height: 92px;
+          border-radius: 18px;
+        }
+
+        .course-select {
+          grid-column: 2;
+          justify-self: start;
+          margin-top: 2px;
+          height: 30px;
+        }
+
+        .fly-block {
+          display: none;
+        }
+      }
+    
+/* === ECNU homepage visual sync + shared top menu; original page functions/content preserved === */
+:root {
+  --blue: #6F97B2 !important;
+  --red: #6F97B2 !important;
+  --signal: #6F97B2 !important;
+  --green: #DDEFC7 !important;
+  --lime: #DDEFC7 !important;
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #6B8BA3 !important;
+  --grid: rgba(72, 108, 134, .055) !important;
+  --paper: #ffffff !important;
+  --line: rgba(72, 108, 134, .16) !important;
+  --ease: cubic-bezier(.2, .85, .2, 1);
+}
+
+html, body {
+  color: #476F8A !important;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.32), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.24), transparent 34%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 42%,#f8fbf3 100%) !important;
+}
+
+body {
+  padding-top: 108px !important;
+  overflow: auto !important;
+}
+
+body * {
+  text-shadow: none !important;
+}
+
+body :is(p, li, a, span, div, button, small, time, label, input, textarea, select, b, strong, em) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body :is(h1, h2, h3, h4, h5, h6,
+  [class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"],
+  [class*="label"], [class*="Label"], [class*="brand"], [class*="Brand"],
+  .path-name, .overview-title, .wheel-core strong, .tooltip strong) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+body :is(.muted, .sub, .desc, .caption, .data-line, .kicker, .mono,
+  [class*="copy"], [class*="Copy"], [class*="desc"], [class*="Desc"],
+  [class*="meta"], [class*="Meta"], [class*="caption"], [class*="Caption"],
+  [class*="sub"], [class*="Sub"], [class*="kicker"], [class*="Kicker"]) {
+  color: #6B8BA3 !important;
+  -webkit-text-fill-color: #6B8BA3 !important;
+}
+
+.stage {
+  background:
+    radial-gradient(circle at 52% 52%, rgba(255,255,255,.96), rgba(255,255,255,.36) 42%, transparent 72%),
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.18), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.18), transparent 34%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 42%,#f8fbf3 100%) !important;
+}
+
+.stage::before {
+  border-color: rgba(72,108,134,.10) !important;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255,255,255,.72), transparent 46%),
+    linear-gradient(rgba(72,108,134,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72,108,134,.055) 1px, transparent 1px),
+    linear-gradient(rgba(72,108,134,.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72,108,134,.028) 1px, transparent 1px) !important;
+  background-size: auto, 96px 96px, 96px 96px, 24px 24px, 24px 24px !important;
+}
+
+/* SVG / visual text sync */
+svg text,
+.label,
+.sub,
+.zone-label,
+.data-tick,
+.step-badge-text {
+  fill: #476F8A !important;
+  stroke: rgba(255,255,255,.78) !important;
+}
+
+.label.root,
+.label.computerroot,
+svg text[class*="root"] {
+  fill: #2E5A78 !important;
+}
+
+.edge,
+.edge.primary,
+.edge.secondary,
+.edge.computer,
+.edge.knowledge,
+.edge.cross,
+.edge.contact,
+.edge.faint,
+.route-edge,
+.bridge-link,
+.ownership-link,
+.sector-arc,
+.sector-divider,
+.containment-parent,
+.containment-branch {
+  stroke: rgba(111,151,178,.32) !important;
+}
+
+.node-core,
+.node-point,
+.containment-node,
+.legend-mark.design,
+.legend-mark.computer {
+  fill: #6F97B2 !important;
+}
+
+.node-core.computer-node,
+.node-core.cross-node,
+.legend-mark.cross,
+.node.path .node-core,
+.wheel-label.is-active::before,
+.wheel-label.is-selected::before {
+  fill: #DDEFC7 !important;
+}
+
+.chat-card,
+.agent-card,
+.composer-glass,
+.composer,
+.path-panel,
+.tooltip,
+.overview,
+.data-panel {
+  background: rgba(255,255,255,.82) !important;
+  border-color: rgba(72,108,134,.14) !important;
+  box-shadow: 0 18px 48px rgba(72,108,134,.08) !important;
+}
+
+.send,
+.submit,
+.overview-num {
+  background: #6F97B2 !important;
+  color: #EEF6FA !important;
+  -webkit-text-fill-color: #EEF6FA !important;
+}
+
+.chip,
+.save,
+.save-path,
+.overview-action,
+.path-tag,
+.agent-status button,
+.wheel-label.type-label,
+.wheel-label.is-selected {
+  background: rgba(255,255,255,.68) !important;
+  border-color: rgba(72,108,134,.18) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+
+.chip:hover,
+.chip.is-primary,
+.path-item.is-hovered,
+.path-item.is-selected-path,
+.wheel-label.is-active,
+.wheel-label.is-selected,
+.wheel-label.type-label.is-selected,
+.overview-action:hover,
+.save:hover,
+.save-path:hover {
+  background: rgba(111,151,178,.14) !important;
+  border-color: rgba(72,108,134,.22) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  box-shadow: 0 8px 24px rgba(72,108,134,.07) !important;
+}
+
+.prompt-copy,
+textarea {
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+.prompt-copy::placeholder,
+textarea::placeholder {
+  color: rgba(71,111,138,.46) !important;
+}
+
+/* Shared top menu copied to match the existing site navigation */
+.site-nav {
+  min-height: 76px;
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  z-index: 10000;
+  width: min(1480px, calc(100% - 48px));
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(72,108,134,.16);
+  border-radius: 999px;
+  padding: 10px 14px 10px 18px;
+  background: rgba(255,255,255,.66);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 22px 70px rgba(65,112,148,.09);
+  overflow: hidden;
+}
+
+.site-nav-home {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 720;
+  letter-spacing: .02em;
+  background: rgba(255,255,255,.50);
+  transition: background .25s ease, transform .25s var(--ease);
+}
+
+.site-nav-home:hover {
+  background: rgba(238,246,250,.86);
+  transform: translateY(-1px);
+}
+
+.site-nav-menu {
+  position: absolute;
+  top: 50%;
+  right: 70px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: min(880px, calc(100vw - 150px));
+  height: 48px;
+  padding: 5px 8px;
+  border: 1px solid rgba(72,108,134,.12);
+  border-radius: 999px;
+  background: rgba(250,253,255,.78);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 16px 46px rgba(82,135,168,.10);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(34px, -50%) scaleX(.78);
+  transform-origin: right center;
+  transition: opacity .34s var(--ease), transform .5s var(--ease);
+}
+
+.site-nav.is-menu-open .site-nav-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -50%) scaleX(1);
+}
+
+.site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 11px;
+  border-radius: 999px;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 620;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: background .25s ease, opacity .34s var(--ease), transform .44s var(--ease);
+}
+
+.site-nav.is-menu-open .site-nav-link { opacity: 1; transform: translateX(0); }
+.site-nav.is-menu-open .site-nav-link:nth-child(1) { transition-delay: .02s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(2) { transition-delay: .04s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(3) { transition-delay: .06s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(4) { transition-delay: .08s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(5) { transition-delay: .10s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(6) { transition-delay: .12s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(7) { transition-delay: .14s; }
+.site-nav.is-menu-open .site-nav-link:nth-child(8) { transition-delay: .16s; }
+
+.site-nav-link:hover,
+.site-nav-link.is-active {
+  background: rgba(238,246,250,.86);
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+.site-nav-right {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.site-menu-toggle {
+  width: 46px;
+  height: 46px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(72,108,134,.14);
+  border-radius: 50%;
+  background: rgba(252,254,255,.82);
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(82,135,168,.10);
+  transition: transform .3s var(--ease), background .3s var(--ease);
+}
+
+.site-menu-toggle:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.95);
+}
+
+.site-menu-toggle-lines {
+  position: relative;
+  width: 18px;
+  height: 12px;
+  display: block;
+}
+
+.site-menu-toggle-lines::before,
+.site-menu-toggle-lines::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #6F97B2;
+  transition: transform .35s var(--ease), top .35s var(--ease), width .35s var(--ease);
+}
+
+.site-menu-toggle-lines::before { top: 1px; }
+.site-menu-toggle-lines::after { top: 9px; width: 13px; }
+.site-nav.is-menu-open .site-menu-toggle-lines::before { top: 5px; transform: rotate(45deg); }
+.site-nav.is-menu-open .site-menu-toggle-lines::after { top: 5px; width: 18px; transform: rotate(-45deg); }
+
+@media (max-width: 1120px) {
+  .site-nav { border-radius: 34px; overflow: visible; }
+  .site-nav-menu {
+    top: calc(100% + 10px);
+    right: 0;
+    max-width: min(720px, calc(100vw - 76px));
+    height: auto;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 10px;
+    border-radius: 26px;
+    transform: translate(24px, -8px) scale(.96);
+  }
+  .site-nav.is-menu-open .site-nav-menu { transform: translate(0, 0) scale(1); }
+}
+
+@media (max-width: 760px) {
+  body { padding-top: 96px !important; }
+  .site-nav {
+    top: 14px;
+    width: calc(100vw - 28px);
+    min-height: 64px;
+    padding: 10px 10px 12px 16px;
+  }
+  .site-nav-home { font-size: 12px; padding: 0 12px; }
+  .site-nav-menu {
+    max-width: calc(100vw - 28px);
+    width: calc(100vw - 28px);
+    right: -10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .site-nav-link { justify-content: center; background: rgba(255,255,255,.62); }
+}
+
+</style>
+  
+<style id="course-resource-gradient-visual-fix">
+/* Final course/resource visual fix:
+   - visual accents follow homepage gradient blue/lime
+   - text stays muted grey-blue
+   - title weights align with other pages
+   - no content/function changes */
+:root {
+  --blue: #9ECBFF !important;
+  --red: #9ECBFF !important;
+  --signal: #9ECBFF !important;
+  --green: #EAFF8F !important;
+  --lime: #EAFF8F !important;
+  --ink: #476F8A !important;
+  --fg: #476F8A !important;
+  --text: #476F8A !important;
+  --muted: #6B8BA3 !important;
+  --grid: rgba(126, 170, 204, .075) !important;
+  --line: rgba(126, 170, 204, .16) !important;
+}
+
+/* Background follows the homepage gradient instead of grey-blue UI tint */
+html, body {
+  color: #476F8A !important;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.48), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.38), transparent 34%),
+    radial-gradient(circle at 48% 42%, rgba(214,247,244,.34), transparent 33%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 38%,#f8fbf3 100%) !important;
+}
+
+.stage {
+  background:
+    radial-gradient(circle at 84% 20%, rgba(235,255,124,.36), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(147,199,255,.30), transparent 34%),
+    radial-gradient(circle at 50% 52%, rgba(255,255,255,.94), rgba(255,255,255,.34) 42%, transparent 72%),
+    linear-gradient(135deg,#f5f8fb 0%,#f4fbff 40%,#f8fbf3 100%) !important;
+}
+
+.stage::before {
+  border-color: rgba(158,203,255,.18) !important;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255,255,255,.76), transparent 46%),
+    linear-gradient(rgba(126,170,204,.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126,170,204,.075) 1px, transparent 1px),
+    linear-gradient(rgba(186,214,72,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(186,214,72,.045) 1px, transparent 1px) !important;
+  background-size: auto, 96px 96px, 96px 96px, 24px 24px, 24px 24px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.94),
+    0 24px 70px rgba(65,112,148,.07) !important;
+}
+
+.stage::after {
+  opacity: .08 !important;
+}
+
+/* Text remains grey-blue only */
+body :is(p, li, a, span, div, button, small, time, label, input, textarea, select, b, strong, em) {
+  color: #476F8A !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-shadow: none !important;
+}
+
+body :is(h1, h2, h3, h4, h5, h6,
+  [class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"],
+  .path-name, .overview-title, .wheel-core strong, .tooltip strong,
+  .chat-card h2, .agent-card h2) {
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  text-shadow: none !important;
+}
+
+/* Title weights aligned with other subpages */
+h1,
+.chat-card h2,
+.agent-card h2,
+.overview h2,
+.path-title,
+.wheel-core strong,
+.tooltip strong,
+.overview-title,
+.path-name,
+body :is([class*="title"], [class*="Title"], [class*="heading"], [class*="Heading"]) {
+  font-weight: 680 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.kicker,
+.agent-kicker,
+.data-line,
+.mono {
+  font-weight: 620 !important;
+  letter-spacing: .06em !important;
+}
+
+/* Keep labels readable but not overly heavy */
+.label,
+.wheel-label,
+.path-tag,
+.overview-action,
+.chip,
+.save,
+.save-path,
+.submit,
+.send {
+  font-weight: 650 !important;
+}
+
+/* Visual accents use homepage gradient colors, not grey-blue */
+.edge.primary,
+.edge.secondary,
+.edge.computer,
+.edge.knowledge,
+.edge.cross,
+.edge.contact,
+.edge.faint,
+.sector-arc,
+.sector-divider,
+.containment-parent,
+.containment-branch {
+  stroke: rgba(126, 170, 204, .30) !important;
+}
+
+.route-edge,
+.bridge-link,
+.containment-spine,
+.graph.has-path .route-edge,
+.graph.has-path .edge.is-route-related {
+  stroke: rgba(186, 214, 72, .70) !important;
+}
+
+.ownership-link {
+  stroke: rgba(126, 170, 204, .46) !important;
+}
+
+.node-core,
+.node-point,
+.legend-mark.design,
+.legend-mark.computer,
+.overview-num {
+  fill: #9ECBFF !important;
+  background: #9ECBFF !important;
+}
+
+.node-core.computer-node,
+.node-core.cross-node,
+.legend-mark.cross,
+.node.path .node-core,
+.wheel-label.is-active::before,
+.wheel-label.is-selected::before,
+.containment-node {
+  fill: #EAFF8F !important;
+}
+
+.node.hover .node-core,
+.node.is-linked-hover .node-core,
+.node.path .node-core {
+  stroke: rgba(126, 170, 204, .72) !important;
+  filter: drop-shadow(0 4px 12px rgba(126,170,204,.18)) !important;
+}
+
+.node.path .node-halo {
+  stroke: rgba(186, 214, 72, .76) !important;
+}
+
+svg text,
+.label,
+.sub,
+.zone-label,
+.data-tick,
+.step-badge-text {
+  fill: #476F8A !important;
+  stroke: rgba(255,255,255,.86) !important;
+}
+
+.label.root,
+.label.computerroot,
+svg text[class*="root"] {
+  fill: #2E5A78 !important;
+}
+
+/* Panels and glass cards remain close to homepage's soft translucent style */
+.chat-card,
+.agent-card,
+.composer-glass,
+.composer,
+.path-panel,
+.tooltip,
+.overview,
+.data-panel {
+  background:
+    radial-gradient(circle at 84% 16%, rgba(235,255,124,.12), transparent 34%),
+    radial-gradient(circle at 18% 78%, rgba(147,199,255,.12), transparent 40%),
+    rgba(255,255,255,.82) !important;
+  border-color: rgba(158,203,255,.20) !important;
+  box-shadow: 0 18px 48px rgba(65,112,148,.08) !important;
+}
+
+/* Buttons / chips use soft background-gradient accents */
+.send,
+.submit {
+  background: linear-gradient(135deg, #9ECBFF, #CFEAF9) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  border-color: rgba(126,170,204,.24) !important;
+}
+
+.chip,
+.save,
+.save-path,
+.overview-action,
+.path-tag,
+.agent-status button,
+.wheel-label.type-label,
+.wheel-label.is-selected {
+  background: rgba(255,255,255,.72) !important;
+  border-color: rgba(158,203,255,.24) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+
+.chip:hover,
+.chip.is-primary,
+.path-item.is-hovered,
+.path-item.is-selected-path,
+.wheel-label.is-active,
+.wheel-label.is-selected,
+.wheel-label.type-label.is-selected,
+.overview-action:hover,
+.save:hover,
+.save-path:hover {
+  background:
+    radial-gradient(circle at 80% 20%, rgba(235,255,124,.38), transparent 46%),
+    rgba(158,203,255,.18) !important;
+  border-color: rgba(126,170,204,.30) !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+  box-shadow: 0 8px 24px rgba(65,112,148,.08) !important;
+}
+
+.path-item.is-hovered .path-num,
+.path-item.is-selected-path .path-num {
+  border-color: rgba(126,170,204,.54) !important;
+  background: #9ECBFF !important;
+  color: #2E5A78 !important;
+  -webkit-text-fill-color: #2E5A78 !important;
+}
+
+.path-item.is-hovered .path-tag,
+.path-item.is-selected-path .path-tag,
+.path-tag.role,
+.path-tag.priority {
+  background: rgba(234,255,143,.36) !important;
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+
+.prompt-copy,
+textarea {
+  color: #476F8A !important;
+  -webkit-text-fill-color: #476F8A !important;
+}
+.prompt-copy::placeholder,
+textarea::placeholder {
+  color: rgba(71,111,138,.46) !important;
+}
+
+/* Shared top menu stays the same as other pages */
+.site-nav {
+  background: rgba(255,255,255,.66) !important;
+  border-color: rgba(72,108,134,.16) !important;
+}
+.site-menu-toggle-lines::before,
+.site-menu-toggle-lines::after {
+  background: #6F97B2 !important;
+}
+</style>
+
+</head>
+  <body>
+
+<nav class="site-nav" id="siteNav" aria-label="网站顶部导航">
+  <a class="site-nav-home" href="./index.html#home">School of Design</a>
+  <div class="site-nav-menu" id="siteNavMenu" aria-hidden="true">
+    <a class="site-nav-link" href="./index.html#card-0">新闻动态</a>
+    <a class="site-nav-link" href="./index.html#card-1">教学科研</a>
+    <a class="site-nav-link" href="./index.html#card-2">学院概况</a>
+    <a class="site-nav-link" href="./index.html#card-3">学生天地</a>
+    <a class="site-nav-link" href="./index.html#card-4">数字展厅</a>
+    <a class="site-nav-link" href="./index.html#card-5">社会服务</a>
+    <a class="site-nav-link" href="./index.html#card-6">校友&合作</a>
+    <a class="site-nav-link" href="./index.html#card-7">党群工作</a>
+  </div>
+  <div class="site-nav-right">
+    <button class="site-menu-toggle" id="siteMenuToggle" type="button" aria-label="展开目录" aria-controls="siteNavMenu" aria-expanded="false">
+      <span class="site-menu-toggle-lines"></span>
+    </button>
+  </div>
+</nav>
+
+    <main class="stage" aria-label="智能体驱动的设计学院课程地图">
+      <svg class="graph" viewBox="0 0 2550 1250" preserveAspectRatio="xMidYMid meet" role="img" aria-label="设计、计算机与具身智能方向的知识图谱">
+        <defs>
+          <pattern id="retroNodeTexture" width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="rgba(7,102,235,0.06)"></rect>
+            <path d="M0 2H10M0 7H10" stroke="rgba(255,255,255,0.38)" stroke-width="0.7"></path>
+            <path d="M2 0V10M7 0V10" stroke="rgba(7,102,235,0.18)" stroke-width="0.55"></path>
+          </pattern>
+          <filter id="retroBlue" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="8" result="noise"></feTurbulence>
+            <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.03 0 0 0 0 0.16 0 0 0 0 0.58 0 0 0 0.18 0" result="blueNoise"></feColorMatrix>
+            <feBlend in="SourceGraphic" in2="blueNoise" mode="multiply"></feBlend>
+          </filter>
+          <marker id="arrowRed" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10Z" fill="#0766EB"></path>
+          </marker>
+          <marker id="arrowGreen" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10Z" fill="#cdff05"></path>
+          </marker>
+        </defs>
+        <g id="ambient"></g>
+        <g id="edges"></g>
+        <g id="routes"></g>
+        <g id="bridges"></g>
+        <g id="nodes"></g>
+      </svg>
+      <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+      <section class="chat-card" aria-label="Course Agent 学习目标输入">
+        <div class="agent-kicker">Course Agent</div>
+        <h2>你想学会哪些技能？</h2>
+        <form class="composer-glass" id="goalForm">
+          <textarea class="prompt-copy" id="goalInput" rows="1" placeholder="输入目标能力，如：具身智能 / HRI / 智能硬件"></textarea>
+          <button class="send" type="submit">生成路径 →</button>
+        </form>
+        <div class="agent-status" id="agentStatus">
+          <span>目标：具身智能 · 已生成 7 个关键学习节点</span>
+          <button type="button" id="regenerateButton">重新生成</button>
+        </div>
+      </section>
+      <section class="path-panel" id="pathPanel" aria-live="polite">
+        <div class="path-head">
+          <h3 class="path-title">推荐学习路径 <span>Course Agent 生成</span></h3>
+          <button class="save-path" type="button">保存路径</button>
+        </div>
+        <p class="path-summary">根据目标「具身智能」，已从知识图谱中提取 7 个关键学习节点。</p>
+        <ol class="path-list" id="pathList"></ol>
+      </section>
+      <aside class="system-status" aria-label="图谱系统状态">
+        <span>graph.index / course.agent.map</span>
+        <span>nodes: 150</span>
+        <span>edges: 282</span>
+        <span>target: career pathways</span>
+        <span>status: ready</span>
+      </aside>
+    </main>
+
+    <script>
+      const svgNS = "http://www.w3.org/2000/svg";
+      const ambient = document.getElementById("ambient");
+      const edgesLayer = document.getElementById("edges");
+      const routesLayer = document.getElementById("routes");
+      const bridgesLayer = document.getElementById("bridges");
+      const nodesLayer = document.getElementById("nodes");
+      const graph = document.querySelector(".graph");
+      const tooltip = document.getElementById("tooltip");
+      const stage = document.querySelector(".stage");
+      const goalForm = document.getElementById("goalForm");
+      const goalInput = document.getElementById("goalInput");
+      const chatCard = document.querySelector(".chat-card");
+      const agentStatus = document.getElementById("agentStatus");
+      const regenerateButton = document.getElementById("regenerateButton");
+      const pathPanel = document.getElementById("pathPanel");
+      const pathList = document.getElementById("pathList");
+
+      const rawNodes = [
+        ["design", "设计", "DESIGN", 760, 520, 58, "root"],
+        ["design_foundation", "设计基础", "Design Foundation", 520, 520, 17, "leaf"],
+        ["problem_definition", "问题定义", "Problem Definition", 520, 560, 17, "leaf"],
+        ["info_expression", "信息表达", "Information Expression", 520, 600, 17, "leaf"],
+
+        ["product", "产品设计", "PRODUCT DESIGN", 650, 210, 39, "domain"],
+        ["environment", "环境设计", "ENVIRONMENT DESIGN", 430, 455, 37, "domain"],
+        ["visual", "视觉传达设计", "VISUAL COMMUNICATION", 560, 760, 38, "domain"],
+        ["digitalmedia", "数字媒体设计", "DIGITAL MEDIA DESIGN", 930, 760, 38, "domain"],
+        ["architecture", "建筑设计", "ARCHITECTURE DESIGN", 1085, 430, 37, "domain"],
+
+        ["materials", "材料工艺", "Materials", 520, 92, 17, "leaf"],
+        ["ergonomics", "人机工学", "Ergonomics", 735, 86, 18, "leaf"],
+        ["modeling", "建模制造", "Modeling & Fabrication", 850, 178, 18, "leaf"],
+        ["prototype", "原型设计", "Prototype", 760, 310, 20, "method"],
+        ["usability", "可用性测试", "Usability Test", 982, 270, 17, "leaf"],
+        ["sustain", "可持续设计", "Sustainable Design", 440, 245, 17, "bridge"],
+        ["product_strategy", "产品策略", "Product Strategy", 615, 332, 17, "method"],
+
+        ["interior", "室内空间", "Interior Space", 255, 370, 18, "leaf"],
+        ["landscape", "景观设计", "Landscape", 260, 515, 18, "leaf"],
+        ["wayfinding", "导视系统", "Wayfinding", 360, 625, 17, "leaf"],
+        ["lighting", "照明设计", "Lighting", 475, 610, 16, "leaf"],
+        ["spatial_planning", "空间规划", "Spatial Planning", 150, 455, 18, "method"],
+        ["exhibition", "展陈设计", "Exhibition Design", 560, 510, 17, "method"],
+
+        ["typography", "字体排版", "Typography", 290, 820, 18, "leaf"],
+        ["color", "色彩系统", "Color System", 410, 895, 18, "leaf"],
+        ["layout", "版式构成", "Composition", 520, 930, 16, "leaf"],
+        ["brand", "品牌识别", "Brand Identity", 640, 895, 18, "leaf"],
+        ["information_design", "信息设计", "Information Design", 690, 790, 18, "method"],
+        ["illustration", "插画叙事", "Illustration Narrative", 425, 715, 16, "leaf"],
+
+        ["interaction", "交互设计", "Interaction Design", 885, 625, 30, "method"],
+        ["motion_design", "动态影像", "Motion Design", 1035, 865, 17, "leaf"],
+        ["game_design", "游戏设计", "Game Design", 1180, 810, 17, "leaf"],
+        ["media_narrative", "媒体叙事", "Media Narrative", 1000, 960, 17, "leaf"],
+        ["creative_coding", "创意编程", "Creative Coding", 1250, 940, 17, "bridge"],
+        ["uxresearch", "用户研究", "User Research", 760, 645, 20, "method"],
+        ["ia", "信息架构", "Information Architecture", 815, 890, 19, "method"],
+        ["designsystem", "设计系统", "Design System", 1095, 660, 21, "method"],
+        ["dataviz", "数据可视化", "Data Visualization", 1225, 680, 18, "bridge"],
+        ["ai", "AI 设计工具", "AI Tools", 1330, 765, 18, "bridge"],
+
+        ["arch_concept", "建筑概念", "Architectural Concept", 1030, 220, 17, "leaf"],
+        ["structure", "结构逻辑", "Structure Logic", 1215, 275, 18, "leaf"],
+        ["urban", "城市语境", "Urban Context", 1245, 440, 18, "leaf"],
+        ["bim", "BIM 建模", "BIM Modeling", 1130, 580, 17, "bridge"],
+        ["building_tech", "建造技术", "Building Technology", 1350, 510, 17, "leaf"],
+        ["site_analysis", "场地分析", "Site Analysis", 925, 335, 18, "method"],
+
+        ["methods", "研究方法", "Research Methods", 720, 500, 19, "method"],
+        ["portfolio", "作品集叙事", "Portfolio Narrative", 865, 1035, 18, "bridge"],
+        ["hci", "HCI", "Human Computer Interaction", 1360, 620, 18, "bridge"],
+
+        ["computer", "计算机", "COMPUTER", 1740, 540, 58, "computerroot", "computer"],
+        ["cs_algo", "算法与理论", "Algorithms & Theory", 1565, 245, 38, "computerdomain", "computer"],
+        ["cs_soft", "软件工程", "Software Engineering", 1515, 520, 37, "computerdomain", "computer"],
+        ["cs_data", "数据与数据库", "Data & Database", 1895, 250, 37, "computerdomain", "computer"],
+        ["cs_ai", "人工智能", "Artificial Intelligence", 2120, 520, 39, "computerdomain", "computer"],
+        ["cs_system", "计算机系统", "Computer Systems", 1785, 835, 37, "computerdomain", "computer"],
+        ["cs_network", "网络与安全", "Network & Security", 1515, 805, 34, "computerdomain", "computer"],
+        ["cs_hci", "人机交互", "Human-Computer Interaction", 1390, 635, 30, "computerdomain", "computer"],
+
+        ["cs_discrete", "离散数学", "Discrete Math", 1445, 120, 17, "computermethod", "computer"],
+        ["cs_foundation", "计算机基础", "Computer Fundamentals", 1540, 510, 17, "computermethod", "computer"],
+        ["cs_ds", "数据结构", "Data Structures", 1615, 115, 20, "computermethod", "computer"],
+        ["cs_complexity", "复杂度分析", "Complexity Analysis", 1730, 210, 17, "computermethod", "computer"],
+        ["cs_optimization", "优化方法", "Optimization", 1515, 360, 17, "computermethod", "computer"],
+
+        ["cs_require", "需求分析", "Requirements", 1350, 430, 17, "computermethod", "computer"],
+        ["cs_api", "API 设计", "API Design", 1405, 560, 18, "computermethod", "computer"],
+        ["cs_frontend", "前端工程", "Frontend Engineering", 1590, 665, 19, "computermethod", "computer"],
+        ["cs_testing", "软件测试", "Software Testing", 1695, 520, 17, "computermethod", "computer"],
+        ["cs_architecture", "软件架构", "Software Architecture", 1570, 415, 18, "computermethod", "computer"],
+
+        ["cs_db", "数据库", "Database", 2015, 145, 19, "computermethod", "computer"],
+        ["cs_stats", "统计学习", "Statistical Learning", 2150, 260, 18, "computermethod", "computer"],
+        ["cs_viz", "可视分析", "Visual Analytics", 1850, 90, 18, "computermethod", "computer"],
+        ["cs_bigdata", "大数据处理", "Big Data Processing", 1965, 390, 17, "computermethod", "computer"],
+
+        ["cs_ml", "机器学习", "Machine Learning", 2260, 450, 20, "computermethod", "computer"],
+        ["perception_control", "感知与控制", "Perception & Control", 2120, 500, 17, "embodiedmethod", "embodied"],
+        ["cs_cv", "计算机视觉", "Computer Vision", 2260, 625, 18, "computermethod", "computer"],
+        ["cs_nlp", "自然语言处理", "NLP", 2125, 705, 17, "computermethod", "computer"],
+        ["cs_robot", "机器人软件", "Robotics Software", 2350, 720, 18, "computermethod", "computer"],
+        ["cs_agent", "智能体系统", "Agent Systems", 2015, 600, 18, "computermethod", "computer"],
+        ["robotics_systems", "机器人 / 智能系统", "Robotics & Intelligent Systems", 2220, 760, 34, "embodieddomain", "embodied"],
+        ["sensor_tech", "传感器技术", "Sensor Technology", 2325, 700, 17, "embodiedmethod", "embodied"],
+        ["system_integration", "系统集成", "System Integration", 2190, 830, 17, "embodiedmethod", "embodied"],
+
+        ["cs_os", "操作系统", "Operating Systems", 1655, 980, 19, "computermethod", "computer"],
+        ["cs_arch", "计算机组成", "Computer Architecture", 1865, 1000, 18, "computermethod", "computer"],
+        ["cs_cloud", "云计算", "Cloud Computing", 1945, 865, 17, "computermethod", "computer"],
+        ["cs_embedded", "嵌入式系统", "Embedded Systems", 1810, 690, 17, "computermethod", "computer"],
+
+        ["cs_protocol", "网络协议", "Protocols", 1365, 760, 17, "computermethod", "computer"],
+        ["cs_crypto", "密码学", "Cryptography", 1390, 925, 17, "computermethod", "computer"],
+        ["cs_privacy", "隐私计算", "Privacy Computing", 1230, 850, 16, "computermethod", "computer"],
+        ["cs_security", "安全工程", "Security Engineering", 1545, 950, 17, "computermethod", "computer"],
+
+        ["embodied", "具身智能", "Embodied Intelligence", 2200, 890, 34, "embodieddomain", "embodied"],
+        ["sensorfusion", "传感器融合", "Sensor Fusion", 2325, 830, 18, "embodiedmethod", "embodied"],
+        ["control", "控制系统", "Control Systems", 2105, 1035, 18, "embodiedmethod", "embodied"],
+        ["motion", "运动规划", "Motion Planning", 2325, 1010, 17, "embodiedmethod", "embodied"],
+        ["hardware", "智能硬件", "Smart Hardware", 2210, 1130, 17, "embodiedmethod", "embodied"],
+        ["hri_robot", "人机协作", "Human-Robot Collaboration", 2025, 765, 18, "embodiedmethod", "embodied"],
+        ["behavior_feedback", "行为反馈", "Behavior Feedback", 2115, 865, 17, "embodiedmethod", "embodied"],
+        ["context_awareness", "情境感知", "Context Awareness", 2220, 930, 17, "embodiedmethod", "embodied"],
+        ["decision_planning", "决策规划", "Decision Planning", 2220, 970, 17, "embodiedmethod", "embodied"],
+        ["hri_project", "人机协作项目", "Human-Robot Collaboration Project", 2025, 900, 18, "embodiedmethod", "embodied"],
+        ["multimodal", "多模态交互", "Multimodal Interaction", 1235, 455, 17, "bridge"],
+        ["ux", "用户体验", "User Experience", 1165, 620, 17, "bridge"],
+        ["interaction_system", "交互系统", "Interaction System", 1265, 650, 17, "bridge"],
+
+        ["mechanical", "机械", "MECHANICAL", 1650, 1110, 34, "major"],
+        ["electronics", "电子信息", "ELECTRONIC INFORMATION", 1885, 1110, 34, "major"],
+        ["automation", "自动化", "AUTOMATION", 2105, 1110, 34, "major"],
+        ["material_major", "材料", "MATERIALS", 1160, 1080, 32, "major"],
+        ["building", "建筑", "ARCHITECTURE", 760, 1080, 32, "major"],
+        ["transport", "交通运输", "TRANSPORTATION", 2420, 735, 32, "major"],
+        ["medicine", "医学", "MEDICINE", 360, 1080, 32, "major"],
+        ["psychology", "心理学", "PSYCHOLOGY", 1010, 235, 32, "major"],
+        ["finance", "经济金融", "ECONOMICS & FINANCE", 1580, 80, 32, "major"],
+        ["management", "管理", "MANAGEMENT", 1790, 80, 32, "major"],
+        ["communication", "新闻传播", "JOURNALISM & COMMUNICATION", 510, 1040, 32, "major"],
+        ["literature", "文学", "LITERATURE", 650, 1120, 32, "major"],
+        ["education", "教育", "EDUCATION", 260, 965, 32, "major"],
+        ["law", "法学", "LAW", 1990, 80, 32, "major"],
+        ["agriculture", "农学", "AGRICULTURE", 2350, 1030, 32, "major"],
+        ["env_energy", "环境能源", "ENVIRONMENT & ENERGY", 1380, 1120, 32, "major"],
+        ["art_media", "艺术传媒", "ART & MEDIA", 820, 1160, 32, "major"],
+        ["interdisciplinary", "交叉学科", "INTERDISCIPLINARY", 1275, 620, 34, "major"],
+        ["math_stats", "统计 / 理学", "STATISTICS & SCIENCE", 1715, 175, 26, "major"],
+
+        ["industrial_design", "工业设计", "Industrial Design", 1540, 1060, 17, "leaf"],
+        ["cmf", "CMF", "Color Material Finish", 1440, 1040, 16, "leaf"],
+        ["mechanism", "机械结构", "Mechanical Structure", 1610, 1030, 17, "leaf"],
+        ["motion_control", "运动控制", "Motion Control", 1705, 1170, 17, "leaf"],
+        ["control_theory", "控制理论", "Control Theory", 2020, 1035, 17, "leaf"],
+        ["industrial_auto", "工业自动化", "Industrial Automation", 2220, 1170, 17, "leaf"],
+        ["iot", "物联网", "IoT", 1975, 1030, 17, "leaf"],
+        ["circuit", "电路基础", "Circuit Fundamentals", 1875, 1030, 17, "leaf"],
+        ["comm_module", "通信模块", "Communication Module", 1970, 1180, 17, "leaf"],
+        ["python_sql", "SQL / Python", "SQL & Python", 1665, 150, 17, "leaf"],
+        ["data_analysis", "数据分析", "Data Analysis", 1855, 165, 17, "leaf"],
+        ["risk_model", "风控建模", "Risk Modeling", 1685, 20, 17, "leaf"],
+        ["payment_system", "支付系统", "Payment System", 1895, 15, 17, "leaf"],
+        ["medical_foundation", "医学基础", "Medical Foundation", 290, 1135, 17, "leaf"],
+        ["medical_scene", "医疗场景研究", "Medical Scenario Research", 440, 1138, 17, "leaf"],
+        ["medical_data", "医疗数据", "Medical Data", 345, 1018, 17, "leaf"],
+        ["medical_compliance", "医疗合规", "Medical Compliance", 455, 1000, 17, "leaf"],
+        ["cognition", "认知心理", "Cognitive Psychology", 930, 155, 17, "leaf"],
+        ["human_factors", "人因工程", "Human Factors", 1065, 160, 17, "leaf"],
+        ["behavior_intervention", "行为干预", "Behavior Intervention", 1135, 265, 17, "leaf"],
+        ["driving_scene", "驾驶场景", "Driving Scenario", 2405, 635, 17, "leaf"],
+        ["hmi", "智能座舱", "Smart Cockpit", 2460, 820, 17, "leaf"],
+        ["vehicle_system", "车载系统", "In-Vehicle System", 2355, 820, 17, "leaf"],
+        ["traffic_data", "交通数据", "Traffic Data", 2460, 655, 17, "leaf"],
+        ["narrative_design", "叙事设计", "Narrative Design", 690, 1038, 17, "leaf"],
+        ["game_system_design", "游戏系统设计", "Game System Design", 910, 1118, 17, "leaf"],
+        ["level_design", "关卡设计", "Level Design", 1000, 1190, 17, "leaf"],
+        ["content_planning", "内容策划", "Content Planning", 545, 1145, 17, "leaf"],
+        ["aigc", "AIGC", "AIGC", 920, 1040, 17, "leaf"],
+        ["product_management", "产品管理", "Product Management", 1810, 175, 17, "leaf"],
+        ["business_analysis", "商业分析", "Business Analysis", 1940, 120, 17, "leaf"],
+        ["data_compliance", "数据合规", "Data Compliance", 2060, 140, 17, "leaf"]
+      ];
+
+      const nodes = rawNodes.map(([id, label, en, x, y, r, type, cluster]) => ({ id, label, en, x, y, r, type, cluster }));
+      const byId = Object.fromEntries(nodes.map((node) => [node.id, node]));
+      const edges = [
+        ["design", "product", "primary"], ["design", "environment", "primary"], ["design", "visual", "primary"],
+        ["design", "design_foundation", "knowledge"], ["design", "problem_definition", "knowledge"], ["design", "info_expression", "knowledge"],
+        ["design", "digitalmedia", "primary"], ["design", "architecture", "primary"], ["design", "methods", "primary"],
+
+        ["product", "materials", "secondary"], ["product", "ergonomics", "secondary"], ["product", "modeling", "secondary"],
+        ["product", "prototype", "secondary"], ["product", "usability", "secondary"], ["product", "sustain", "knowledge"],
+        ["product", "product_strategy", "secondary"], ["product", "uxresearch", "knowledge"], ["product", "portfolio", "cross"],
+
+        ["environment", "interior", "secondary"], ["environment", "landscape", "secondary"], ["environment", "wayfinding", "secondary"],
+        ["environment", "lighting", "secondary"], ["environment", "spatial_planning", "secondary"], ["environment", "exhibition", "secondary"],
+        ["environment", "sustain", "knowledge"], ["environment", "architecture", "cross"],
+
+        ["visual", "typography", "secondary"], ["visual", "color", "secondary"], ["visual", "layout", "secondary"],
+        ["visual", "brand", "secondary"], ["visual", "information_design", "secondary"], ["visual", "illustration", "secondary"],
+        ["visual", "portfolio", "cross"], ["visual", "digitalmedia", "cross"],
+
+        ["digitalmedia", "interaction", "secondary"], ["digitalmedia", "motion_design", "secondary"], ["digitalmedia", "game_design", "secondary"],
+        ["digitalmedia", "media_narrative", "secondary"], ["digitalmedia", "creative_coding", "secondary"], ["digitalmedia", "uxresearch", "knowledge"],
+        ["digitalmedia", "ia", "secondary"], ["digitalmedia", "designsystem", "secondary"], ["digitalmedia", "dataviz", "knowledge"],
+        ["digitalmedia", "ai", "knowledge"], ["interaction", "hci", "knowledge"], ["interaction", "prototype", "knowledge"],
+        ["interaction", "usability", "knowledge"], ["interaction", "ia", "knowledge"], ["designsystem", "brand", "cross"],
+
+        ["architecture", "arch_concept", "secondary"], ["architecture", "structure", "secondary"], ["architecture", "urban", "secondary"],
+        ["architecture", "bim", "secondary"], ["architecture", "building_tech", "secondary"], ["architecture", "site_analysis", "secondary"],
+        ["architecture", "spatial_planning", "knowledge"], ["architecture", "sustain", "knowledge"],
+
+        ["methods", "uxresearch", "knowledge"], ["methods", "site_analysis", "knowledge"], ["methods", "information_design", "knowledge"],
+        ["methods", "product_strategy", "knowledge"], ["methods", "portfolio", "knowledge"], ["dataviz", "information_design", "cross"],
+        ["creative_coding", "interaction", "cross"], ["ai", "digitalmedia", "cross"],
+
+        ["computer", "cs_algo", "computer"], ["computer", "cs_soft", "computer"], ["computer", "cs_data", "computer"],
+        ["computer", "cs_ai", "computer"], ["computer", "cs_system", "computer"], ["computer", "cs_network", "computer"],
+        ["computer", "cs_hci", "computer"],
+
+        ["cs_algo", "cs_discrete", "computer"], ["cs_algo", "cs_ds", "computer"], ["cs_algo", "cs_complexity", "computer"],
+        ["cs_algo", "cs_optimization", "computer"], ["cs_algo", "cs_ml", "knowledge"], ["cs_algo", "motion", "cross"],
+
+        ["computer", "cs_foundation", "computer"], ["cs_soft", "cs_require", "computer"], ["cs_soft", "cs_api", "computer"], ["cs_soft", "cs_frontend", "computer"],
+        ["cs_soft", "cs_testing", "computer"], ["cs_soft", "cs_architecture", "computer"], ["cs_soft", "cs_hci", "knowledge"],
+
+        ["cs_data", "cs_db", "computer"], ["cs_data", "cs_stats", "computer"], ["cs_data", "cs_viz", "computer"],
+        ["cs_data", "cs_bigdata", "computer"], ["cs_data", "cs_ml", "knowledge"], ["cs_data", "dataviz", "contact"],
+
+        ["cs_ai", "cs_ml", "computer"], ["cs_ai", "perception_control", "computer"], ["cs_ai", "behavior_feedback", "computer"], ["cs_ai", "cs_cv", "computer"], ["cs_ai", "cs_nlp", "computer"],
+        ["cs_ai", "cs_robot", "computer"], ["cs_ai", "cs_agent", "computer"], ["cs_ai", "ai", "contact"],
+        ["cs_ai", "robotics_systems", "computer"], ["robotics_systems", "cs_robot", "computer"], ["robotics_systems", "sensor_tech", "computer"],
+        ["robotics_systems", "system_integration", "computer"], ["robotics_systems", "hri_robot", "computer"],
+
+        ["cs_system", "cs_os", "computer"], ["cs_system", "cs_arch", "computer"], ["cs_system", "cs_cloud", "computer"],
+        ["cs_system", "cs_embedded", "computer"], ["cs_system", "cs_network", "knowledge"], ["cs_system", "control", "cross"],
+
+        ["cs_network", "cs_protocol", "computer"], ["cs_network", "cs_crypto", "computer"], ["cs_network", "cs_privacy", "computer"],
+        ["cs_network", "cs_security", "computer"], ["cs_protocol", "cs_cloud", "knowledge"], ["cs_crypto", "cs_privacy", "knowledge"],
+
+        ["cs_hci", "cs_require", "knowledge"], ["cs_hci", "cs_frontend", "knowledge"], ["cs_hci", "cs_testing", "knowledge"],
+        ["cs_hci", "hci", "contact"], ["cs_hci", "interaction", "contact"], ["cs_frontend", "designsystem", "contact"],
+        ["cs_api", "designsystem", "contact"], ["cs_viz", "dataviz", "contact"], ["cs_require", "uxresearch", "contact"],
+        ["cs_testing", "usability", "contact"], ["cs_frontend", "prototype", "contact"], ["cs_agent", "ai", "contact"],
+
+        ["embodied", "sensorfusion", "computer"], ["embodied", "control", "computer"], ["embodied", "motion", "computer"],
+        ["embodied", "hardware", "computer"], ["embodied", "hri_robot", "computer"], ["embodied", "hri_project", "computer"], ["embodied", "context_awareness", "computer"], ["embodied", "decision_planning", "computer"], ["embodied", "behavior_feedback", "computer"], ["embodied", "robotics_systems", "computer"], ["embodied", "cs_robot", "contact"],
+        ["embodied", "cs_ai", "contact"], ["sensorfusion", "cs_cv", "knowledge"], ["sensorfusion", "cs_data", "knowledge"],
+        ["control", "cs_embedded", "knowledge"], ["control", "cs_system", "knowledge"], ["motion", "cs_algo", "knowledge"],
+        ["hardware", "materials", "cross"], ["hardware", "modeling", "cross"], ["hri_robot", "ergonomics", "contact"],
+        ["hri_robot", "hci", "contact"], ["hri_robot", "uxresearch", "contact"], ["hci", "multimodal", "knowledge"], ["hci", "ux", "knowledge"],
+        ["hci", "interaction_system", "knowledge"], ["hci", "ergonomics", "contact"], ["embodied", "product", "contact"],
+        ["embodied", "prototype", "contact"], ["sensor_tech", "sensorfusion", "knowledge"], ["system_integration", "cs_embedded", "knowledge"],
+
+        ["design", "psychology", "cross"], ["design", "mechanical", "cross"], ["design", "electronics", "cross"],
+        ["computer", "mechanical", "cross"], ["computer", "electronics", "cross"], ["computer", "automation", "cross"],
+        ["mechanical", "electronics", "cross"], ["mechanical", "automation", "cross"], ["electronics", "automation", "cross"],
+        ["computer", "medicine", "cross"], ["medicine", "design", "cross"], ["medicine", "psychology", "cross"],
+        ["finance", "computer", "cross"], ["finance", "management", "cross"], ["management", "computer", "cross"],
+        ["communication", "literature", "cross"], ["communication", "design", "cross"], ["literature", "design", "cross"],
+        ["art_media", "computer", "cross"], ["art_media", "literature", "cross"], ["art_media", "communication", "cross"],
+        ["building", "design", "cross"], ["building", "computer", "cross"], ["transport", "computer", "cross"],
+        ["transport", "design", "cross"], ["education", "psychology", "cross"], ["education", "computer", "cross"],
+        ["education", "design", "cross"], ["law", "computer", "cross"], ["law", "management", "cross"],
+        ["agriculture", "computer", "cross"], ["agriculture", "mechanical", "cross"], ["agriculture", "electronics", "cross"],
+        ["env_energy", "material_major", "cross"], ["env_energy", "management", "cross"], ["env_energy", "finance", "cross"],
+        ["material_major", "electronics", "cross"], ["math_stats", "computer", "cross"], ["math_stats", "finance", "cross"],
+
+        ["mechanical", "mechanism", "knowledge"], ["mechanical", "motion_control", "knowledge"], ["mechanical", "modeling", "knowledge"],
+        ["electronics", "sensor_tech", "knowledge"], ["electronics", "hardware", "knowledge"], ["electronics", "circuit", "knowledge"], ["electronics", "comm_module", "knowledge"],
+        ["automation", "control_theory", "knowledge"], ["automation", "cs_embedded", "knowledge"], ["automation", "control", "knowledge"], ["automation", "industrial_auto", "knowledge"],
+        ["material_major", "materials", "knowledge"], ["material_major", "cmf", "knowledge"], ["design", "industrial_design", "knowledge"],
+        ["medicine", "medical_foundation", "knowledge"], ["medicine", "medical_scene", "knowledge"], ["medicine", "medical_data", "knowledge"], ["medicine", "medical_compliance", "knowledge"],
+        ["psychology", "cognition", "knowledge"], ["psychology", "human_factors", "knowledge"], ["psychology", "behavior_intervention", "knowledge"],
+        ["transport", "driving_scene", "knowledge"], ["transport", "hmi", "knowledge"], ["transport", "vehicle_system", "knowledge"], ["transport", "traffic_data", "knowledge"],
+        ["literature", "narrative_design", "knowledge"], ["communication", "content_planning", "knowledge"], ["art_media", "game_system_design", "knowledge"], ["art_media", "level_design", "knowledge"], ["art_media", "aigc", "knowledge"],
+        ["finance", "risk_model", "knowledge"], ["finance", "payment_system", "knowledge"], ["management", "product_management", "knowledge"], ["management", "business_analysis", "knowledge"],
+        ["math_stats", "python_sql", "knowledge"], ["math_stats", "data_analysis", "knowledge"], ["law", "data_compliance", "knowledge"]
+      ];
+
+      const learningPaths = {
+        product: {
+          nodes: ["design", "product", "product_strategy", "materials", "ergonomics", "modeling", "prototype", "uxresearch", "usability", "portfolio"]
+        },
+        embodied: {
+          nodes: ["design", "product", "uxresearch", "cs_require", "ergonomics", "cs_hci", "interaction", "hci", "computer", "cs_ai", "cs_robot", "embodied", "prototype", "modeling", "materials", "hardware", "cs_embedded", "sensorfusion", "control", "motion", "hri_robot"]
+        },
+        aiMedical: {
+          nodes: ["medicine", "computer", "management", "design", "psychology", "math_stats", "medical_foundation", "medical_scene", "medical_data", "cs_ai", "data_analysis", "uxresearch", "product_management", "medical_compliance"]
+        },
+        hmi: {
+          nodes: ["design", "computer", "psychology", "transport", "electronics", "automation", "uxresearch", "hci", "human_factors", "driving_scene", "vehicle_system", "hmi", "traffic_data", "prototype"]
+        },
+        game: {
+          nodes: ["literature", "communication", "design", "art_media", "computer", "psychology", "narrative_design", "content_planning", "game_system_design", "level_design", "data_analysis", "aigc"]
+        },
+        fintech: {
+          nodes: ["finance", "computer", "management", "math_stats", "law", "data_analysis", "product_management", "risk_model", "payment_system", "data_compliance", "business_analysis", "python_sql"]
+        }
+      };
+
+      const embodiedBridgeInsights = [
+        {
+          from: "uxresearch",
+          to: "cs_require",
+          title: "用户研究 × 需求分析",
+          copy: "把真实使用场景转译为机器人任务需求"
+        },
+        {
+          from: "ergonomics",
+          to: "cs_hci",
+          title: "人机工学 × 人机交互",
+          copy: "把身体尺度与认知负荷转成协作界面规则"
+        },
+        {
+          from: "prototype",
+          to: "cs_robot",
+          title: "原型设计 × 机器人软件",
+          copy: "用可测试样机验证感知、控制与反馈流程"
+        },
+        {
+          from: "modeling",
+          to: "cs_embedded",
+          title: "建模制造 × 嵌入式系统",
+          copy: "把结构样机接入传感器、执行器和控制板"
+        },
+        {
+          from: "materials",
+          to: "hardware",
+          title: "材料工艺 × 智能硬件",
+          copy: "让外壳、触感、结构与硬件形态协同落地"
+        }
+      ];
+
+      const pathCards = {
+        product: [
+          { nodes: ["design"], title: "设计基础", desc: "建立设计语言、问题意识与项目表达基础", tags: [{ text: "已掌握", type: "state" }, { text: "起点", type: "role" }] },
+          { nodes: ["product"], title: "产品设计基础", desc: "理解产品定义、功能组织与使用场景", tags: [{ text: "正在学习", type: "state" }, { text: "主干课程", type: "role" }] },
+          { nodes: ["product_strategy"], title: "产品策略", desc: "把目标用户、价值定位与产品路线连接起来", tags: [{ text: "未学习", type: "state" }, { text: "优先补齐", type: "priority" }] },
+          { nodes: ["ergonomics"], title: "人机工学", desc: "建立身体尺度、动作方式和舒适性的判断标准", tags: [{ text: "未学习", type: "state" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["prototype"], title: "原型设计", desc: "用样机验证结构、交互流程与体验假设", tags: [{ text: "未学习", type: "state" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["usability"], title: "可用性测试", desc: "通过任务观察和指标记录验证产品可用性", tags: [{ text: "未学习", type: "state" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["portfolio"], title: "作品集整合", desc: "把研究、设计、验证与项目结果转化为作品叙事", tags: [{ text: "未学习", type: "state" }, { text: "项目输出", type: "role" }] }
+        ],
+        embodied: [
+          { nodes: ["product"], title: "产品设计基础", desc: "建立设计问题定义与产品思维", tags: [{ text: "已掌握", type: "state" }, { text: "起点", type: "role" }] },
+          { nodes: ["uxresearch", "cs_require"], title: "用户研究 × 需求分析", desc: "连接用户问题与智能体任务理解", tags: [{ text: "交叉入口", type: "role" }, { text: "优先补齐", type: "priority" }] },
+          { nodes: ["ergonomics", "cs_hci", "hci"], title: "人机工学 × HCI", desc: "建立人与智能系统之间的交互逻辑", tags: [{ text: "桥接课程", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["prototype", "cs_robot"], title: "原型设计 × 机器人软件", desc: "将交互流程转译为可测试的智能系统原型", tags: [{ text: "桥接课程", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["modeling", "cs_embedded"], title: "建模制造 × 嵌入式系统", desc: "补齐从形态设计到硬件实现的基础能力", tags: [{ text: "能力补齐", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["materials", "hardware"], title: "材料工艺 × 智能硬件", desc: "理解材料、结构与传感硬件之间的关系", tags: [{ text: "拓展能力", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["hri_project"], title: "人机协作项目", desc: "将设计、交互、硬件与智能系统整合为项目输出", tags: [{ text: "项目输出", type: "role" }, { text: "终点", type: "state" }] }
+        ],
+        aiMedical: [
+          { nodes: ["medical_foundation"], title: "医学基础", desc: "理解疾病场景、临床流程与健康问题边界", tags: [{ text: "起点", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["medical_scene"], title: "医疗场景研究", desc: "把临床流程与患者需求转化为产品问题", tags: [{ text: "交叉入口", type: "role" }, { text: "优先补齐", type: "priority" }] },
+          { nodes: ["cs_ai"], title: "AI 基础", desc: "理解识别、预测、生成与辅助诊断的技术能力", tags: [{ text: "桥接课程", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["medical_data", "data_analysis"], title: "医疗数据分析", desc: "把健康数据、影像数据与模型评估连接起来", tags: [{ text: "能力补齐", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["uxresearch", "product_management"], title: "用户研究 × 产品定义", desc: "平衡医生、患者、合规与商业目标", tags: [{ text: "桥接课程", type: "role" }, { text: "优先补齐", type: "priority" }] },
+          { nodes: ["medical_compliance"], title: "医疗合规", desc: "理解隐私、安全、伦理与医疗监管约束", tags: [{ text: "能力补齐", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["medicine"], title: "AI 医疗项目", desc: "整合医疗场景、AI 能力与产品落地验证", tags: [{ text: "项目输出", type: "role" }, { text: "终点", type: "state" }] }
+        ],
+        hmi: [
+          { nodes: ["uxresearch"], title: "用户研究", desc: "理解驾驶者、乘客与车辆场景中的真实任务", tags: [{ text: "起点", type: "role" }, { text: "已掌握", type: "state" }] },
+          { nodes: ["driving_scene"], title: "驾驶场景分析", desc: "分析道路、车内状态、注意力与信息负荷", tags: [{ text: "交叉入口", type: "role" }, { text: "优先补齐", type: "priority" }] },
+          { nodes: ["hci", "human_factors"], title: "HCI × 人因工程", desc: "建立车机界面、身体尺度与认知负荷之间的规则", tags: [{ text: "桥接课程", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["vehicle_system"], title: "车载系统理解", desc: "理解座舱、车联网与车辆信息系统的基础结构", tags: [{ text: "能力补齐", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["hmi"], title: "智能座舱信息架构", desc: "组织驾驶信息、娱乐信息与安全提示的层级", tags: [{ text: "桥接课程", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["prototype"], title: "HMI 原型设计", desc: "将界面状态、交互流程与反馈机制做成可测原型", tags: [{ text: "能力补齐", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["transport"], title: "智能座舱项目", desc: "完成从驾驶场景到交互原型的系统化输出", tags: [{ text: "项目输出", type: "role" }, { text: "终点", type: "state" }] }
+        ],
+        game: [
+          { nodes: ["narrative_design"], title: "叙事基础", desc: "建立角色、世界观、任务与文本表达基础", tags: [{ text: "起点", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["cognition"], title: "用户心理", desc: "理解玩家动机、反馈循环与行为决策", tags: [{ text: "交叉入口", type: "role" }, { text: "优先补齐", type: "priority" }] },
+          { nodes: ["game_system_design"], title: "游戏系统设计", desc: "组织规则、成长、资源与反馈机制", tags: [{ text: "桥接课程", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["level_design"], title: "关卡设计", desc: "把叙事、任务与空间节奏转化为可游玩结构", tags: [{ text: "能力补齐", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["data_analysis"], title: "数据分析", desc: "通过留存、行为与反馈数据调整玩法设计", tags: [{ text: "能力补齐", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["content_planning"], title: "策划案写作", desc: "把玩法、叙事和商业目标写成可协作方案", tags: [{ text: "项目输出", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["aigc"], title: "游戏 Demo", desc: "整合 AIGC、互动技术与策划方案进行验证", tags: [{ text: "项目输出", type: "role" }, { text: "终点", type: "state" }] }
+        ],
+        fintech: [
+          { nodes: ["finance"], title: "金融基础", desc: "理解金融业务、市场机制与支付/风控场景", tags: [{ text: "起点", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["product_management"], title: "产品思维", desc: "把用户、业务、合规与增长目标转化为产品定义", tags: [{ text: "交叉入口", type: "role" }, { text: "优先补齐", type: "priority" }] },
+          { nodes: ["python_sql"], title: "SQL / Python", desc: "具备金融数据查询、清洗与分析的基础工具能力", tags: [{ text: "能力补齐", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["data_analysis"], title: "数据分析", desc: "从交易、用户与风险数据中提取产品判断", tags: [{ text: "桥接课程", type: "role" }, { text: "强推荐", type: "priority" }] },
+          { nodes: ["risk_model"], title: "风控基础", desc: "理解风险指标、评分模型与业务规则", tags: [{ text: "能力补齐", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["payment_system"], title: "支付系统", desc: "理解支付链路、账户体系与交易安全", tags: [{ text: "桥接课程", type: "role" }, { text: "建议修读", type: "priority" }] },
+          { nodes: ["business_analysis"], title: "金融科技项目", desc: "整合金融业务、数据分析与产品落地", tags: [{ text: "项目输出", type: "role" }, { text: "终点", type: "state" }] }
+        ]
+      };
+
+      const relationRules = {
+        designComputer: {
+          majors: ["design", "computer"],
+          nodes: ["interaction", "uxresearch", "ia", "prototype", "information_design", "cs_frontend", "cs_soft", "cs_ai", "cs_ds", "ai"]
+        },
+        designPsychology: {
+          majors: ["design", "psychology"],
+          nodes: ["uxresearch", "interaction", "ux", "prototype", "cognition", "human_factors", "behavior_intervention"]
+        },
+        designMechanicalElectronics: {
+          majors: ["design", "mechanical", "electronics"],
+          nodes: ["product", "industrial_design", "cmf", "uxresearch", "prototype", "mechanism", "motion_control", "sensor_tech", "hardware", "circuit"]
+        },
+        computerMechanicalAutomation: {
+          majors: ["computer", "mechanical", "automation"],
+          nodes: ["cs_foundation", "cs_robot", "cs_algo", "data_analysis", "mechanism", "motion_control", "control_theory", "cs_embedded", "control", "industrial_auto"]
+        },
+        computerElectronicsAutomation: {
+          majors: ["computer", "electronics", "automation"],
+          nodes: ["cs_soft", "iot", "ai", "data_analysis", "sensor_tech", "comm_module", "hardware", "cs_embedded", "control_theory"]
+        },
+        computerMedicine: {
+          majors: ["computer", "medicine"],
+          nodes: ["medical_foundation", "medical_scene", "medical_data", "cs_ai", "data_analysis", "cs_cv", "cs_privacy", "medical_compliance"]
+        },
+        medicineDesignPsychology: {
+          majors: ["medicine", "design", "psychology"],
+          nodes: ["medical_scene", "uxresearch", "service", "interaction", "prototype", "cognition", "behavior_intervention", "human_factors"]
+        },
+        financeComputerManagement: {
+          majors: ["finance", "computer", "management"],
+          nodes: ["finance", "data_analysis", "python_sql", "cs_ml", "payment_system", "product_management", "business_analysis"]
+        },
+        lawComputerManagement: {
+          majors: ["law", "computer", "management"],
+          nodes: ["data_compliance", "cs_security", "cs_privacy", "cs_ai", "product_management", "business_analysis"]
+        },
+        communicationLiteratureDesignComputer: {
+          majors: ["communication", "literature", "design", "computer"],
+          nodes: ["content_planning", "narrative_design", "information_design", "visual", "aigc", "cs_frontend", "interaction"]
+        },
+        artMediaComputerLiteratureCommunication: {
+          majors: ["art_media", "computer", "literature", "communication"],
+          nodes: ["aigc", "motion_design", "game_system_design", "level_design", "narrative_design", "content_planning"]
+        },
+        transportComputerDesign: {
+          majors: ["transport", "computer", "design"],
+          nodes: ["driving_scene", "traffic_data", "hmi", "vehicle_system", "hci", "interaction", "human_factors"]
+        },
+        managementFinanceStatsComputer: {
+          majors: ["management", "finance", "math_stats", "computer"],
+          nodes: ["business_analysis", "product_management", "python_sql", "data_analysis", "risk_model", "payment_system"]
+        }
+      };
+
+      const careerProfiles = {
+        product: {
+          label: "产品设计",
+          relations: ["designComputer", "designPsychology"],
+          majors: ["design", "product", "psychology"],
+          knowledge: ["design_foundation", "product", "product_strategy", "ergonomics", "prototype", "usability", "portfolio", "uxresearch"],
+          summary: "依据设计内部能力与设计×心理学关系，在设计组团内提取产品设计学习路径。"
+        },
+        embodied: {
+          label: "具身智能",
+          relations: ["designComputer", "designPsychology", "designMechanicalElectronics", "computerMechanicalAutomation", "computerElectronicsAutomation"],
+          majors: ["design", "product", "hci", "computer", "cs_ai", "robotics_systems", "embodied", "mechanical", "electronics", "automation", "psychology", "interdisciplinary"],
+          knowledge: ["uxresearch", "cs_require", "prototype", "ergonomics", "cs_hci", "hci", "cs_robot", "cs_embedded", "sensor_tech", "hardware", "hri_robot", "hri_project", "materials", "modeling", "mechanism", "control_theory"],
+          summary: "依据设计×计算机、设计×心理学、设计×机械×电子信息、计算机×机械×自动化、计算机×电子信息×自动化，提取具身智能方向路径。"
+        },
+        aiMedical: {
+          label: "AI 医疗产品经理",
+          relations: ["computerMedicine", "medicineDesignPsychology", "managementFinanceStatsComputer"],
+          majors: ["medicine", "computer", "management", "design", "psychology", "math_stats"],
+          knowledge: ["medical_foundation", "medical_scene", "medical_data", "cs_ai", "data_analysis", "uxresearch", "product_management", "medical_compliance"],
+          summary: "依据计算机×医学、医学×设计×心理学、管理×经济金融×统计×计算机，生成 AI 医疗产品路径。"
+        },
+        hmi: {
+          label: "智能座舱 HMI 设计师",
+          relations: ["designComputer", "designPsychology", "transportComputerDesign", "computerElectronicsAutomation"],
+          majors: ["design", "computer", "psychology", "transport", "electronics", "automation"],
+          knowledge: ["uxresearch", "hci", "human_factors", "driving_scene", "vehicle_system", "hmi", "traffic_data", "prototype"],
+          summary: "依据设计×计算机、设计×心理学、交通运输×计算机×设计、计算机×电子信息×自动化，生成 HMI 学习路径。"
+        },
+        game: {
+          label: "游戏策划",
+          relations: ["communicationLiteratureDesignComputer", "artMediaComputerLiteratureCommunication", "designPsychology"],
+          majors: ["literature", "communication", "design", "art_media", "computer", "psychology"],
+          knowledge: ["narrative_design", "content_planning", "cognition", "game_system_design", "level_design", "data_analysis", "aigc"],
+          summary: "依据新闻传播×文学×设计×计算机、艺术传媒×计算机×文学×新闻传播、设计×心理学，生成游戏策划路径。"
+        },
+        fintech: {
+          label: "金融科技产品经理",
+          relations: ["financeComputerManagement", "managementFinanceStatsComputer", "lawComputerManagement"],
+          majors: ["finance", "computer", "management", "math_stats", "law"],
+          knowledge: ["finance", "data_analysis", "product_management", "risk_model", "payment_system", "data_compliance", "business_analysis", "python_sql"],
+          summary: "依据经济金融×计算机×管理、管理×经济金融×统计×计算机、法学×计算机×管理，生成金融科技路径。"
+        }
+      };
+
+      const professionalEdgeKeys = new Set();
+      const defaultMajorCrossEdges = new Set([
+        "design-computer", "design-psychology", "design-mechanical", "design-electronics",
+        "computer-mechanical", "computer-electronics", "computer-automation", "mechanical-automation",
+        "medicine-computer", "medicine-design", "medicine-psychology", "transport-computer",
+        "transport-design", "finance-management", "finance-computer", "management-computer",
+        "communication-literature", "art_media-computer", "building-design", "env_energy-material_major",
+        "law-computer", "math_stats-computer"
+      ].flatMap((key) => {
+        const [from, to] = key.split("-");
+        return [key, `${to}-${from}`];
+      }));
+      const edgeKeys = new Set(edges.flatMap(([from, to]) => [`${from}-${to}`, `${to}-${from}`]));
+      function ensureProfessionalEdge(from, to, type = "cross") {
+        if (!byId[from] || !byId[to] || edgeKeys.has(`${from}-${to}`)) return;
+        edges.push([from, to, type]);
+        edgeKeys.add(`${from}-${to}`);
+        edgeKeys.add(`${to}-${from}`);
+      }
+      Object.values(relationRules).forEach((rule) => {
+        rule.majors.slice(0, -1).forEach((from, index) => {
+          rule.majors.slice(index + 1).forEach((to) => {
+            professionalEdgeKeys.add(`${from}-${to}`);
+            professionalEdgeKeys.add(`${to}-${from}`);
+            ensureProfessionalEdge(from, to, "cross");
+          });
+        });
+        rule.majors.forEach((major) => {
+          rule.nodes.forEach((node) => {
+            if (byId[major] && byId[node]) {
+              professionalEdgeKeys.add(`${major}-${node}`);
+              professionalEdgeKeys.add(`${node}-${major}`);
+              ensureProfessionalEdge(major, node, "knowledge");
+            }
+          });
+        });
+      });
+
+      const nodeNotes = {
+        design: "设计研究如何把人的需求、技术条件、材料媒介与社会语境转化为可使用、可理解、可传播的产品和体验。",
+        product: "产品设计关注实体或数字产品的功能、结构、材料、人机工学、使用场景与制造可行性。",
+        environment: "环境设计研究室内、景观、展陈和导视等空间体验，关注人在环境中的行动、感知和停留方式。",
+        digitalmedia: "数字媒体设计研究交互、影像、游戏、数据与生成技术如何共同构成动态媒介体验。",
+        architecture: "建筑设计研究空间、结构、建造技术与城市语境，关注建筑从概念到落地的组织方式。",
+        interaction: "交互设计研究人与系统之间的行为流程、反馈机制、界面状态和任务完成方式。",
+        research: "设计研究通过访谈、观察、问卷和数据分析理解用户、场景与问题，为设计决策提供证据。",
+        visual: "视觉传达研究文字、图像、版式、色彩和品牌符号如何组织信息并影响理解。",
+        service: "服务设计关注跨触点的完整体验，包括用户旅程、服务蓝图、前后台流程和利益相关者协作。",
+        theory: "设计史论研究设计的发展脉络、思想流派、批评方法和社会文化意义。",
+        systems: "系统设计关注多个组件、规则、接口和反馈之间如何共同构成稳定的产品或服务体系。",
+        computer: "计算机研究计算系统、算法、数据、软件、网络和人工智能的理论与工程实现。",
+        cs_algo: "算法与理论研究计算问题的抽象建模、数据结构、复杂度和优化方法，是计算机学科的理论基础。",
+        cs_soft: "软件工程研究如何把需求转化为可维护的软件系统，包括架构、接口、测试和协作开发流程。",
+        cs_data: "数据与数据库研究数据的存储、查询、统计建模、可视分析和大规模处理方法。",
+        cs_system: "计算机系统研究操作系统、组成原理、嵌入式、云计算等底层运行机制。",
+        cs_network: "网络与安全研究通信协议、加密、隐私计算和安全工程，保证系统连接可靠且可信。",
+        cs_hci: "计算机方向的人机交互研究可用性、交互技术、界面工程和用户与计算系统之间的行为关系。",
+        embodied: "具身智能研究智能体如何通过身体、传感器、动作和环境交互获得感知、决策与行动能力。",
+        ergonomics: "人机工学研究人的身体尺度、动作能力、认知负荷和安全边界，用于提升产品舒适性与可用性。",
+        materials: "材料工艺研究材料特性、加工方式、结构强度、表面处理和量产限制。",
+        modeling: "建模制造把设计概念转化为三维模型、样机和可制造结构，是产品验证的重要环节。",
+        prototype: "原型设计用低保真或高保真模型验证功能、交互、结构和体验假设。",
+        usability: "可用性测试通过任务观察和指标记录评估用户是否能高效、准确、满意地使用系统。",
+        hci: "HCI 连接设计与计算机，研究人如何理解、控制和评价计算系统。",
+        cs_ai: "人工智能研究让计算机完成识别、预测、生成、规划和决策等智能任务的方法。",
+        cs_robot: "机器人软件负责机器人感知、定位、规划、控制和任务执行的软件系统。",
+        sensorfusion: "传感器融合把视觉、距离、惯性、触觉等多源数据合成为更可靠的环境感知。",
+        control: "控制系统研究如何让机器根据目标和反馈稳定地产生动作。",
+        motion: "运动规划研究机器人或智能体如何在约束空间中选择安全、有效的移动路径。",
+        hardware: "智能硬件把传感器、执行器、电路、结构件和嵌入式系统整合成可交互实体。",
+        hri_robot: "人机协作研究人与机器人如何分工、沟通、避让、协同完成任务。",
+        mechanical: "机械关注结构、运动、制造与执行机构，是机器人、智能硬件和工业产品落地的重要工程基础。",
+        electronics: "电子信息关注传感器、电路、通信、芯片与信号处理，为智能设备提供感知和连接能力。",
+        automation: "自动化研究控制理论、反馈系统、嵌入式控制和工业设备协同，是智能制造和机器人控制的核心。",
+        medicine: "医学提供疾病场景、临床流程、康复治疗和健康数据，是医疗产品与 AI 医疗方向的专业基础。",
+        psychology: "心理学研究认知、行为、情绪和决策机制，帮助设计判断用户如何理解、学习和使用系统。",
+        finance: "经济金融研究金融业务、市场机制、风险控制和支付体系，为金融科技产品提供业务基础。",
+        management: "管理关注产品、运营、组织、项目和商业决策，支撑跨学科方案落地。",
+        transport: "交通运输研究道路、车辆、驾驶、出行和交通系统，是 HMI、车联网与自动驾驶产品的重要场景来源。",
+        law: "法学提供规则、权责、合规和治理框架，支撑数据合规、AI 伦理和平台治理。",
+        art_media: "艺术传媒关注视听语言、影像、游戏美术和数字艺术，是 AIGC 与互动叙事方向的表达基础。",
+        interdisciplinary: "交叉学科用于组织多个专业之间的桥接能力，帮助从单一课程迁移到复合职业路径。",
+        math_stats: "统计 / 理学提供概率、建模、优化、实验分析和科学计算能力，是 AI、金融和数据科学的重要方法基础。",
+        medical_foundation: "医学基础用于理解人体、疾病、诊疗流程和医疗场景的基本逻辑。",
+        medical_scene: "医疗场景研究通过观察临床、康复和健康管理流程来定义真实产品问题。",
+        medical_data: "医疗数据包含影像、检验、病历和健康行为数据，需要结合隐私、质量和模型评估使用。",
+        human_factors: "人因工程研究身体尺度、注意力、认知负担和安全边界，常用于座舱、设备和医疗交互。",
+        driving_scene: "驾驶场景分析研究道路、车内任务、信息负荷和安全决策，是智能座舱 HMI 的场景基础。",
+        hmi: "智能座舱研究车内界面、信息架构、驾驶辅助反馈和人车交互体验。",
+        game_system_design: "游戏系统设计组织规则、成长、资源、反馈和玩家行为循环，是游戏策划的核心能力。",
+        risk_model: "风控建模通过统计、规则和机器学习方法识别金融风险并辅助业务决策。",
+        payment_system: "支付系统研究交易链路、账户体系、风控校验和资金安全。",
+        data_compliance: "数据合规研究个人信息、数据安全、平台责任和 AI 应用的合规边界。"
+      };
+
+      const initialViewBox = { x: 120, y: 55, w: 2260, h: 1120 };
+      const resultViewBox = { x: 280, y: 55, w: 2240, h: 1120 };
+      const viewBox = { ...initialViewBox };
+      const rendered = new Map();
+      const original = new Map();
+      const nodeElements = new Map();
+      const edgeElements = [];
+      const routeElements = [];
+      const ownershipElements = [];
+      const bridgeElements = [];
+      const activeStepByNode = new Map();
+      let dragStart = null;
+      let nodeDrag = null;
+      let mode = "initial";
+      let hoveredPathStep = null;
+      let selectedPathStep = null;
+
+      function el(name, attrs = {}) {
+        const node = document.createElementNS(svgNS, name);
+        Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+        return node;
+      }
+
+      function seeded(index) {
+        const x = Math.sin(index * 91.17) * 10000;
+        return x - Math.floor(x);
+      }
+
+      function hashId(id) {
+        return id.split("").reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 7), 0);
+      }
+
+      const crossKnowledge = new Set([
+        "hci", "cs_hci", "ai", "cs_ai", "code", "cs_frontend", "designsystem", "cs_api",
+        "dataviz", "cs_viz", "uxresearch", "cs_require", "usability", "cs_testing",
+        "prototype", "data", "cs_data", "embodied", "hri_robot"
+      ]);
+
+      const majorNodes = new Set([
+        "design", "computer", "product", "environment", "visual", "hci", "cs_ai", "cs_system",
+        "cs_soft", "embodied", "cs_data", "cs_algo", "robotics_systems", "mechanical",
+        "electronics", "automation", "material_major", "building", "transport", "medicine",
+        "psychology", "finance", "management", "communication", "literature", "education",
+        "law", "agriculture", "env_energy", "art_media", "interdisciplinary", "math_stats"
+      ]);
+
+      function isMajorNode(node) {
+        return majorNodes.has(node.id);
+      }
+
+      const readableEdges = new Set([
+        "design-product", "design-environment", "design-visual", "design-digitalmedia", "design-architecture",
+        "design-design_foundation", "design-problem_definition", "design-info_expression",
+        "product-uxresearch", "product-prototype", "product-ergonomics", "product-materials", "product-modeling", "product-cs_require",
+        "hci-ergonomics", "hci-multimodal", "hci-ux", "hci-interaction_system", "hci-usability", "hci-cs_hci",
+        "computer-cs_soft", "computer-cs_algo", "computer-cs_data", "computer-cs_ai", "computer-cs_system", "computer-robotics_systems",
+        "computer-cs_foundation", "cs_ai-cs_ml", "cs_ai-perception_control", "cs_ai-behavior_feedback", "cs_ai-robotics_systems",
+        "robotics_systems-cs_robot", "robotics_systems-sensor_tech", "robotics_systems-system_integration", "robotics_systems-hardware",
+        "cs_system-cs_embedded", "embodied-hri_robot", "embodied-context_awareness", "embodied-decision_planning",
+        "embodied-hri_project", "embodied-robotics_systems"
+      ]);
+
+      function isReadableEdge(from, to) {
+        return readableEdges.has(`${from}-${to}`) || readableEdges.has(`${to}-${from}`) ||
+          professionalEdgeKeys.has(`${from}-${to}`) || professionalEdgeKeys.has(`${to}-${from}`);
+      }
+
+      const embodiedRelatedMajors = new Set([
+        "design", "product", "hci", "computer", "cs_ai", "robotics_systems", "embodied"
+      ]);
+
+      const embodiedRelatedKnowledge = new Set([
+        "design_foundation", "problem_definition", "info_expression", "uxresearch", "cs_require", "prototype",
+        "ergonomics", "multimodal", "ux", "interaction_system", "usability", "cs_foundation",
+        "cs_robot", "cs_embedded", "sensor_tech", "system_integration", "cs_ml", "perception_control",
+        "hardware", "hri_robot", "hri_project", "context_awareness", "decision_planning",
+        "behavior_feedback", "materials", "modeling"
+      ]);
+
+      const parentByNode = {
+        design_foundation: "design", problem_definition: "design", info_expression: "design",
+        product: "design", interaction: "design", uxresearch: "design", ia: "design", designsystem: "design", usability: "design",
+        cs_require: "product", prototype: "product", product_strategy: "product", materials: "product", modeling: "product",
+        environment: "design", interior: "environment", landscape: "environment", wayfinding: "environment", lighting: "environment", spatial_planning: "environment", exhibition: "environment",
+        visual: "design", typography: "visual", color: "visual", layout: "visual", brand: "visual", information_design: "visual", illustration: "visual",
+        digitalmedia: "art_media", motion_design: "art_media", game_design: "art_media", media_narrative: "art_media", creative_coding: "art_media",
+        ergonomics: "hci", multimodal: "hci", ux: "hci", interaction_system: "hci", usability: "hci", cs_hci: "hci",
+        cs_foundation: "computer", cs_soft: "computer", cs_algo: "computer", cs_data: "computer", cs_system: "computer", cs_network: "computer",
+        cs_frontend: "cs_soft", cs_api: "cs_soft", cs_testing: "cs_soft", cs_architecture: "cs_soft",
+        cs_os: "cs_system", cs_arch: "cs_system", cs_cloud: "cs_system", cs_embedded: "cs_system",
+        cs_protocol: "cs_network", cs_crypto: "cs_network", cs_privacy: "cs_network", cs_security: "cs_network",
+        cs_discrete: "cs_algo", cs_ds: "cs_algo", cs_complexity: "cs_algo", cs_optimization: "cs_algo",
+        cs_db: "cs_data", cs_stats: "cs_data", cs_viz: "cs_data", cs_bigdata: "cs_data",
+        system_integration: "robotics_systems",
+        cs_ml: "cs_ai", perception_control: "cs_ai", behavior_feedback: "cs_ai", cs_cv: "cs_ai", cs_nlp: "cs_ai", cs_agent: "cs_ai",
+        cs_robot: "robotics_systems", cs_embedded: "robotics_systems", sensor_tech: "robotics_systems", hardware: "robotics_systems",
+        sensorfusion: "robotics_systems", motion: "robotics_systems",
+        hri_robot: "embodied", context_awareness: "embodied", decision_planning: "embodied", hri_project: "embodied",
+        industrial_design: "design", cmf: "material_major", mechanism: "mechanical", motion_control: "mechanical",
+        control_theory: "automation", industrial_auto: "automation", iot: "electronics", circuit: "electronics",
+        comm_module: "electronics", python_sql: "math_stats", data_analysis: "math_stats", risk_model: "finance",
+        payment_system: "finance", medical_foundation: "medicine", medical_scene: "medicine", medical_data: "medicine",
+        medical_compliance: "medicine", cognition: "psychology", human_factors: "psychology", behavior_intervention: "psychology",
+        driving_scene: "transport", hmi: "transport", vehicle_system: "transport", traffic_data: "transport",
+        narrative_design: "literature", game_system_design: "art_media", level_design: "art_media",
+        content_planning: "communication", aigc: "art_media", product_management: "management",
+        business_analysis: "management", data_compliance: "law"
+      };
+
+      function nodeRole(node) {
+        if (crossKnowledge.has(node.id) || node.type === "bridge") return "cross";
+        if (node.cluster === "computer" || node.cluster === "embodied") return "computer";
+        return "design";
+      }
+
+      function nodeColorClass(node) {
+        return `${nodeRole(node)}-node`;
+      }
+
+      function gridSnap(value, grid = 28) {
+        return Math.round(value / grid) * grid;
+      }
+
+      const terrainPositions = {
+        literature: [310, 235], narrative_design: [205, 180],
+        communication: [535, 220], content_planning: [560, 130],
+        art_media: [750, 270], game_system_design: [850, 220], level_design: [880, 330], aigc: [720, 382],
+        design: [490, 560], design_foundation: [350, 495], problem_definition: [350, 555], info_expression: [365, 615],
+        interaction: [580, 480], uxresearch: [625, 565], ia: [590, 650], designsystem: [465, 675], usability: [650, 505],
+        product: [780, 520], product_strategy: [850, 430], cs_require: [915, 520], prototype: [850, 610], industrial_design: [735, 420],
+        materials: [705, 585], modeling: [725, 655],
+        environment: [315, 705], interior: [175, 660], landscape: [190, 760], wayfinding: [380, 790],
+        lighting: [450, 700], spatial_planning: [190, 720], exhibition: [460, 635], sustain: [250, 595],
+        visual: [545, 835], typography: [400, 800], color: [430, 900], layout: [540, 945], brand: [665, 880],
+        information_design: [700, 795], illustration: [400, 725],
+        digitalmedia: [760, 790], motion_design: [850, 925], game_design: [930, 810], media_narrative: [735, 920],
+        creative_coding: [940, 735],
+        psychology: [985, 430], cognition: [900, 330], human_factors: [1085, 350], behavior_intervention: [1115, 465],
+        education: [305, 965], methods: [480, 730], portfolio: [640, 985],
+        ergonomics: [1010, 545], hci: [1140, 590], multimodal: [1160, 460], ux: [1250, 545], interaction_system: [1245, 650],
+
+        finance: [1160, 245], risk_model: [1065, 170], payment_system: [1265, 165],
+        management: [1360, 255], product_management: [1340, 150], business_analysis: [1480, 240],
+        law: [1535, 315], data_compliance: [1625, 250],
+        math_stats: [1340, 430], python_sql: [1240, 380], data_analysis: [1460, 400],
+        interdisciplinary: [1355, 610], dataviz: [1260, 700], ai: [1460, 675],
+        env_energy: [1290, 930],
+
+        computer: [1760, 360], cs_foundation: [1630, 330],
+        cs_algo: [1725, 190], cs_discrete: [1600, 150], cs_ds: [1725, 105], cs_complexity: [1855, 140], cs_optimization: [1885, 230],
+        cs_data: [1965, 245], cs_db: [2055, 155], cs_stats: [2120, 255], cs_viz: [1945, 105], cs_bigdata: [2085, 365],
+        cs_soft: [1605, 515], cs_frontend: [1490, 570], cs_api: [1610, 630], cs_testing: [1730, 600], cs_architecture: [1505, 455],
+        cs_system: [1795, 690], cs_os: [1665, 720], cs_arch: [1800, 800], cs_cloud: [1930, 730], cs_embedded: [1930, 620],
+        cs_network: [1560, 715], cs_protocol: [1450, 665], cs_crypto: [1475, 785], cs_privacy: [1595, 835], cs_security: [1715, 830],
+        cs_ai: [2080, 455], cs_ml: [2180, 365], perception_control: [2210, 455], cs_cv: [2180, 560], cs_nlp: [2050, 590], cs_agent: [1960, 525],
+        cs_hci: [1435, 560],
+
+        electronics: [2240, 365], sensor_tech: [2365, 305], hardware: [2350, 420], circuit: [2160, 260], comm_module: [2365, 520], iot: [2135, 500],
+        mechanical: [1930, 800], mechanism: [1815, 745], motion_control: [2040, 900], modeling: [1835, 895],
+        automation: [2225, 750], control_theory: [2130, 655], industrial_auto: [2350, 790], control: [2250, 890],
+        material_major: [1640, 900], materials: [1540, 840], cmf: [1580, 990],
+        robotics_systems: [2365, 635], cs_robot: [2460, 570], system_integration: [2470, 685], sensorfusion: [2385, 760],
+        embodied: [2240, 990], hri_robot: [2100, 965], behavior_feedback: [2115, 1050], context_awareness: [2375, 940],
+        decision_planning: [2405, 1015], hri_project: [2240, 1100], motion: [2485, 800],
+
+        medicine: [1765, 1055], medical_foundation: [1625, 1025], medical_scene: [1710, 1145], medical_data: [1880, 1005],
+        medical_compliance: [1935, 1095],
+        building: [2020, 1060], architecture: [1980, 945], arch_concept: [1885, 905], structure: [2110, 905],
+        urban: [2175, 990], bim: [2105, 1140], building_tech: [2235, 1065], site_analysis: [1885, 1000],
+        transport: [2365, 1080], driving_scene: [2240, 1015], hmi: [2460, 995], vehicle_system: [2490, 1115], traffic_data: [2325, 1165],
+        agriculture: [2415, 1155]
+      };
+
+      function point(node) {
+        const fixed = terrainPositions[node.id];
+        if (fixed) return { x: fixed[0], y: fixed[1], r: node.r };
+        const role = nodeRole(node);
+        const base = role === "design" ? { x: 600, y: 640 } : role === "cross" ? { x: 1210, y: 650 } : { x: 1930, y: 640 };
+        const h = hashId(node.id);
+        const angle = seeded(h) * Math.PI * 2;
+        const spread = role === "cross" ? 170 : 260;
+        return {
+          x: gridSnap(base.x + Math.cos(angle) * spread),
+          y: gridSnap(base.y + Math.sin(angle) * spread * 0.74),
+          r: node.r
+        };
+      }
+
+      function curve(a, b, bend = 0.2, seed = 1) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const len = Math.max(1, Math.hypot(dx, dy));
+        const ux = dx / len;
+        const uy = dy / len;
+        const startPad = Math.min(len * 0.35, (a.r || 12) * 0.9 + 4);
+        const endPad = Math.min(len * 0.35, (b.r || 12) * 1.05 + 10);
+        const sx = a.x + ux * startPad;
+        const sy = a.y + uy * startPad;
+        const ex = b.x - ux * endPad;
+        const ey = b.y - uy * endPad;
+        const midX = (sx + ex) / 2;
+        const midY = (sy + ey) / 2;
+        const lane = Math.max(-48, Math.min(48, ((seed % 7) - 3) * 9));
+        const cx = midX + -uy * lane * bend;
+        const cy = midY + ux * lane * bend;
+        return `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+      }
+
+      function drawAmbient() {
+        [
+          { x: 160, y: 120, w: 890, h: 960, title: "HUMANITIES / DESIGN / MEDIA" },
+          { x: 1035, y: 145, w: 560, h: 850, title: "CROSS-FIELD / APPLICATION" },
+          { x: 1575, y: 110, w: 900, h: 1060, title: "ENGINEERING / SYSTEMS / INDUSTRY" }
+        ].forEach((zone) => {
+          ambient.append(el("rect", { class: "zone-band", x: zone.x, y: zone.y, width: zone.w, height: zone.h, rx: 26 }));
+          const text = el("text", { class: "zone-label", x: zone.x + 22, y: zone.y + 30 });
+          text.textContent = zone.title;
+          ambient.append(text);
+        });
+        [
+          ["X-04 / Y-02", 210, 1180],
+          ["GROUP_ID: DESIGN_CLUSTER", 430, 1098],
+          ["MATCH_SCORE: 0.86", 1120, 1045],
+          ["PATH_SCORE 0.92", 1960, 1180],
+          ["CROSS_FIELD 5", 2180, 1180],
+          ["SELECTED_NODES 7", 2380, 1180]
+        ].forEach(([copy, x, y]) => {
+          const text = el("text", { class: "data-tick", x, y });
+          text.textContent = copy;
+          ambient.append(text);
+        });
+        for (let i = 0; i < 360; i++) {
+          const x = 90 + seeded(i) * 2380;
+          const y = 85 + seeded(i + 400) * 1110;
+          const r = 0.45 + seeded(i + 800) * 1.35;
+          ambient.append(el("circle", { class: "micro-dot", cx: x.toFixed(1), cy: y.toFixed(1), r: r.toFixed(1), opacity: (0.1 + seeded(i + 1200) * 0.22).toFixed(2) }));
+        }
+      }
+
+      function shouldDrawEdge(from, to, type) {
+        if (!byId[from] || !byId[to]) return false;
+        const isContainment = parentByNode[from] === to || parentByNode[to] === from;
+        if (isContainment) return true;
+        const bothMajor = isMajorNode(byId[from]) && isMajorNode(byId[to]);
+        if (bothMajor && (type === "primary" || type === "computer" || type === "contact")) return true;
+        if (bothMajor && defaultMajorCrossEdges.has(`${from}-${to}`)) return true;
+        if (readableEdges.has(`${from}-${to}`) || readableEdges.has(`${to}-${from}`)) {
+          return type === "primary" || type === "computer" || type === "contact";
+        }
+        return false;
+      }
+
+      function drawEdges() {
+        edges.forEach(([from, to, type], index) => {
+          if (!shouldDrawEdge(from, to, type)) return;
+          const a = point(byId[from]);
+          const b = point(byId[to]);
+          const bend = type === "contact" ? 0.12 : type === "primary" ? 0.08 : type === "cross" ? 0.1 : 0.08;
+          const path = el("path", { class: `edge ${type}`, "data-edge": `${from}-${to}`, d: curve(a, b, bend, index + 3) });
+          edgesLayer.append(path);
+          edgeElements.push({ element: path, from, to, seed: index + 3, bend });
+        });
+      }
+
+      function labelAnchor(node) {
+        const p = point(node);
+        if (!isMajorNode(node)) {
+          return { x: p.x + 12, y: p.y - 3, anchor: "start" };
+        }
+        return { x: p.x, y: p.y - 6, anchor: "middle" };
+        const role = nodeRole(node);
+        const cx = role === "computer" ? 1810 : role === "cross" ? 1265 : 720;
+        const cy = role === "computer" ? 470 : role === "cross" ? 615 : 760;
+        const right = p.x >= cx;
+        const below = p.y >= cy;
+        return { x: p.x + (right ? p.r + 12 : -p.r - 12), y: p.y + (below ? 4 : -10), anchor: right ? "start" : "end" };
+      }
+
+      function cardBox(p, node, extra = 0) {
+        if (isMajorNode(node)) {
+          const root = node.type === "root" || node.type === "computerroot";
+          const width = root ? 126 : Math.max(112, Math.min(190, 76 + node.label.length * 17));
+          const height = root ? 60 : 56;
+          return {
+            x: p.x - width / 2 - extra / 2,
+            y: p.y - height / 2 - extra / 2,
+            w: width + extra,
+            h: height + extra,
+            rx: 14
+          };
+        }
+        if (extra >= 30) {
+          return {
+            x: p.x - 12,
+            y: p.y - 18,
+            w: 150,
+            h: 42,
+            rx: 8
+          };
+        }
+        const baseSide =
+          node.type === "root" || node.type === "computerroot" ? 86 :
+          node.type === "domain" || node.type === "computerdomain" || node.type === "embodieddomain" ? 58 :
+          node.type === "method" || node.type === "bridge" || node.type === "embodiedmethod" || node.type === "computermethod" ? 34 :
+          26;
+        const side = baseSide + extra;
+        return {
+          x: p.x - side / 2,
+          y: p.y - side / 2,
+          w: side,
+          h: side,
+          rx: 0.8
+        };
+      }
+
+      function drawKnowledgeImage(group, core, node, index) {
+        const x = core.x;
+        const y = core.y;
+        const w = core.w;
+        const h = core.h;
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+        const kind =
+          node.id.includes("cs_") || node.type === "computerroot" ? "code" :
+          node.cluster === "embodied" || ["ergonomics", "hci", "interaction"].includes(node.id) ? "body" :
+          ["data", "dataviz", "cs_data", "cs_viz", "cs_stats", "cs_ml"].includes(node.id) ? "data" :
+          ["visual", "typography", "color", "layout", "brand"].includes(node.id) ? "composition" :
+          ["product", "materials", "modeling", "prototype", "hardware"].includes(node.id) ? "object" :
+          "map";
+
+        const addRect = (attrs) => group.append(el("rect", { class: "node-figure", ...attrs }));
+        const addLine = (attrs) => group.append(el("line", { class: "node-line", ...attrs }));
+        const addDot = (attrs) => group.append(el("circle", { class: "node-dot", ...attrs }));
+        const addShadow = (attrs) => group.append(el("rect", { class: "node-shadow-mark", ...attrs }));
+
+        if (kind === "code") {
+          for (let i = 0; i < 5; i++) addLine({ x1: x + w * 0.16, y1: y + h * (0.22 + i * 0.13), x2: x + w * (0.52 + seeded(index + i) * 0.3), y2: y + h * (0.22 + i * 0.13) });
+          addRect({ x: x + w * 0.62, y: y + h * 0.18, width: w * 0.18, height: h * 0.56, rx: 0.6, opacity: "0.72" });
+          addDot({ cx: x + w * 0.2, cy: y + h * 0.78, r: Math.max(1.2, w * 0.035) });
+          return;
+        }
+
+        if (kind === "body") {
+          addDot({ cx, cy: y + h * 0.25, r: Math.max(2.2, w * 0.07) });
+          addLine({ x1: cx, y1: y + h * 0.32, x2: cx, y2: y + h * 0.62 });
+          addLine({ x1: cx, y1: y + h * 0.42, x2: x + w * 0.24, y2: y + h * 0.5 });
+          addLine({ x1: cx, y1: y + h * 0.42, x2: x + w * 0.76, y2: y + h * 0.5 });
+          addLine({ x1: cx, y1: y + h * 0.62, x2: x + w * 0.34, y2: y + h * 0.82 });
+          addLine({ x1: cx, y1: y + h * 0.62, x2: x + w * 0.68, y2: y + h * 0.82 });
+          return;
+        }
+
+        if (kind === "data") {
+          for (let i = 0; i < 4; i++) addRect({ x: x + w * (0.16 + i * 0.17), y: y + h * (0.72 - seeded(index + i) * 0.42), width: w * 0.09, height: h * (0.18 + seeded(index + i + 9) * 0.36), rx: 0.6, opacity: "0.76" });
+          addLine({ x1: x + w * 0.14, y1: y + h * 0.76, x2: x + w * 0.82, y2: y + h * 0.28 });
+          return;
+        }
+
+        if (kind === "composition") {
+          addRect({ x: x + w * 0.14, y: y + h * 0.18, width: w * 0.3, height: h * 0.32, rx: 0.6, opacity: "0.74" });
+          addRect({ x: x + w * 0.52, y: y + h * 0.22, width: w * 0.25, height: h * 0.16, rx: 0.6, opacity: "0.6" });
+          addLine({ x1: x + w * 0.18, y1: y + h * 0.68, x2: x + w * 0.8, y2: y + h * 0.68 });
+          addLine({ x1: x + w * 0.18, y1: y + h * 0.78, x2: x + w * 0.64, y2: y + h * 0.78 });
+          return;
+        }
+
+        if (kind === "object") {
+          addShadow({ x: x + w * 0.2, y: y + h * 0.22, width: w * 0.42, height: h * 0.44, rx: 1.2, opacity: "0.35" });
+          addLine({ x1: x + w * 0.22, y1: y + h * 0.7, x2: x + w * 0.74, y2: y + h * 0.34 });
+          addLine({ x1: x + w * 0.38, y1: y + h * 0.78, x2: x + w * 0.78, y2: y + h * 0.78 });
+          addDot({ cx: x + w * 0.73, cy: y + h * 0.35, r: Math.max(1.4, w * 0.035) });
+          return;
+        }
+
+        addDot({ cx: x + w * 0.24, cy: y + h * 0.32, r: Math.max(1.7, w * 0.04) });
+        addDot({ cx: x + w * 0.55, cy: y + h * 0.26, r: Math.max(1.7, w * 0.04) });
+        addDot({ cx: x + w * 0.72, cy: y + h * 0.64, r: Math.max(1.7, w * 0.04) });
+        addLine({ x1: x + w * 0.24, y1: y + h * 0.32, x2: x + w * 0.55, y2: y + h * 0.26 });
+        addLine({ x1: x + w * 0.55, y1: y + h * 0.26, x2: x + w * 0.72, y2: y + h * 0.64 });
+        addLine({ x1: x + w * 0.24, y1: y + h * 0.32, x2: x + w * 0.72, y2: y + h * 0.64 });
+      }
+
+      function drawNodes() {
+        nodes.forEach((node, index) => {
+          const p = point(node);
+          rendered.set(node.id, { x: p.x, y: p.y, r: p.r });
+          original.set(node.id, { x: p.x, y: p.y, r: p.r });
+          const colorClass = nodeColorClass(node);
+          const major = isMajorNode(node);
+          const group = el("g", { class: `node ${node.type} ${colorClass} ${major ? "is-major" : "is-minor"}`, "data-node": node.id });
+          const haloColor = colorClass === "computer-node" ? "rgba(7,102,235,.44)" : colorClass === "cross-node" ? "rgba(205,255,5,.42)" : "rgba(7,102,235,.36)";
+          const hit = cardBox(p, node, 36);
+          const halo = cardBox(p, node, 16);
+          const core = cardBox(p, node);
+          group.append(el("rect", { class: "node-hit", x: hit.x, y: hit.y, width: hit.w, height: hit.h, rx: hit.rx }));
+          group.append(el("circle", { class: "node-point", cx: p.x, cy: p.y, r: major ? 0 : 3.2 }));
+          group.append(el("rect", { class: "node-halo", x: halo.x, y: halo.y, width: halo.w, height: halo.h, rx: halo.rx, stroke: haloColor, opacity: node.type === "leaf" ? "0.32" : "0.7" }));
+          group.append(el("rect", { class: `node-core ${node.type} ${colorClass}`, x: core.x, y: core.y, width: core.w, height: core.h, rx: core.rx }));
+          group.append(el("rect", { class: "node-grain", x: core.x + 2, y: core.y + 2, width: Math.max(4, core.w - 4), height: Math.max(4, core.h - 4), rx: Math.max(0, core.rx - 1) }));
+          drawKnowledgeImage(group, core, node, index);
+          group.append(el("rect", { class: "node-green-wash", x: core.x + 2, y: core.y + 2, width: Math.max(4, core.w - 4), height: Math.max(4, core.h - 4), rx: Math.max(0, core.rx - 1) }));
+          group.append(el("rect", { class: "node-scan", x: core.x + 5, y: core.y + core.h * 0.24, width: Math.max(6, core.w - 10), height: Math.max(1.2, core.h * 0.08), rx: 0.5 }));
+          group.append(el("text", { class: `node-index ${node.type === "root" || node.type === "computerroot" ? "root-index" : ""}`, x: p.x, y: p.y }));
+          group.lastChild.textContent = String(index).padStart(2, "0");
+          const label = labelAnchor(node);
+          group.append(el("text", { class: `label ${node.type}`, x: label.x, y: label.y, "text-anchor": label.anchor }));
+          group.lastChild.textContent = node.label;
+          group.append(el("text", { class: "sub", x: label.x, y: label.y + (major ? 18 : 19), "text-anchor": label.anchor }));
+          group.lastChild.textContent = major ? node.en.toUpperCase() : node.en;
+          const badgeX = major ? core.x - 16 : p.x - 34;
+          const badgeY = major ? core.y - 10 : p.y - 14;
+          group.append(el("rect", { class: "step-badge-bg", x: badgeX, y: badgeY, width: 30, height: 18, rx: 9 }));
+          group.append(el("text", { class: "step-badge-text", x: badgeX + 15, y: badgeY + 9 }));
+          nodesLayer.append(group);
+          nodeElements.set(node.id, { group, node, radius: p.r });
+          ["mouseenter", "mouseover", "pointerenter", "click"].forEach((eventName) => {
+            group.addEventListener(eventName, (event) => {
+              showTooltip(event, node);
+              const step = activeStepByNode.get(node.id);
+              if (step) setStepHover(step, true);
+            });
+          });
+          ["mousemove", "pointermove"].forEach((eventName) => group.addEventListener(eventName, moveTooltip));
+          ["mouseleave", "pointerleave"].forEach((eventName) => {
+            group.addEventListener(eventName, () => {
+              group.classList.remove("hover");
+              const step = activeStepByNode.get(node.id);
+              if (step) setStepHover(step, false);
+              hideTooltip();
+            });
+          });
+          group.addEventListener("pointerdown", (event) => startNodeDrag(event, node.id));
+        });
+      }
+
+      function describe(node) {
+        if (nodeNotes[node.id]) return nodeNotes[node.id];
+        const field = node.cluster === "computer" ? "计算机" : node.cluster === "embodied" ? "具身智能方向" : "设计";
+        if (node.type.includes("domain")) return `${node.label}是${field}中的一级领域，用来组织一组相关理论、方法和实践能力。`;
+        if (node.type.includes("method")) return `${node.label}是一项方法或技能，用于把专业知识转化为可执行、可验证的工作过程。`;
+        if (node.type === "bridge") return `${node.label}是跨领域知识点，常用于连接设计表达、技术实现和用户体验。`;
+        return `${node.label}是${field}中的基础知识点，用于支撑更高层级的专业判断和实践。`;
+      }
+
+      function nodeMeta(node) {
+        const parent = parentByNode[node.id];
+        const relatedCount = edges.filter(([from, to]) => from === node.id || to === node.id).length;
+        const type = isMajorNode(node) ? "MAJOR" : "ABILITY";
+        const score = (0.68 + Math.min(0.29, relatedCount * 0.018)).toFixed(2);
+        return `NODE_ID: ${node.id.toUpperCase()} · TYPE: ${type} · RELATED_FIELDS: ${parent ? byId[parent]?.label || parent : node.label} · MATCH_SCORE: ${score}`;
+      }
+
+      function showTooltip(event, node) {
+        event.currentTarget.classList.add("hover");
+        tooltip.innerHTML = `<strong>${node.label}</strong><span>${node.en}</span><span>${nodeMeta(node)}</span><p>${describe(node)}</p>`;
+        tooltip.classList.add("visible");
+        tooltip.setAttribute("aria-hidden", "false");
+        moveTooltip(event);
+      }
+
+      function moveTooltip(event) {
+        const pad = 18;
+        const rect = tooltip.getBoundingClientRect();
+        let x = event.clientX + 18;
+        let y = event.clientY + 18;
+        if (x + rect.width + pad > window.innerWidth) x = event.clientX - rect.width - 18;
+        if (y + rect.height + pad > window.innerHeight) y = event.clientY - rect.height - 18;
+        tooltip.style.left = `${Math.max(pad, x)}px`;
+        tooltip.style.top = `${Math.max(pad, y)}px`;
+      }
+
+      function hideTooltip() {
+        tooltip.classList.remove("visible");
+        tooltip.setAttribute("aria-hidden", "true");
+      }
+
+      function shiftElementAttributes(element, dx, dy) {
+        ["cx", "x", "x1", "x2"].forEach((attr) => {
+          if (element.hasAttribute(attr)) element.setAttribute(attr, Number(element.getAttribute(attr)) + dx);
+        });
+        ["cy", "y", "y1", "y2"].forEach((attr) => {
+          if (element.hasAttribute(attr)) element.setAttribute(attr, Number(element.getAttribute(attr)) + dy);
+        });
+      }
+
+      function setNodePosition(id, x, y) {
+        const current = rendered.get(id);
+        const entry = nodeElements.get(id);
+        if (!current || !entry) return;
+        const dx = x - current.x;
+        const dy = y - current.y;
+        entry.group.querySelectorAll("circle, rect, line, text").forEach((child) => shiftElementAttributes(child, dx, dy));
+        current.x = x;
+        current.y = y;
+      }
+
+      function setNodeLabels(id, mode = "cluster", index = 0) {
+        const entry = nodeElements.get(id);
+        const current = rendered.get(id);
+        if (!entry || !current) return;
+        const texts = entry.group.querySelectorAll("text");
+        const label = texts[1];
+        const sub = texts[2];
+        if (!label || !sub) return;
+        if (mode === "path") {
+          const above = index % 2 === 0;
+          const y = current.y + (above ? -entry.radius - 42 : entry.radius + 34);
+          [label, sub].forEach((text) => {
+            text.setAttribute("x", current.x);
+            text.setAttribute("text-anchor", "middle");
+          });
+          label.setAttribute("y", y);
+          sub.setAttribute("y", y + 18);
+          return;
+        }
+        const anchor = labelAnchor(entry.node);
+        [label, sub].forEach((text) => {
+          text.setAttribute("x", anchor.x);
+          text.setAttribute("text-anchor", anchor.anchor);
+        });
+        label.setAttribute("y", anchor.y);
+        sub.setAttribute("y", anchor.y + 19);
+      }
+
+      function updateEdges() {
+        edgeElements.forEach((edge) => {
+          const a = rendered.get(edge.from);
+          const b = rendered.get(edge.to);
+          if (!a || !b) return;
+          edge.element.setAttribute("d", curve(a, b, edge.bend, edge.seed));
+        });
+      }
+
+      function rectEdgePoint(center, target, box) {
+        const dx = target.x - center.x;
+        const dy = target.y - center.y;
+        if (!dx && !dy) return { x: center.x, y: center.y };
+        const halfW = box.w / 2;
+        const halfH = box.h / 2;
+        const sx = dx ? halfW / Math.abs(dx) : Infinity;
+        const sy = dy ? halfH / Math.abs(dy) : Infinity;
+        const scale = Math.min(sx, sy);
+        return {
+          x: center.x + dx * scale,
+          y: center.y + dy * scale
+        };
+      }
+
+      function routeAnchor(id, towardId) {
+        const current = rendered.get(id);
+        const target = rendered.get(towardId);
+        const entry = nodeElements.get(id);
+        if (!current || !target) return null;
+        if (!entry || !isMajorNode(entry.node)) return { x: current.x, y: current.y };
+        return rectEdgePoint(current, target, cardBox(current, entry.node));
+      }
+
+      const pathParentOverrides = {
+        embodied: {
+          uxresearch: "product",
+          cs_require: "product",
+          ergonomics: "hci",
+          cs_hci: "hci",
+          prototype: "product",
+          cs_robot: "robotics_systems",
+          modeling: "product",
+          cs_embedded: "robotics_systems",
+          materials: "product",
+          hardware: "robotics_systems",
+          hri_project: "embodied"
+        }
+      };
+
+      function pathParent(id, key) {
+        let parent = pathParentOverrides[key]?.[id] || parentByNode[id];
+        while (parent && byId[parent] && !isMajorNode(byId[parent]) && parentByNode[parent]) {
+          parent = parentByNode[parent];
+        }
+        if (!parent || parent === id || !byId[parent]) return null;
+        return parent;
+      }
+
+      function ownershipPath(parentId, childId) {
+        const start = routeAnchor(parentId, childId);
+        const end = routeAnchor(childId, parentId);
+        if (!start || !end) return "";
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const elbowX = start.x + dx * 0.46;
+        const elbowY = end.y - Math.sign(dy || 1) * Math.min(18, Math.abs(dy) * 0.28);
+        return `M${start.x.toFixed(1)} ${start.y.toFixed(1)} C${elbowX.toFixed(1)} ${start.y.toFixed(1)} ${elbowX.toFixed(1)} ${elbowY.toFixed(1)} ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+      }
+
+      function routeCurve(a, b, index) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const len = Math.max(1, Math.hypot(dx, dy));
+        const ux = dx / len;
+        const uy = dy / len;
+        const lane = (index % 2 === 0 ? -1 : 1) * Math.min(28, len * 0.035);
+        const cx = (a.x + b.x) / 2 - uy * lane;
+        const cy = (a.y + b.y) / 2 + ux * lane;
+        return `M${a.x.toFixed(1)} ${a.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+      }
+
+      function updateOwnershipLinks() {
+        ownershipElements.forEach((link) => {
+          link.element.setAttribute("d", ownershipPath(link.parent, link.child));
+        });
+      }
+
+      function updateRoute() {
+        updateOwnershipLinks();
+        routeElements.forEach((route, index) => {
+          const a = routeAnchor(route.from, route.to);
+          const b = routeAnchor(route.to, route.from);
+          if (!a || !b) return;
+          route.element.setAttribute("d", routeCurve(a, b, index));
+        });
+      }
+
+      function bridgePath(a, b, index) {
+        const midX = (a.x + b.x) / 2;
+        const midY = (a.y + b.y) / 2 + (index % 2 === 0 ? -92 : 92);
+        return `M${a.x} ${a.y} Q${midX.toFixed(1)} ${midY.toFixed(1)} ${b.x} ${b.y}`;
+      }
+
+      function bridgeCardPosition(a, b, index) {
+        return {
+          x: (a.x + b.x) / 2 - 118,
+          y: (a.y + b.y) / 2 + (index % 2 === 0 ? -138 : 78)
+        };
+      }
+
+      function setBridgeCardText(group, insight) {
+        const title = group.querySelector(".bridge-card-title");
+        const copy = group.querySelector(".bridge-card-copy");
+        title.textContent = insight.title;
+        copy.textContent = insight.copy;
+      }
+
+      function updateBridgeInsights() {
+        bridgeElements.forEach((bridge, index) => {
+          const a = rendered.get(bridge.from);
+          const b = rendered.get(bridge.to);
+          if (!a || !b) return;
+          bridge.path.setAttribute("d", bridgePath(a, b, index));
+          const pos = bridgeCardPosition(a, b, index);
+          bridge.card.setAttribute("transform", `translate(${pos.x.toFixed(1)} ${pos.y.toFixed(1)})`);
+        });
+      }
+
+      function drawBridgeInsights(key) {
+        bridgesLayer.innerHTML = "";
+        bridgeElements.length = 0;
+        if (key !== "embodied") return;
+        embodiedBridgeInsights.forEach((insight, index) => {
+          const a = rendered.get(insight.from);
+          const b = rendered.get(insight.to);
+          if (!a || !b) return;
+          const path = el("path", { class: "bridge-link", d: bridgePath(a, b, index) });
+          bridgesLayer.append(path);
+
+          const pos = bridgeCardPosition(a, b, index);
+          const card = el("g", { class: "bridge-card", transform: `translate(${pos.x.toFixed(1)} ${pos.y.toFixed(1)})` });
+          card.append(el("rect", { class: "bridge-card-bg", x: 0, y: 0, width: 236, height: 58, rx: 2 }));
+          card.append(el("text", { class: "bridge-card-title", x: 12, y: 22 }));
+          card.append(el("text", { class: "bridge-card-copy", x: 12, y: 43 }));
+          setBridgeCardText(card, insight);
+          bridgesLayer.append(card);
+          bridgeElements.push({ ...insight, path, card });
+        });
+      }
+
+      function drawRoute(ids, key) {
+        routesLayer.innerHTML = "";
+        routeElements.length = 0;
+        ownershipElements.length = 0;
+        const ownershipPairs = new Set();
+        flattenedPathNodes(key).forEach((id) => {
+          const parent = pathParent(id, key);
+          if (!parent) return;
+          const pairKey = `${parent}-${id}`;
+          if (ownershipPairs.has(pairKey)) return;
+          ownershipPairs.add(pairKey);
+          const path = el("path", { class: "ownership-link", d: ownershipPath(parent, id) });
+          routesLayer.append(path);
+          ownershipElements.push({ element: path, parent, child: id });
+        });
+        ids.slice(0, -1).forEach((from, index) => {
+          const to = ids[index + 1];
+          const a = routeAnchor(from, to);
+          const b = routeAnchor(to, from);
+          if (!a || !b) return;
+          const path = el("path", { class: "route-edge", d: routeCurve(a, b, index) });
+          routesLayer.append(path);
+          routeElements.push({ element: path, from, to });
+        });
+      }
+
+      function animatePositions(targets, duration = 560) {
+        const start = new Map();
+        targets.forEach((_, id) => {
+          const current = rendered.get(id);
+          if (current) start.set(id, { x: current.x, y: current.y });
+        });
+        const startTime = performance.now();
+        function frame(now) {
+          const t = Math.min(1, (now - startTime) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          targets.forEach((target, id) => {
+            const s = start.get(id);
+            if (!s) return;
+            setNodePosition(id, s.x + (target.x - s.x) * eased, s.y + (target.y - s.y) * eased);
+          });
+          updateEdges();
+          updateRoute();
+          updateBridgeInsights();
+          if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function animateViewBox(target, duration = 560) {
+        const start = { ...viewBox };
+        const startTime = performance.now();
+        function frame(now) {
+          const t = Math.min(1, (now - startTime) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          viewBox.x = start.x + (target.x - start.x) * eased;
+          viewBox.y = start.y + (target.y - start.y) * eased;
+          viewBox.w = start.w + (target.w - start.w) * eased;
+          viewBox.h = start.h + (target.h - start.h) * eased;
+          applyViewBox();
+          if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function pathLayout(ids, key) {
+        const targets = new Map();
+        const count = ids.length;
+        const startX = key === "product" ? 210 : 210;
+        const endX = key === "product" ? 1370 : 2320;
+        const y = 520;
+        ids.forEach((id, index) => {
+          const x = count === 1 ? 1275 : startX + ((endX - startX) * index) / (count - 1);
+          targets.set(id, { x, y: y + (index % 2 ? 34 : -34) });
+        });
+        return targets;
+      }
+
+      function pathRouteSequence(key) {
+        if (key === "embodied") {
+          return ["product", "uxresearch", "hci", "cs_robot", "cs_embedded", "hardware", "hri_project"];
+        }
+        if (pathCards[key]) {
+          return pathCards[key].map((item) => item.nodes[0]).filter((id) => byId[id]);
+        }
+        return ["design", "product", "product_strategy", "ergonomics", "prototype", "usability", "portfolio"];
+      }
+
+      function flattenedPathNodes(key) {
+        const cards = pathCards[key] || [];
+        return new Set(cards.flatMap((item) => item.nodes));
+      }
+
+      function clearStepState() {
+        hoveredPathStep = null;
+        selectedPathStep = null;
+        activeStepByNode.clear();
+        document.querySelectorAll(".node.has-step, .node.is-linked-hover, .node.current-step, .node.related, .node.related-major, .node.related-knowledge").forEach((node) => {
+          node.classList.remove("has-step", "is-linked-hover", "current-step", "related", "related-major", "related-knowledge");
+          const badge = node.querySelector(".step-badge-text");
+          if (badge) badge.textContent = "";
+        });
+        pathList.querySelectorAll(".path-item.is-hovered, .path-item.is-selected-path").forEach((item) => item.classList.remove("is-hovered", "is-selected-path"));
+        edgeElements.forEach((edge) => edge.element.classList.remove("is-route-related", "is-hovered"));
+        routeElements.forEach((edge) => edge.element.classList.remove("is-hovered"));
+      }
+
+      function applyStepBadges(key) {
+        clearStepState();
+        const cards = pathCards[key] || [];
+        cards.forEach((item, index) => {
+          item.nodes.forEach((id) => {
+            activeStepByNode.set(id, index + 1);
+            const entry = nodeElements.get(id);
+            if (!entry) return;
+            entry.group.classList.add("has-step");
+            if (index === 1) entry.group.classList.add("current-step");
+            const badge = entry.group.querySelector(".step-badge-text");
+            if (badge) badge.textContent = String(index + 1).padStart(2, "0");
+          });
+        });
+      }
+
+      function applyRelatedHighlights(key) {
+        const profile = careerProfiles[key] || {};
+        const relationMajors = new Set();
+        const relationKnowledge = new Set();
+        (profile.majors || (key === "embodied" ? embodiedRelatedMajors : [])).forEach((id) => relationMajors.add(id));
+        (profile.knowledge || (key === "embodied" ? embodiedRelatedKnowledge : [])).forEach((id) => relationKnowledge.add(id));
+        relationMajors.forEach((id) => {
+          const entry = nodeElements.get(id);
+          if (entry) entry.group.classList.add("related", "related-major");
+        });
+        relationKnowledge.forEach((id) => {
+          const entry = nodeElements.get(id);
+          if (entry) entry.group.classList.add("related", "related-knowledge");
+        });
+      }
+
+      function markRouteEdges(key) {
+        const routeIds = pathRouteSequence(key);
+        const routePairs = new Set();
+        routeIds.slice(0, -1).forEach((from, index) => {
+          const to = routeIds[index + 1];
+          routePairs.add(`${from}-${to}`);
+          routePairs.add(`${to}-${from}`);
+        });
+        const profile = careerProfiles[key];
+        (profile?.relations || []).forEach((relationId) => {
+          const rule = relationRules[relationId];
+          if (!rule) return;
+          rule.majors.slice(0, -1).forEach((from, index) => {
+            rule.majors.slice(index + 1).forEach((to) => {
+              routePairs.add(`${from}-${to}`);
+              routePairs.add(`${to}-${from}`);
+            });
+          });
+        });
+        if (key === "embodied") {
+          embodiedBridgeInsights.forEach((link) => {
+            routePairs.add(`${link.from}-${link.to}`);
+            routePairs.add(`${link.to}-${link.from}`);
+          });
+        }
+        edgeElements.forEach((edge) => {
+          edge.element.classList.toggle("is-route-related", routePairs.has(`${edge.from}-${edge.to}`));
+        });
+      }
+
+      function setStepHover(step, active) {
+        if (!step) return;
+        hoveredPathStep = active ? step : null;
+        updatePathFocusState();
+      }
+
+      function setSelectedPathStep(step) {
+        selectedPathStep = step;
+        updatePathFocusState();
+      }
+
+      function updatePathFocusState() {
+        pathList.querySelectorAll(".path-item").forEach((item) => {
+          const step = Number(item.dataset.step);
+          item.classList.toggle("is-hovered", hoveredPathStep === step);
+          item.classList.toggle("is-selected-path", selectedPathStep === step);
+        });
+        document.querySelectorAll(".node.is-linked-hover").forEach((node) => node.classList.remove("is-linked-hover"));
+        const activeSteps = new Set([hoveredPathStep, selectedPathStep].filter(Boolean));
+        activeSteps.forEach((step) => {
+          const item = pathList.querySelector(`.path-item[data-step="${step}"]`);
+          if (!item) return;
+          item.dataset.nodes.split(",").forEach((id) => {
+            const entry = nodeElements.get(id);
+            if (entry) entry.group.classList.add("is-linked-hover");
+            const parent = parentByNode[id];
+            const parentEntry = parent ? nodeElements.get(parent) : null;
+            if (parentEntry) parentEntry.group.classList.add("is-linked-hover");
+          });
+        });
+        routeElements.forEach((route, index) => {
+          const routeStep = index + 1;
+          route.element.classList.toggle(
+            "is-hovered",
+            hoveredPathStep === routeStep || hoveredPathStep === routeStep + 1 ||
+              selectedPathStep === routeStep || selectedPathStep === routeStep + 1
+          );
+        });
+      }
+
+      function renderPathPanel(key) {
+        const cards = pathCards[key] || [];
+        pathList.innerHTML = "";
+        cards.forEach((item, index) => {
+          const li = document.createElement("li");
+          li.className = "path-item";
+          li.dataset.step = String(index + 1);
+          li.dataset.nodes = item.nodes.join(",");
+          li.style.transitionDelay = `${index * 0.045}s`;
+          li.innerHTML = `
+            <span class="path-num">${String(index + 1).padStart(2, "0")}</span>
+            <span>
+              <strong class="path-name">${item.title}</strong>
+              <span class="path-desc">${item.desc}</span>
+              <span class="path-tags">${item.tags.map((tag) => `<span class="path-tag ${tag.type}">${tag.text}</span>`).join("")}</span>
+            </span>
+            <button class="course-select ${index === 1 ? "is-selected" : ""}" type="button">${index === 1 ? "已选" : "选课"}</button>
+          `;
+          const selectButton = li.querySelector(".course-select");
+          selectButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const selected = selectButton.classList.toggle("is-selected");
+            selectButton.textContent = selected ? "已选" : "选课";
+          });
+          li.addEventListener("mouseenter", () => setStepHover(index + 1, true));
+          li.addEventListener("mouseleave", () => setStepHover(index + 1, false));
+          li.addEventListener("click", () => setSelectedPathStep(index + 1));
+          pathList.append(li);
+        });
+      }
+
+      function animateBlocksIntoPanel(key) {
+        const cards = pathCards[key] || [];
+        const panelRect = pathPanel.getBoundingClientRect();
+        cards.forEach((item, index) => {
+          const sourceId = item.nodes[0];
+          const sourceGroup = document.querySelector(`.node[data-node="${sourceId}"]`);
+          const source = sourceGroup?.classList.contains("is-major")
+            ? sourceGroup.querySelector(".node-core")
+            : sourceGroup?.querySelector(".node-point");
+          const target = pathList.querySelector(`.path-item[data-step="${index + 1}"] .path-num`);
+          if (!source || !target) return;
+          const s = source.getBoundingClientRect();
+          const t = target.getBoundingClientRect();
+          const block = document.createElement("div");
+          block.className = "fly-block";
+          block.style.left = `${s.left + s.width / 2 - 11}px`;
+          block.style.top = `${s.top + s.height / 2 - 11}px`;
+          block.style.opacity = "0.95";
+          document.body.append(block);
+          requestAnimationFrame(() => {
+            block.style.width = "30px";
+            block.style.height = "30px";
+            block.style.opacity = "0.16";
+            block.style.transform = `translate(${t.left + t.width / 2 - (s.left + s.width / 2)}px, ${t.top + t.height / 2 - (s.top + s.height / 2)}px)`;
+          });
+          window.setTimeout(() => block.remove(), 840 + index * 35);
+        });
+        window.setTimeout(() => {
+          pathPanel.classList.remove("is-building");
+          pathPanel.classList.add("is-ready");
+        }, 760);
+      }
+
+      function activatePath(key) {
+        const path = learningPaths[key];
+        if (!path) return resetPath();
+        const pathNodes = flattenedPathNodes(key);
+        ["design", "computer", "embodied"].forEach((id) => {
+          if (key === "embodied") pathNodes.add(id);
+        });
+        stage.classList.add("is-generated");
+        graph.classList.add("has-path");
+        chatCard.classList.add("is-expanded");
+        mode = "result";
+        const profile = careerProfiles[key] || {};
+        const targetLabel = profile.label || (key === "embodied" ? "具身智能" : "产品设计");
+        const nodeCount = pathCards[key]?.length || 0;
+        if (agentStatus) agentStatus.querySelector("span").textContent = `目标：${targetLabel} · 已生成 ${nodeCount} 个关键学习节点`;
+        const summary = pathPanel.querySelector(".path-summary");
+        if (summary) summary.textContent = profile.summary || `根据目标「${targetLabel}」，已从知识图谱中提取 ${nodeCount} 个关键学习节点。`;
+        document.querySelectorAll(".node").forEach((node) => node.classList.toggle("path", pathNodes.has(node.dataset.node)));
+        drawRoute(pathRouteSequence(key), key);
+        bridgesLayer.innerHTML = "";
+        bridgeElements.length = 0;
+        markRouteEdges(key);
+        animateViewBox(resultViewBox, 620);
+        renderPathPanel(key);
+        applyStepBadges(key);
+        applyRelatedHighlights(key);
+        pathPanel.classList.add("is-visible", "is-building");
+        pathPanel.classList.remove("is-ready");
+        window.setTimeout(() => animateBlocksIntoPanel(key), 420);
+      }
+
+      function resetPath() {
+        mode = "initial";
+        stage.classList.remove("is-generated");
+        graph.classList.remove("has-path");
+        chatCard.classList.remove("is-expanded");
+        routesLayer.innerHTML = "";
+        bridgesLayer.innerHTML = "";
+        routeElements.length = 0;
+        ownershipElements.length = 0;
+        bridgeElements.length = 0;
+        document.querySelectorAll(".fly-block").forEach((block) => block.remove());
+        if (!goalInput.value.trim()) goalInput.value = "具身智能";
+        animateViewBox(initialViewBox, 520);
+        pathPanel.classList.remove("is-visible", "is-ready", "is-building");
+        pathList.innerHTML = "";
+        document.querySelectorAll(".node.path").forEach((node) => node.classList.remove("path"));
+        clearStepState();
+      }
+
+      function detectGoal(text) {
+        const normalized = text.trim().toLowerCase();
+        if (!normalized) return null;
+        if (normalized.includes("ai 医疗") || normalized.includes("ai医疗") || normalized.includes("医疗") || normalized.includes("医学影像") || normalized.includes("数字健康")) return "aiMedical";
+        if (normalized.includes("智能座舱") || normalized.includes("hmi") || normalized.includes("车联网") || normalized.includes("自动驾驶")) return "hmi";
+        if (normalized.includes("游戏策划") || normalized.includes("游戏") || normalized.includes("aigc 创作") || normalized.includes("aigc创作")) return "game";
+        if (normalized.includes("金融科技") || normalized.includes("fintech") || normalized.includes("风控") || normalized.includes("支付产品")) return "fintech";
+        if (normalized.includes("具身") || normalized.includes("机器人") || normalized.includes("智能硬件") || normalized.includes("embodied")) return "embodied";
+        if (normalized.includes("产品设计") || normalized.includes("产品")) return "product";
+        return null;
+      }
+
+      function applyViewBox() {
+        graph.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+      }
+
+      graph.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        const scale = event.deltaY > 0 ? 1.12 : 0.88;
+        const rect = graph.getBoundingClientRect();
+        const mx = viewBox.x + ((event.clientX - rect.left) / rect.width) * viewBox.w;
+        const my = viewBox.y + ((event.clientY - rect.top) / rect.height) * viewBox.h;
+        const nextW = Math.min(3600, Math.max(900, viewBox.w * scale));
+        const nextH = Math.min(1800, Math.max(450, viewBox.h * scale));
+        viewBox.x = mx - ((mx - viewBox.x) / viewBox.w) * nextW;
+        viewBox.y = my - ((my - viewBox.y) / viewBox.h) * nextH;
+        viewBox.w = nextW;
+        viewBox.h = nextH;
+        applyViewBox();
+      }, { passive: false });
+
+      graph.addEventListener("pointerdown", (event) => {
+        if (event.target.closest(".node")) return;
+        graph.setPointerCapture(event.pointerId);
+        dragStart = { x: event.clientX, y: event.clientY, vx: viewBox.x, vy: viewBox.y };
+      });
+
+      graph.addEventListener("pointermove", (event) => {
+        if (nodeDrag) {
+          const rect = graph.getBoundingClientRect();
+          const dx = ((event.clientX - nodeDrag.x) / rect.width) * viewBox.w;
+          const dy = ((event.clientY - nodeDrag.y) / rect.height) * viewBox.h;
+          setNodePosition(nodeDrag.id, nodeDrag.start.x + dx, nodeDrag.start.y + dy);
+          updateEdges();
+          updateRoute();
+          updateBridgeInsights();
+          return;
+        }
+        if (!dragStart) return;
+        const rect = graph.getBoundingClientRect();
+        viewBox.x = dragStart.vx - ((event.clientX - dragStart.x) / rect.width) * viewBox.w;
+        viewBox.y = dragStart.vy - ((event.clientY - dragStart.y) / rect.height) * viewBox.h;
+        applyViewBox();
+      });
+
+      ["pointerup", "pointerleave"].forEach((eventName) => {
+        graph.addEventListener(eventName, () => {
+          dragStart = null;
+          nodeDrag = null;
+          graph.classList.remove("is-dragging-node");
+        });
+      });
+
+      function startNodeDrag(event, id) {
+        event.preventDefault();
+        event.stopPropagation();
+        graph.setPointerCapture(event.pointerId);
+        const current = rendered.get(id);
+        graph.classList.add("is-dragging-node");
+        nodeDrag = { id, x: event.clientX, y: event.clientY, start: { x: current.x, y: current.y } };
+      }
+
+      goalForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        activatePath(detectGoal(goalInput.value));
+      });
+
+      regenerateButton.addEventListener("click", resetPath);
+
+      drawAmbient();
+      drawEdges();
+      drawNodes();
+      applyViewBox();
+      if (new URLSearchParams(window.location.search).get("demo") === "embodied") {
+        goalInput.value = "具身智能";
+        window.setTimeout(() => activatePath("embodied"), 260);
+      }
+    </script>
+  
+<script id="site-top-nav-script">
+(function(){
+  const nav = document.getElementById('siteNav');
+  const toggle = document.getElementById('siteMenuToggle');
+  if (!nav || !toggle) return;
+  toggle.addEventListener('click', function(){
+    const isOpen = nav.classList.toggle('is-menu-open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    const menu = document.getElementById('siteNavMenu');
+    if (menu) menu.setAttribute('aria-hidden', String(!isOpen));
+  });
+  document.addEventListener('click', function(event){
+    if (!nav.contains(event.target)) {
+      nav.classList.remove('is-menu-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      const menu = document.getElementById('siteNavMenu');
+      if (menu) menu.setAttribute('aria-hidden', 'true');
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
