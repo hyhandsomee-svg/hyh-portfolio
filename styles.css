@@ -84,7 +84,7 @@
 .portrait-code {
   z-index: 1;
   clip-path: inset(0 calc(100% - var(--scan-progress)) 0 0);
-  filter: drop-shadow(0 0 5px rgba(255, 171, 61, 0.28));
+  filter: none;
   opacity: 0.96;
 }
 
@@ -2223,22 +2223,11 @@ html[lang="en"] .profile-shell h1 {
 }
 
 .frame-ambient {
-  position: absolute;
-  inset: 9% -7%;
-  z-index: -2;
-  overflow: hidden;
-  opacity: 0.24;
-  filter: blur(84px) saturate(1.4) brightness(0.7);
-  transform: scale(1.12);
+  display: none;
 }
 
 .frame-ambient::before {
-  position: absolute;
-  inset: 0;
-  background-image: var(--frame-image);
-  background-position: center;
-  background-size: cover;
-  content: "";
+  content: none;
 }
 
 .frame-shell {
