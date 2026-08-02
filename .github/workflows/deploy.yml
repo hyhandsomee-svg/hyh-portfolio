@@ -22,14 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Reassemble archive
-        run: cat portfolio-site-deploy.zip.part-00 portfolio-site-deploy.zip.part-01 portfolio-site-deploy.zip.part-02 portfolio-site-deploy.zip.part-03 portfolio-site-deploy.zip.part-04 portfolio-site-deploy.zip.part-05 portfolio-site-deploy.zip.part-06 > site.zip
-      - name: Extract static site
-        run: unzip -q site.zip -d _site
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: .
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
