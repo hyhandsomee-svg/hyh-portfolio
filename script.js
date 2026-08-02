@@ -170,76 +170,12 @@ updateFrameDepth();
 const portraitScanner = document.querySelector("[data-portrait-scan]");
 
 if (portraitScanner) {
-  const portraitImage = portraitScanner.querySelector(".portrait");
-  const codeCanvas = portraitScanner.querySelector("[data-portrait-code]");
   const portraitState = portraitScanner.querySelector("[data-portrait-state]");
   const scanLabel = portraitScanner.querySelector(".portrait-scan-line span");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const characters = "01{}[]<>/\\|;:+-*#";
   let animationFrame = 0;
   let cycleStartedAt = 0;
   let activeCycle = -1;
-
-  const drawCodePortrait = () => {
-    if (!portraitImage?.complete || !portraitImage.naturalWidth || !codeCanvas) return;
-
-    const bounds = portraitScanner.getBoundingClientRect();
-    if (!bounds.width || !bounds.height) return;
-
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    const width = Math.max(1, Math.round(bounds.width * ratio));
-    const height = Math.max(1, Math.round(bounds.height * ratio));
-    const source = document.createElement("canvas");
-    const sourceContext = source.getContext("2d", { willReadFrequently: true });
-    const context = codeCanvas.getContext("2d");
-    if (!sourceContext || !context) return;
-
-    codeCanvas.width = width;
-    codeCanvas.height = height;
-    source.width = width;
-    source.height = height;
-
-    const scale = Math.max(width / portraitImage.naturalWidth, height / portraitImage.naturalHeight);
-    const imageWidth = portraitImage.naturalWidth * scale;
-    const imageHeight = portraitImage.naturalHeight * scale;
-    const offsetX = (width - imageWidth) / 2;
-    const offsetY = (height - imageHeight) * 0.12;
-    sourceContext.clearRect(0, 0, width, height);
-    sourceContext.drawImage(portraitImage, offsetX, offsetY, imageWidth, imageHeight);
-
-    const pixels = sourceContext.getImageData(0, 0, width, height).data;
-    const cell = Math.max(8, Math.round(9 * ratio));
-    context.clearRect(0, 0, width, height);
-    context.font = `${Math.max(7, Math.round(8 * ratio))}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-
-    const alphaAt = (x, y) => pixels[(Math.min(height - 1, Math.max(0, y)) * width + Math.min(width - 1, Math.max(0, x))) * 4 + 3];
-
-    for (let y = cell / 2; y < height; y += cell) {
-      for (let x = cell / 2; x < width; x += cell) {
-        const alpha = alphaAt(Math.round(x), Math.round(y));
-        if (alpha < 42) continue;
-
-        const edge =
-          alphaAt(Math.round(x - cell), Math.round(y)) < 34 ||
-          alphaAt(Math.round(x + cell), Math.round(y)) < 34 ||
-          alphaAt(Math.round(x), Math.round(y - cell)) < 34 ||
-          alphaAt(Math.round(x), Math.round(y + cell)) < 34;
-        const seed = (Math.round(x / cell) * 17 + Math.round(y / cell) * 29) % 19;
-        if (!edge && seed > 11) continue;
-
-        const character = characters[(seed + Math.round(y / cell)) % characters.length];
-        if (edge) {
-          context.fillStyle = seed % 4 === 0 ? "rgba(255,171,61,0.98)" : "rgba(255,239,214,0.96)";
-        } else {
-          const opacity = 0.28 + (alpha / 255) * 0.46;
-          context.fillStyle = seed % 5 === 0 ? `rgba(255,171,61,${opacity})` : `rgba(218,210,199,${opacity})`;
-        }
-        context.fillText(character, x, y);
-      }
-    }
-  };
 
   const smoothStep = (value) => value * value * (3 - 2 * value);
   const animatePortraitScan = (timestamp) => {
@@ -292,9 +228,6 @@ if (portraitScanner) {
     animationFrame = requestAnimationFrame(animatePortraitScan);
   };
 
-  if (portraitImage?.complete) drawCodePortrait();
-  portraitImage?.addEventListener("load", drawCodePortrait, { once: true });
-  new ResizeObserver(drawCodePortrait).observe(portraitScanner);
   reducedMotion.addEventListener?.("change", startPortraitScan);
   startPortraitScan();
 }
