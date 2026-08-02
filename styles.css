@@ -5394,3 +5394,205 @@ html[lang="en"] .profile-shell h1 {
     width: 100%;
   }
 }
+
+/* Mobile layout guardrails. Desktop composition stays untouched. */
+@media (max-width: 720px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  :root {
+    --shell: calc(100vw - 32px);
+  }
+
+  .site-header {
+    width: 100%;
+    height: 56px;
+    gap: 10px;
+    padding-inline: 16px;
+  }
+
+  .site-mark {
+    max-width: 96px;
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .site-nav {
+    gap: 11px;
+    align-items: center;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .site-nav > *,
+  .language-toggle,
+  .header-contact {
+    flex: 0 0 auto;
+  }
+
+  .content-shell,
+  .profile-shell {
+    width: var(--shell);
+    max-width: 100%;
+  }
+
+  .home-page .hero-portrait-stage {
+    top: 12svh;
+    right: 0;
+    bottom: 17svh;
+    width: min(66vw, 252px);
+    max-width: calc(100vw - 122px);
+  }
+
+  .home-page .hero-portrait-stage .portrait,
+  .home-page .hero-portrait-stage .portrait-code {
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 12%;
+  }
+
+  .home-page .profile-main,
+  .home-page .profile-meta {
+    position: relative;
+    z-index: 6;
+  }
+
+  .home-page .project-card,
+  .home-page .project-copy,
+  .home-page .project-media,
+  .case-intro-grid > *,
+  .project-section__intro > *,
+  .college-system-row > *,
+  .sim-lab > *,
+  .sim-lab__workspace > *,
+  .story-frame,
+  .frame-shell,
+  .frame-viewport {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .home-page .project-media,
+  .project-media-panel,
+  .project-video,
+  .college-live-preview,
+  .product-browser,
+  .live-prototype,
+  .sim-system-window,
+  .sim-lab {
+    overflow: hidden;
+  }
+
+  .case-intro__visual img {
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: none;
+  }
+
+  img,
+  video,
+  iframe,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  .project-hero__heading h1,
+  .project-section__intro h2,
+  .home-page .project-copy h3,
+  .case-intro h2,
+  .profile-thesis,
+  .case-judgment {
+    overflow-wrap: anywhere;
+  }
+
+  .live-prototype iframe,
+  .college-live-preview iframe {
+    display: block;
+    width: 100%;
+    border: 0;
+  }
+
+  .college-live-preview__toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .college-live-preview__toolbar > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .sim-lab input,
+  .sim-lab textarea,
+  .sim-lab select,
+  .sim-lab button {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --shell: calc(100vw - 28px);
+  }
+
+  .site-header {
+    gap: 8px;
+    padding-inline: 14px;
+  }
+
+  .site-mark {
+    max-width: 74px;
+    font-size: 9px;
+  }
+
+  .site-nav {
+    gap: 8px;
+    font-size: 10px;
+  }
+
+  .home-page .hero-portrait-stage {
+    right: 0;
+    width: min(64vw, 224px);
+    max-width: calc(100vw - 108px);
+  }
+
+  .home-page .profile-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .home-page .profile-meta > div,
+  .home-page .profile-meta > div + div {
+    padding: 14px 0;
+    border-left: 0;
+  }
+
+  .home-page .profile-meta > div + div {
+    border-top: 1px solid var(--line);
+  }
+
+  .sim-lab__stages,
+  .sim-pipeline {
+    grid-template-columns: 1fr;
+  }
+
+  .sim-lab__stages li,
+  .sim-pipeline article,
+  .sim-pipeline article:nth-child(5),
+  .sim-pipeline article:nth-child(odd) {
+    border-right: 0;
+    border-left: 0;
+  }
+}
