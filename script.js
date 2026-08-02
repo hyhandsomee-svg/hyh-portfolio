@@ -178,6 +178,7 @@ if (portraitScanner) {
   const characters = "01{}[]<>/\\|;:+-*#";
   let animationFrame = 0;
   let cycleStartedAt = 0;
+  let activeCycle = -1;
 
   const drawCodePortrait = () => {
     if (!portraitImage?.complete || !portraitImage.naturalWidth || !codeCanvas) return;
@@ -240,35 +241,38 @@ if (portraitScanner) {
     }
   };
 
-  const easeInOut = (value) => value < 0.5 ? 2 * value * value : 1 - Math.pow(-2 * value + 2, 2) / 2;
+  const smoothStep = (value) => value * value * (3 - 2 * value);
   const animatePortraitScan = (timestamp) => {
     if (!cycleStartedAt) cycleStartedAt = timestamp;
-    const cycle = 9000;
-    const phase = ((timestamp - cycleStartedAt) % cycle) / cycle;
+    const cycle = 7200;
+    const elapsed = timestamp - cycleStartedAt;
+    const cycleIndex = Math.floor(elapsed / cycle);
+    const phase = (elapsed % cycle) / cycle;
+    const target = cycleIndex % 2 === 0 ? "code" : "human";
     let progress = 0;
     let opacity = 0;
-    let direction = "idle";
 
-    if (phase >= 0.1 && phase < 0.44) {
-      progress = easeInOut((phase - 0.1) / 0.34);
-      opacity = Math.min((phase - 0.1) / 0.035, 1, (0.44 - phase) / 0.035);
-      direction = "forward";
-    } else if (phase >= 0.44 && phase < 0.56) {
+    if (cycleIndex !== activeCycle) {
+      activeCycle = cycleIndex;
+      portraitScanner.dataset.scanTarget = target;
+    }
+
+    if (phase >= 0.12 && phase < 0.5) {
+      const pulse = (phase - 0.12) / 0.38;
+      progress = smoothStep(pulse);
+      opacity = Math.pow(Math.sin(Math.PI * pulse), 0.72) * 0.78;
+    } else if (phase >= 0.5) {
       progress = 1;
-    } else if (phase >= 0.56 && phase < 0.9) {
-      progress = 1 - easeInOut((phase - 0.56) / 0.34);
-      opacity = Math.min((phase - 0.56) / 0.035, 1, (0.9 - phase) / 0.035);
-      direction = "backward";
     }
 
     portraitScanner.style.setProperty("--scan-progress", `${(progress * 100).toFixed(3)}%`);
     portraitScanner.style.setProperty("--scan-opacity", Math.max(0, opacity).toFixed(3));
-    const nextDirection = direction === "backward" ? "backward" : "forward";
-    if (portraitScanner.dataset.scanDirection !== nextDirection) portraitScanner.dataset.scanDirection = nextDirection;
-    const nextState = progress < 0.04 ? "HUMAN" : progress > 0.98 ? "CODEFORM" : "SCANNING";
+    const sourceState = target === "code" ? "HUMAN" : "CODEFORM";
+    const targetState = target === "code" ? "CODEFORM" : "HUMAN";
+    const nextState = progress < 0.04 ? sourceState : progress > 0.98 ? targetState : "SCANNING";
     if (portraitState && portraitState.textContent !== nextState) portraitState.textContent = nextState;
     if (scanLabel) {
-      const nextLabel = direction === "backward" ? "SCAN / CODE → HUMAN" : "SCAN / HUMAN → CODE";
+      const nextLabel = target === "code" ? "PULSE / HUMAN → CODE" : "PULSE / CODE → HUMAN";
       if (scanLabel.textContent !== nextLabel) scanLabel.textContent = nextLabel;
     }
     animationFrame = requestAnimationFrame(animatePortraitScan);
@@ -283,6 +287,8 @@ if (portraitScanner) {
       return;
     }
     cycleStartedAt = 0;
+    activeCycle = -1;
+    portraitScanner.dataset.scanTarget = "code";
     animationFrame = requestAnimationFrame(animatePortraitScan);
   };
 
